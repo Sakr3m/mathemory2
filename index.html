@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mathemory — math games & timed challenges</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1E2C23;
+    --bg-panel: #2E4636;
+    --bg-panel-locked: #263A2C;
+    --bg-table-desktop: #171F19;
+    --ink: #F3EFE4;
+    --ink-dim: #9FB0A2;
+    --ink-faint: rgba(243,239,228,0.28);
+    --yellow: #E8C468;
+    --red: #C1554B;
+    --teal: #5FA8A0;
+    --rule: rgba(243,239,228,0.12);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    padding:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+  }
+
+  body{
+    background-image:
+      radial-gradient(circle at 6% 96%, rgba(243,239,228,0.09), transparent 38%),
+      radial-gradient(circle at 95% 4%, rgba(243,239,228,0.09), transparent 38%);
+  }
+
+  .wrap{
+    max-width: 2060px;
+    margin: 0 auto;
+    padding: 7vh 1.5rem 4vh;
+  }
+
+  /* --- masthead --- */
+  header{
+    margin-bottom: 1.70vh;
+  }
+  header::after{
+    content: '';
+    display: block;
+    width: 22.3rem;
+    max-width: 100%;
+    height: 1px;
+    background: var(--rule);
+    margin: 1.70vh auto 0;
+  }
+
+  .mark{
+    font-family:'Kalam', cursive;
+    font-weight:700;
+    font-size: clamp(3.2rem, 6.4vw, 5rem);
+    display:block;
+    max-width: 100%;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .subtitle{
+    font-family:'Work Sans', sans-serif;
+    font-size: 1.25rem;
+    color: var(--ink-dim);
+    margin: 1vh auto 0;
+    max-width: 1100px;
+    text-align: center;
+  }
+
+  /* --- games grid --- */
+  .games{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.1rem;
+  }
+
+  .game-slot{
+    display:flex;
+    flex-direction:column;
+  }
+
+  .game-card{
+    background: var(--bg-panel);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 0.855rem;
+    text-decoration:none;
+    color: var(--ink);
+    display:flex;
+    flex-direction:column;
+    gap: 0.475rem;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+
+  .cta-inline:focus-visible{ outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .card-top-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 1rem;
+  }
+
+  .play-preview-block{
+    display:flex;
+    flex-direction:column;
+    gap: 0.475rem;
+  }
+  .game-title-centered{
+    font-family:'Kalam', cursive;
+    font-size: 3.192rem;
+    text-align: center;
+    margin: 0;
+  }
+  .cta-inline.cta-full-width{
+    display:block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .game-card h2{
+    font-family:'Kalam', cursive;
+    font-size: 3.192rem;
+    margin: 0;
+  }
+
+  .game-card.locked h2{ color: var(--ink-faint); font-size: 3.06rem; }
+
+  .game-card p.desc{
+    font-family:'Work Sans', sans-serif;
+    color: var(--ink-dim);
+    font-size: 1.097rem;
+    line-height:1.55;
+    margin:0;
+    flex-grow:1;
+  }
+  .desc-title{
+    font-family:'Work Sans', sans-serif;
+    font-weight:700;
+    color: var(--ink);
+    font-size: 1.265rem;
+    margin: 0 0 0.5rem;
+    display:block;
+  }
+
+  .game-card.locked{
+    background: var(--bg-panel-locked);
+    border-style: dashed;
+    pointer-events: none;
+    align-items: center;
+    text-align: center;
+    justify-content: center;
+  }
+  .game-card.locked p.desc{ color: var(--ink-faint); }
+
+  .unlock-date{
+    font-family:'Space Mono', monospace;
+    font-size: 1.5rem;
+    color: var(--ink-faint);
+    margin-top: 0.4rem;
+  }
+
+  /* --- leaderboard vera: podio + record personali, due blocchi esattamente uguali --- */
+  .leaderboard-card{
+    display:flex;
+    flex-direction:column;
+    text-align: left;
+  }
+  .lb-half{
+    flex: 1 1 0;
+    display:flex;
+    flex-direction:column;
+    min-height: 0;
+  }
+  .leaderboard-card h2{
+    font-family:'Kalam', cursive;
+    font-size: 1.8rem;
+    color: var(--ink);
+    text-align: center;
+    margin: 0 0 0.6rem;
+    flex-shrink: 0;
+  }
+  .leaderboard-card h3{
+    font-family:'Kalam', cursive;
+    font-size: 1.8rem;
+    color: var(--ink);
+    text-align: center;
+    margin: 0 0 0.6rem;
+    flex-shrink: 0;
+  }
+  .lb-section{
+    flex: 1 1 0;
+    display:flex;
+    flex-direction:column;
+    justify-content: space-evenly;
+    gap: 0.5rem;
+    min-height: 0;
+  }
+  .race-end-inline{
+    text-align: center;
+    font-family:'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(243,239,228,0.5);
+    margin: 0 0 0.6rem;
+  }
+  .lb-row{
+    flex: 1 1 0;
+    min-height: 0;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-family:'Space Mono', monospace;
+    background: var(--bg-panel-locked);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 0 1rem;
+  }
+  .lb-medal{ font-size: 1.32rem; line-height:1; }
+  .lb-label{ color: var(--ink-dim); font-size: 1rem; }
+  .lb-value{ color: var(--yellow); font-weight:700; font-size: 1rem; }
+  .lb-divider{
+    flex-shrink: 0;
+    height: 1px;
+    background: var(--rule);
+    margin: 0.8rem 0;
+  }
+
+  .cta-inline{
+    display:inline-block;
+    font-family:'Work Sans', sans-serif;
+    font-size:1.777rem;
+    font-weight:700;
+    color: var(--bg);
+    background: var(--yellow);
+    padding: 0.332rem 2.565rem;
+    border-radius: 6px;
+    text-align:center;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+  }
+
+  .device-note{
+    font-family:'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-dim);
+    margin: 0;
+  }
+
+  .device-note-old{
+    font-family:'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(243,239,228,0.5);
+    margin: 0;
+  }
+  .device-note-full{
+    width: 100%;
+    text-align: center;
+    margin-top: -0.275rem;
+    margin-bottom: -0.655rem;
+  }
+
+  /* --- mini crivello 5x5, dentro le card attive --- */
+  .preview-row{
+    display:flex;
+    align-items:stretch;
+    gap: 1rem;
+  }
+
+  .preview-text-col{
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    height: 355px;
+    box-sizing: border-box;
+  }
+
+  .mini-sieve{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.3rem;
+    width: 355px;
+    flex-shrink: 0;
+    padding: 0.4rem;
+    background: var(--bg-panel-locked);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+  }
+
+  .mc{
+    position:relative;
+    aspect-ratio:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Mono', monospace;
+    font-size: 1.65rem;
+  }
+
+  .mc.composite{ color: rgba(243,239,228,0.22); }
+  .mc.prime{ color: var(--ink); font-weight:700; }
+
+  .mc.prime svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .mc.prime circle{
+    fill:none;
+    stroke: var(--yellow);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 132;
+    stroke-dashoffset: 132;
+    animation: draw 0.8s ease forwards;
+    animation-delay: calc(var(--i) * 90ms + 0.3s);
+  }
+
+  @keyframes draw{ to{ stroke-dashoffset: 0; } }
+
+  @media (min-width: 901px){
+    .lb-row{ background: var(--bg-table-desktop); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .mc.prime circle{ animation:none; stroke-dashoffset:0; }
+  }
+
+  /* --- carosello: contatore sopra, freccette ai lati dei giochi --- */
+  .game-number{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height: 2rem;
+    font-family:'Space Mono', monospace;
+    font-size: 1.3rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim);
+    margin-bottom: 0.938rem;
+  }
+  .games-column{
+    display:flex;
+    flex-direction:column;
+    flex: 1;
+    min-width: 0;
+  }
+  .game-label-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 0.7rem;
+    min-height: 2rem;
+    margin-bottom: 0.938rem;
+  }
+  .game-number-btn{
+    font-family:'Work Sans', sans-serif;
+    font-size: 1.43rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    background: none;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 0.25rem 0.9rem;
+    cursor: pointer;
+  }
+  .game-number-btn:hover{ color: var(--yellow); border-color: var(--yellow); }
+  .tap-hint{
+    font-family:'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: rgba(243,239,228,0.5);
+  }
+  .game-number.race-end-label{
+    font-size: 0.95rem;
+  }
+  .game-number .race-end{
+    font-size: 0.9rem;
+    color: var(--ink-faint);
+  }
+
+  /* --- overlay condiviso da tutti i popup (regole, scelta modalità, ecc.) --- */
+  .modal-overlay{
+    display:none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 1000;
+    align-items:center;
+    justify-content:center;
+  }
+  .modal-overlay.visible{ display:flex; }
+
+  .mode-modal-card{
+    position: relative;
+    background: var(--bg-panel);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    text-align: left;
+  }
+  .mode-modal-card h3{
+    font-family:'Kalam', cursive;
+    font-size: 1.6rem;
+    margin: 0 0 1.3rem;
+    color: var(--ink);
+    text-align: center;
+  }
+  .mode-options{ display:flex; flex-direction:column; gap: 0.9rem; }
+  .mode-option{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 1rem;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-left: 5px solid var(--mode-color, var(--yellow));
+    border-radius: 8px;
+    padding: 1rem 1.3rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .mode-option:hover{ background: var(--bg-panel-locked); border-color: var(--mode-color, var(--yellow)); }
+  .mode-option.mode-option-locked{
+    cursor: default;
+    opacity: 0.55;
+    border-left-color: var(--rule);
+  }
+  .mode-option.mode-option-locked:hover{
+    background: var(--bg);
+    border-color: var(--rule);
+  }
+  .mode-option.mode-option-locked h4{ color: var(--ink-dim); }
+  .mode-option-text h4{
+    font-family:'Kalam', cursive;
+    font-size: 1.25rem;
+    margin: 0 0 0.3rem;
+    color: var(--mode-color, var(--yellow));
+  }
+  .mode-option-text p{
+    font-family:'Work Sans', sans-serif;
+    font-size: 0.92rem;
+    color: var(--ink-dim);
+    margin: 0;
+    line-height: 1.4;
+  }
+  .mode-option-text p.mode-option-details{
+    font-family:'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(243,239,228,0.5);
+    margin-top: 0.35rem;
+    line-height: 1.35;
+  }
+  .mode-modal-footnote{
+    font-family:'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(243,239,228,0.5);
+    text-align: center;
+    margin: 1rem 0 0;
+  }
+
+  /* --- popup del regolamento --- */
+  .rules-modal-card{
+    background: var(--bg-panel);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 2rem;
+    max-width: 780px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    text-align: left;
+    position: relative;
+    box-sizing: border-box;
+  }
+  .rules-close-btn{
+    position: absolute;
+    top: 1rem; right: 1rem;
+    width: 36px; height: 36px;
+    display:flex; align-items:center; justify-content:center;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    color: var(--ink-dim);
+    font-family:'Work Sans', sans-serif;
+    font-size: 1.21rem;
+    cursor: pointer;
+  }
+  .rules-close-btn:hover{ color: var(--yellow); border-color: var(--yellow); }
+  .rules-modal-card h3{
+    font-family:'Kalam', cursive;
+    font-size: 1.8rem;
+    margin: 0 1.5rem 1.2rem 0;
+    color: var(--ink);
+  }
+  .rules-modal-card p{
+    font-family:'Work Sans', sans-serif;
+    font-size: 0.99rem;
+    color: var(--ink-dim);
+    line-height: 1.6;
+    margin: 0 0 1rem;
+  }
+  .rules-modal-card p strong{ color: var(--ink); }
+
+  .carousel-row{
+    display:flex;
+    align-items:center;
+    gap: 1rem;
+  }
+
+  .carousel-row .games{ flex: 1; min-width: 0; }
+
+  .nav-column{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 1.1rem;
+  }
+  .nav-dots{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    gap: 0.9rem;
+  }
+  .nav-dot{
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--rule);
+    flex-shrink:0;
+  }
+  .nav-dot.active{ background: var(--yellow); }
+
+  .nav-arrow{
+    flex: 0 0 auto;
+    min-width: 60px;
+    min-height: 60px;
+    width: 88px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 0.35rem;
+    padding: 0 0.9rem;
+    background: var(--bg-panel);
+    border: 1px solid var(--rule);
+    border-radius: 30px;
+    cursor: pointer;
+    color: var(--ink-dim);
+    transition: box-shadow 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  #prevBtn{ flex-direction: row-reverse; }
+  .nav-number{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size: 1.05rem;
+  }
+  .nav-arrow:hover{
+    color: var(--yellow);
+    border-color: var(--yellow);
+    box-shadow: 0 0 12px rgba(232,196,104,0.35);
+  }
+  .nav-arrow.disabled{
+    opacity: 0.3;
+    pointer-events: none;
+  }
+  .nav-arrow svg{ width: 27px; height: 27px; }
+
+  @media (max-width: 900px){
+    .games{ grid-template-columns: 1fr; }
+    .carousel-row{ flex-direction: column; }
+    .nav-arrow.rotate{ transform: rotate(90deg); }
+    .index-sound-btn{ display: none; }
+    .mobile-index-sound-btn{
+      display: flex;
+      position: absolute;
+      top: 75%;
+      left: 50%;
+      transform: translateX(-50%);
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--rule);
+      border-radius: 50%;
+      background: var(--bg-panel);
+      color: var(--ink-dim);
+      font-family:'Space Mono', monospace;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+  }
+
+  /* --- fascia intermedia (finestra desktop stretta, non mobile): 1 sola card, contenuto essenziale --- */
+  @media (min-width: 901px) and (max-width: 1400px){
+    .games{ grid-template-columns: 1fr; }
+    .desc,
+    .device-note-old,
+    .preview-text-col{
+      display: none;
+    }
+  }
+
+  /* --- stessa modalità compatta, ma quando è l'altezza a essere troppo poca --- */
+  @media (max-height: 800px){
+    .desc,
+    .device-note-old,
+    .preview-text-col{
+      display: none;
+    }
+  }
+
+  /* --- spazio banner --- */
+  .page-shell{
+    min-height: 100vh;
+    display:grid;
+    grid-template-columns: 160px minmax(0,1fr) 160px;
+    grid-template-areas: "adA content adB";
+    gap: 1.2rem;
+    max-width: 2390px;
+    margin: 0 auto;
+    align-items:start;
+    padding: 0 1rem;
+  }
+  .ad-slot{
+    position: sticky;
+    top: calc(50vh - 300px);
+    width: 160px;
+    height: 600px;
+    border: 1px dashed var(--rule);
+    border-radius: 6px;
+    background: var(--bg-panel);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color: var(--ink-faint);
+  }
+  .ad-a{ grid-area: adA; }
+  .ad-b-wrapper{ grid-area: adB; position: relative; align-self: stretch; }
+  .ad-top-rect{
+    position: absolute;
+    top: 3.5vh;
+    right: 0;
+    width: 300px;
+    height: 250px;
+    border: 1px dashed var(--rule);
+    border-radius: 6px;
+    background: var(--bg-panel);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color: var(--ink-faint);
+  }
+  .ad-side-small{
+    position: sticky;
+    top: 50vh;
+    width: 160px;
+    height: 300px;
+  }
+  .content-col{ grid-area: content; min-width:0; max-width: 1600px; margin: 0 auto; width: 100%; }
+  .mobile-snap-wrap{ display: none; }
+
+  @media (max-width: 900px){
+    .page-shell{
+    min-height: 100vh;
+    min-height: 100dvh;
+      grid-template-columns: 1fr;
+      grid-template-areas: "adA" "content" "adB";
+      padding: 0;
+      max-width: 100%;
+    }
+    .ad-slot{
+      position: static;
+      width: 320px;
+      height: 50px;
+      margin: 0 auto;
+    }
+  }
+
+  /* ============================================================
+     SOLO MOBILE: da qui in giù, correzioni isolate,
+     non toccano in alcun modo lo stile desktop sopra.
+     ============================================================ */
+  @media (max-width: 900px){
+    /* i 2 banner (sopra e sotto) restano sempre visibili, fissi, "tagliano" la pagina */
+    .ad-slot{
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      bottom: auto;
+      width: 320px;
+      height: 50px;
+      margin: 0 auto;
+      z-index: 9000;
+    }
+    .ad-b-wrapper{ position: static; }
+    .ad-top-rect{ display: none; }
+    .ad-side-small{
+      position: fixed;
+      top: auto;
+      bottom: 0; left: 0; right: 0;
+      width: 320px;
+      height: 50px;
+      margin: 0 auto;
+      z-index: 9000;
+    }
+    .content-col{
+      padding-top: 50px;
+      padding-bottom: 50px;
+      height: 100vh;
+      height: 100dvh;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .wrap{ max-width: 100%; padding: 0; height: 100%; }
+
+    /* su mobile spariscono header e carosello desktop, arriva la versione a 3 scorrimenti */
+    .wrap > header, .wrap > .carousel-row{ display: none; }
+    .mobile-snap-wrap{ display: block; height: 100%; }
+    .snap-scroll{
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+    .snap-track{
+      height: 300%;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.32s ease;
+    }
+    .snap-section{
+      height: 33.3334%;
+      display: flex;
+      flex-direction: column;
+      justify-content: safe center;
+      overflow-y: auto;
+      padding: 1.5rem;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+    #snapIntro{ position: relative; }
+    #snapIntro .mark{
+      position: absolute;
+      top: 15%;
+      left: 1.5rem;
+      right: 1.5rem;
+      font-size: clamp(2.1rem, 9.625vw, 2.8rem);
+      max-width: 100%;
+    }
+    #snapIntro .subtitle{
+      position: absolute;
+      top: 30%;
+      left: 1.5rem;
+      right: 1.5rem;
+      max-width: 100%;
+      font-size: 0.85rem;
+      margin: 0;
+    }
+    .scroll-hint{
+      position: absolute;
+      top: 90%;
+      left: 1.5rem;
+      right: 1.5rem;
+      font-family:'Space Mono', monospace;
+      font-size: 0.749rem;
+      color: var(--ink-dim);
+    }
+
+    #snapGame, #snapLeaderboard{ align-items: stretch; }
+    #snapGame{ position: relative; }
+    .mobile-shifted-content{ position: absolute; inset: 0; transform: translateY(-10%); }
+
+    .mobile-nav-row{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.7rem;
+      flex-shrink: 0;
+    }
+    #snapGame .mobile-nav-row{
+      position: absolute;
+      top: 90%;
+      left: 1.5rem;
+      right: 1.5rem;
+      margin: 0;
+    }
+    #snapLeaderboard{ position: relative; }
+    #snapLeaderboard .mobile-nav-row{
+      position: absolute;
+      top: 15%;
+      left: 1.5rem;
+      right: 1.5rem;
+      margin: 0;
+    }
+    .mobile-dots-row{ display: none; flex-direction: row; gap: 0.35rem; }
+    .mobile-arrow{ min-width: 34px; min-height: 34px; }
+
+    /* schermata del gioco: Game N a sinistra, il nome del gioco centrato sullo schermo */
+    .mobile-locked-desc{
+      position: absolute;
+      top: 50%;
+      left: 1.5rem;
+      right: 1.5rem;
+      text-align: center;
+      color: var(--ink-faint);
+      font-family:'Work Sans', sans-serif;
+      font-size: 0.85rem;
+    }
+    .mobile-game-header{
+      position: absolute;
+      top: 25%;
+      left: 1.5rem;
+      right: 1.5rem;
+      text-align: center;
+    }
+    .mobile-game-number{
+      display: inline-block;
+      font-family:'Work Sans', sans-serif;
+      font-size: 1.19rem;
+      text-transform: uppercase;
+      color: var(--ink-dim);
+      background: none;
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 0.25rem 0.9rem;
+      cursor: pointer;
+    }
+    .mobile-tap-hint{
+      text-align: center;
+      font-family:'Space Mono', monospace;
+      font-size: 0.749rem;
+      color: rgba(243,239,228,0.5);
+      margin: 0 0 0.7rem;
+    }
+    .mobile-game-header .mobile-tap-hint{ margin: 0.2rem 0 0; }
+    .mobile-game-title{
+      position: absolute;
+      top: 15%;
+      left: 1.5rem;
+      right: 1.5rem;
+      display: block;
+      text-align: center;
+      font-family:'Kalam', cursive;
+      font-size: clamp(2.1rem, 9.625vw, 2.8rem);
+      margin: 0;
+    }
+    .mobile-play-preview-block{
+      position: absolute;
+      top: 39%;
+      left: 1.5rem;
+      right: 1.5rem;
+    }
+    .mobile-play-btn{
+      display: block;
+      width: 100%;
+      text-align:center;
+      box-sizing: border-box;
+      font-family:'Work Sans', sans-serif;
+      font-weight:700;
+      font-size: 0.924rem;
+      color: var(--bg);
+      background: var(--yellow);
+      padding: 0.56rem;
+      border-radius: 6px;
+      text-decoration:none;
+      border: none;
+      margin-bottom: 0.7rem;
+      cursor: pointer;
+    }
+    .mobile-preview-block{
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+    .mobile-preview-block .mini-sieve{ width: auto; max-width: 196px; margin: 0; }
+    /* il cerchio si scala già da solo col viewBox: la proporzione giusta è quella originale (r=21) */
+    .mobile-preview-block .mc{ font-size: 0.91rem; }
+    .mobile-device-note-full{
+      width: 100%;
+      text-align: center;
+      font-family:'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: rgba(243,239,228,0.5);
+      margin: 0.6rem 0 0;
+    }
+    .mobile-desc-block{ flex: 1 1 0; margin-top: 0; min-width: 0; }
+    .mobile-desc-block .desc-title{
+      font-size: 0.85rem;
+      margin-bottom: 0.3rem;
+    }
+    .mobile-desc{
+      font-family:'Work Sans', sans-serif;
+      color: var(--ink-dim);
+      font-size: 0.85rem;
+      line-height:1.5;
+      margin: 0;
+    }
+
+    /* schermata della leaderboard: stesso schema, ordine invertito, niente riquadro */
+    .mobile-lb-block{
+      position: absolute;
+      top: 25%;
+      left: 1.5rem;
+      right: 1.5rem;
+    }
+    .mobile-records-block{
+      position: absolute;
+      top: 68%;
+      left: 1.5rem;
+      right: 1.5rem;
+    }
+    .mobile-lb-divider{
+      position: absolute;
+      top: 65%;
+      left: 1.5rem;
+      right: 1.5rem;
+      border-top: 1px solid var(--rule);
+      margin: 0;
+    }
+    .mobile-lb-block h2{
+      font-family:'Kalam', cursive;
+      font-size: clamp(2.1rem, 9.625vw, 2.8rem);
+      text-align:center;
+      margin: 0 0 0.42rem;
+    }
+    .mobile-records-block h3{
+      font-family:'Kalam', cursive;
+      font-size: clamp(2.1rem, 9.625vw, 2.8rem);
+      text-align:center;
+      color: var(--ink);
+      margin: 0 0 0.42rem;
+    }
+    .mobile-lb-block .lb-row, .mobile-records-block .lb-row{
+      height: auto;
+      min-height: 1.68rem;
+      padding: 0.35rem 0.49rem;
+    }
+    .mobile-lb-block .lb-medal, .mobile-records-block .lb-medal{
+      font-size: 0.77rem;
+    }
+
+    /* --- popup regolamento su mobile: finestra fissa tra 15% e 85% dello schermo, scorrevole --- */
+    #rulesModal{ align-items: stretch; justify-content: stretch; }
+    #rulesModal .rules-modal-card{
+      position: fixed;
+      top: 15%;
+      bottom: 15%;
+      left: 1rem;
+      right: 1rem;
+      max-width: none;
+      width: auto;
+      max-height: none;
+      margin: 0;
+    }
+    #rulesModal .rules-modal-card h3{ font-size: 1.53rem; }
+
+    #modeModal{ align-items: stretch; justify-content: stretch; }
+    #modeModal .mode-modal-card{
+      position: fixed;
+      top: 15%;
+      bottom: 15%;
+      left: 1rem;
+      right: 1rem;
+      max-width: none;
+      width: auto;
+      margin: 0;
+      padding: 1.17rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+    #modeModal .mode-modal-card h3{ font-size: 1.125rem; margin: 0 0 0.81rem; }
+    #modeModal .mode-options{ gap: 0.54rem; }
+    #modeModal .mode-option{ padding: 0.63rem 0.81rem; gap: 0.54rem; }
+    #modeModal .mode-option-text h4{ font-size: 0.918rem; margin: 0 0 0.135rem; }
+    #modeModal .mode-option-text p{ font-size: 0.675rem; line-height: 1.25; }
+    #modeModal .mode-option-text p.mode-option-details{
+      font-family:'Space Mono', monospace;
+      font-size: 0.585rem;
+      color: rgba(243,239,228,0.5);
+      line-height: 1.25;
+    }
+    #modeModal .mode-modal-footnote{ font-size: 0.585rem; margin-top: 0.63rem; }
+  }
+
+  /* --- blocco orizzontale: nasconde tutto e mostra un avviso finché il telefono non torna verticale --- */
+  @media (min-width: 901px){
+    .title-row{
+      position: relative;
+      display: table;
+      margin: 0 auto;
+    }
+    .index-sound-btn{
+      position: absolute;
+      top: 50%;
+      right: calc(100% + 126px);
+      transform: translateY(-50%);
+      flex-shrink: 0;
+      width: 84px;
+      height: 84px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--rule);
+      border-radius: 50%;
+      background: var(--bg-panel);
+      color: var(--ink-dim);
+      font-family:'Space Mono', monospace;
+      font-size: 2.24rem;
+      cursor: pointer;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+    .mobile-index-sound-btn{ display: none; }
+  }
+
+  .audio-slider-row{
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  .audio-slider-row label{
+    font-family:'Work Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink-dim);
+    min-width: 5.5rem;
+  }
+  .audio-slider-row input[type="range"]{
+    flex: 1;
+    accent-color: var(--yellow);
+  }
+  .audio-slider-row span{
+    font-family:'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink);
+    min-width: 2.8rem;
+    text-align: right;
+  }
+  .audio-toggle-btn{ cursor: pointer; }
+
+  .rotate-lock-overlay{ display: none; }
+  @media (orientation: landscape) and (max-width: 900px), (orientation: landscape) and (max-height: 500px){
+    .rotate-lock-overlay{
+      display: flex;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--bg);
+      color: var(--ink);
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      font-family:'Space Mono', monospace;
+      font-size: 1rem;
+    }
+    .page-shell{ display: none; }
+  }
+</style>
+</head>
+<body>
+
+<audio id="bgMusic" src="eratostene_index.mp3" loop preload="none"></audio>
+
+<div class="rotate-lock-overlay">Please rotate your device back to portrait to continue.</div>
+
+<div class="page-shell">
+  <div class="ad-slot ad-a" aria-hidden="true">Ad space</div>
+
+  <div class="content-col">
+  <div class="wrap">
+  <header>
+    <div class="title-row">
+      <button type="button" class="index-sound-btn audio-toggle-btn" aria-label="Sound">🔊</button>
+      <span class="mark">Mathemory</span>
+    </div>
+    <p class="subtitle">A collection of math games, unlocking one after another over time.<br>Each one runs its own ~12-day race with a leaderboard ranked by fastest completion time.<br>Your progress is saved automatically, so you can always pick up right where you left off.</p>
+  </header>
+
+  <div class="carousel-row">
+    <div class="nav-column">
+      <div class="nav-dots" id="prevDotsTop"></div>
+      <div class="nav-arrow" id="prevBtn" aria-label="Previous games">
+        <span class="nav-number" id="prevNumber"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div class="nav-dots" id="prevDotsBottom"></div>
+    </div>
+
+    <div class="games-column">
+      <div class="game-label-row" id="gameLabelRow"></div>
+      <div class="games" id="gamesGrid"></div>
+    </div>
+
+    <div class="nav-column">
+      <div class="nav-dots" id="nextDotsTop"></div>
+      <div class="nav-arrow" id="nextBtn" aria-label="Next games">
+        <span class="nav-number" id="nextNumber"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="nav-dots" id="nextDotsBottom"></div>
+    </div>
+  </div>
+
+  <div class="mobile-snap-wrap" id="mobileSnapWrap">
+    <div class="snap-scroll" id="snapScroll">
+      <div class="snap-track" id="snapTrack">
+        <section class="snap-section" id="snapIntro">
+          <div class="mobile-shifted-content">
+            <span class="mark">Mathemory</span>
+            <p class="subtitle">A collection of math games, unlocking one after another over time.<br><br>Each one runs its own ~12-day race with a leaderboard ranked by fastest completion time.<br><br>Your progress is saved automatically, so you can always pick up right where you left off.</p>
+            <button type="button" class="mobile-index-sound-btn audio-toggle-btn" aria-label="Sound">🔊</button>
+            <p class="scroll-hint">↓ Scroll down to explore the games and the rest of the site. ↓</p>
+          </div>
+        </section>
+
+        <section class="snap-section" id="snapGame"></section>
+
+        <section class="snap-section" id="snapLeaderboard"></section>
+      </div>
+    </div>
+  </div>
+
+  </div>
+  </div>
+
+  <div class="ad-b-wrapper">
+    <div class="ad-top-rect" aria-hidden="true">Ad 300×250</div>
+    <div class="ad-slot ad-side-small" aria-hidden="true">Ad 320×50</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modeModal">
+  <div class="mode-modal-card">
+    <button type="button" class="rules-close-btn" id="modeCloseBtn" aria-label="Close">✕</button>
+    <h3>Choose your mode</h3>
+    <div class="mode-options" id="modeOptions"></div>
+    <p class="mode-modal-footnote">Exit via 🏠 Home, not by closing the page abruptly.</p>
+  </div>
+</div>
+
+<div class="modal-overlay" id="rulesModal">
+  <div class="rules-modal-card">
+    <button type="button" class="rules-close-btn" id="rulesCloseBtn" aria-label="Close">✕</button>
+    <h3>Rules — Eratostene</h3>
+    <p><strong>How to play:</strong> find the 5 hidden primes in the 5×5 grid, add up their values, enter the total. Correct answer = next level.</p>
+    <p><strong>Modes:</strong> each mode has its own rules on time limits and leaderboards — check them when choosing your mode.</p>
+    <p><strong>Fair play:</strong> out of respect for all participants, please don't cheat.</p>
+    <p><em>Happy prime hunting.</em></p>
+  </div>
+</div>
+
+<script>
+  // --- griglia decorativa 5x5, max 5 primi cerchiati ---
+  function buildMiniSieve(){
+    const values =    [9, 7, 22, 34, 13,
+                       15, 18, 29, 6, 21,
+                       19, 24, 8, 41, 27,
+                       10, 33, 4, 12, 38,
+                       26, 44, 20, 16, 25];
+    const primeIdx = [1, 7, 10, 13, 4];
+    let html = '';
+    values.forEach((v, i) => {
+      const isPrime = primeIdx.includes(i);
+      if (isPrime){
+        html += `<div class="mc prime" style="--i:${i}">${v}<svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20"/></svg></div>`;
+      } else {
+        html += `<div class="mc composite">${v}</div>`;
+      }
+    });
+    return `<div class="mini-sieve">${html}</div>`;
+  }
+
+  // --- le 11 date di sblocco per i "coming soon" ---
+  const comingSoonDates = [
+    '2026-08-01T00:00:00+02:00',
+    '2026-08-13T00:00:00+02:00',
+    '2026-08-25T00:00:00+02:00',
+    '2026-09-06T00:00:00+02:00',
+    '2026-09-18T00:00:00+02:00',
+    '2026-09-30T00:00:00+02:00',
+    '2026-10-12T00:00:00+02:00',
+    '2026-10-24T00:00:00+02:00',
+    '2026-11-05T00:00:00+01:00',
+    '2026-11-17T00:00:00+01:00',
+    '2026-11-29T00:00:00+01:00',
+  ];
+
+  // --- progressi salvati per dispositivo ---
+  function resumeHref(key, baseUrl){
+    const last = localStorage.getItem(key) || '1';
+    return `${baseUrl}?n=${last}`;
+  }
+
+  // --- una sola card attiva: Eratostene ---
+  const games = [
+    {
+      title: 'Eratostene',
+      descTitle: 'Prime Numbers Game',
+      desc: 'Find the primes hidden in the grid and add them up. Simple rules, a growing memory challenge as the numbers climb higher and higher. Every level tests how many you can still remember.',
+      mobileDesc: 'Find the primes hidden in the grid and add them up. Every level tests how many you can still remember.',
+      hrefKey: 'erato_basic_last', hrefBase: 'eratostene_thesieve.html',
+      preview: buildMiniSieve(),
+      modes: [
+        { name: 'The Sieve', desc: 'The full 200-level race, at your own pace, ranked on the main leaderboard.', details: '~12-day race · podium once per device · anti-cheat active.', file: 'eratostene_thesieve.html', hrefKey: 'erato_basic_last', accent: 'yellow' },
+        { name: 'Prime Rush', desc: 'The same 200 levels, a different combination, no unlocks holding you back.', details: 'Free leaderboard, no time limit · re-enter every run. Unlocks after finishing The Sieve.', file: 'eratostene_primerush.html', hrefKey: 'erato_primerush_last', accent: 'red', requiresSieveFinish: true },
+        { name: 'Infinite Primes', desc: 'Endless levels, no leaderboard, just you and the numbers.', details: 'No leaderboard · no timer · progress saved. Unlocks after finishing The Sieve.', file: 'eratostene_infiniteprimes.html', hrefKey: 'erato_infinite_last', accent: 'teal' },
+      ]
+    },
+  ];
+
+  // date di fine gara per tutti e 12 i giochi (già formattate, stesso fuso Europa/Roma usato ovunque)
+  const raceEndLabels = [
+    'July 31, 2026, 23:59 (UTC+02:00)',
+    'August 12, 2026, 23:59 (UTC+02:00)',
+    'August 24, 2026, 23:59 (UTC+02:00)',
+    'September 5, 2026, 23:59 (UTC+02:00)',
+    'September 17, 2026, 23:59 (UTC+02:00)',
+    'September 29, 2026, 23:59 (UTC+02:00)',
+    'October 11, 2026, 23:59 (UTC+02:00)',
+    'October 23, 2026, 23:59 (UTC+02:00)',
+    'November 4, 2026, 23:59 (UTC+01:00)',
+    'November 16, 2026, 23:59 (UTC+01:00)',
+    'November 28, 2026, 23:59 (UTC+01:00)',
+    'December 10, 2026, 23:59 (UTC+01:00)',
+  ];
+  games[0].raceEnd = raceEndLabels[0];
+
+  // etichette già formattate (evita differenze di fuso tra il dispositivo dell'utente e il fuso di riferimento)
+  const unlockLabels = [
+    'August 1 - 00:00 (UTC+02:00)',
+    'August 13 - 00:00 (UTC+02:00)',
+    'August 25 - 00:00 (UTC+02:00)',
+    'September 6 - 00:00 (UTC+02:00)',
+    'September 18 - 00:00 (UTC+02:00)',
+    'September 30 - 00:00 (UTC+02:00)',
+    'October 12 - 00:00 (UTC+02:00)',
+    'October 24 - 00:00 (UTC+02:00)',
+    'November 5 - 00:00 (UTC+01:00)',
+    'November 17 - 00:00 (UTC+01:00)',
+    'November 29 - 00:00 (UTC+01:00)',
+  ];
+
+  comingSoonDates.forEach((d, i) => {
+    games.push({ title: '???', desc: null, start: new Date(d), unlockLabel: unlockLabels[i], raceEnd: raceEndLabels[i+1] });
+  });
+
+  function gameState(g){
+    if (!g.start) return 'open'; // Eratostene: sempre aperto, nessun gating
+    return 'upcoming';
+  }
+
+  // --- suono tap.mp3: generico, riusato su tutti i pulsanti della pagina ---
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const soundBuffers = {};
+  function loadSound(name, url){
+    fetch(url)
+      .then(res => res.arrayBuffer())
+      .then(data => audioCtx.decodeAudioData(data))
+      .then(buffer => { soundBuffers[name] = buffer; })
+      .catch(() => {}); // se il file manca o non si carica, il sito funziona comunque senza audio
+  }
+  loadSound('tap', 'tap.mp3');
+  function playSound(name){
+    const buffer = soundBuffers[name];
+    if (!buffer) return;
+    if (window.MathemoryAudio && window.MathemoryAudio.isMuted()) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = window.MathemoryAudio ? window.MathemoryAudio.getSfxVolume() : 1;
+    source.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    source.start(0);
+  }
+
+  let currentIndex = 0;
+  const maxIndex = games.length - 1;
+  // per ora si può navigare solo fino a Game 2: niente promesse sugli altri 10 finché non vediamo come va
+  const NAV_LIMIT_INDEX = 1;
+
+  let cachedEratoHeight = null;
+
+  // --- podio globale: letto dal Cloudflare Worker, null finché non arriva la prima risposta ---
+  let cachedPodium = null;
+  let cachedPrimeRushPodium = null;
+  const LEADERBOARD_API = 'https://eratostene.sl-eternal-lux.workers.dev';
+
+  function fetchLeaderboard(){
+    fetch(`${LEADERBOARD_API}/leaderboard`)
+      .then(r => r.json())
+      .then(data => {
+        cachedPodium = data.podium || [];
+        render();
+      })
+      .catch(() => {
+        // se il Worker non risponde, restano i trattini: nessun errore mostrato all'utente
+      });
+  }
+
+  function fetchPrimeRushLeaderboard(){
+    fetch(`${LEADERBOARD_API}/leaderboard-primerush`)
+      .then(r => r.json())
+      .then(data => {
+        cachedPrimeRushPodium = data.podium || [];
+        render();
+      })
+      .catch(() => {
+        // se il Worker non risponde, restano i trattini: nessun errore mostrato all'utente
+      });
+  }
+
+  function podiumRowsHtml(podium){
+    const medals = ['🥇', '🥈', '🥉'];
+    let html = '';
+    for (let i = 0; i < 3; i++){
+      const entry = podium && podium[i];
+      const label = entry ? `${entry.nickname} — ${entry.time}s` : '—';
+      html += `<div class="lb-row"><span class="lb-medal">${medals[i]}</span><span class="lb-value">${label}</span></div>`;
+    }
+    return html;
+  }
+
+  function gameCardHtml(g, number){
+    const state = gameState(g);
+    if (state === 'open'){
+      const href = resumeHref(g.hrefKey, g.hrefBase);
+      return `
+        <div class="game-slot">
+          <div class="game-card">
+            <h2 class="game-title-centered">${g.title}</h2>
+            <div class="play-preview-block">
+              <button type="button" class="cta-inline cta-full-width" onclick="openModeModal(0)">Play now</button>
+              <div class="preview-row">
+                ${g.preview || ''}
+                <div class="preview-text-col">
+                  <p class="desc"><span class="desc-title">${g.descTitle}</span>${g.desc}</p>
+                </div>
+              </div>
+              <p class="device-note-old device-note-full">Progress is saved per device — switching devices restarts from level 1.</p>
+            </div>
+          </div>
+        </div>`;
+    } else {
+      const heightStyle = cachedEratoHeight ? `style="height:${cachedEratoHeight}px"` : '';
+      return `
+        <div class="game-slot">
+          <div class="game-card locked" ${heightStyle}>
+            <h2>COMING SOON</h2>
+            <p class="unlock-date">${g.unlockLabel}</p>
+          </div>
+        </div>`;
+    }
+  }
+
+  function leaderboardCardHtml(g){
+    const state = gameState(g);
+    const heightStyle = cachedEratoHeight ? `style="height:${cachedEratoHeight}px"` : '';
+
+    if (state === 'open'){
+      return `
+        <div class="game-slot">
+          <div class="game-card leaderboard-card" ${heightStyle}>
+            <div class="lb-half">
+              <h2>The Sieve</h2>
+              <p class="race-end-inline">The race ends on ${g.raceEnd}</p>
+              <div class="lb-section">
+                ${podiumRowsHtml(cachedPodium)}
+              </div>
+            </div>
+            <div class="lb-divider"></div>
+            <div class="lb-half">
+              <h3>Prime Rush</h3>
+              <div class="lb-section">
+                ${podiumRowsHtml(cachedPrimeRushPodium)}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    return `
+      <div class="game-slot">
+        <div class="game-card locked" ${heightStyle}>
+          <h2>LEADERBOARD</h2>
+          <p class="race-end-inline">The race ends on ${g.raceEnd}</p>
+          <p class="unlock-date">Unlocks with the game.</p>
+        </div>
+      </div>`;
+  }
+
+  function mobileNavRowHtml(){
+    let dots = '';
+    for (let i = 1; i <= 12; i++){
+      dots += `<div class="nav-dot${i === currentIndex + 1 ? ' active' : ''}"></div>`;
+    }
+    return `
+      <div class="mobile-nav-row">
+        <div class="nav-arrow mobile-arrow mobile-prev${currentIndex === 0 ? ' disabled' : ''}" aria-label="Previous games">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <div class="mobile-dots-row">${dots}</div>
+        <div class="nav-arrow mobile-arrow mobile-next${currentIndex === NAV_LIMIT_INDEX ? ' disabled' : ''}" aria-label="Next games">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>`;
+  }
+
+  function mobileGameSectionHtml(g, number){
+    const state = gameState(g);
+    if (state !== 'open'){
+      return `
+        <div class="mobile-shifted-content">
+          <h2 class="mobile-game-title">COMING SOON</h2>
+          <div class="mobile-game-header">
+            <button type="button" class="mobile-game-number" onclick="openRulesModal()">Game ${number}</button>
+            <p class="mobile-tap-hint">Tap Game ${number} to read the rules.</p>
+          </div>
+          <p class="mobile-locked-desc">${g.unlockLabel}</p>
+          ${mobileNavRowHtml()}
+        </div>`;
+    }
+    const href = resumeHref(g.hrefKey, g.hrefBase);
+    return `
+      <div class="mobile-shifted-content">
+        <h2 class="mobile-game-title">${g.title}</h2>
+        <div class="mobile-game-header">
+          <button type="button" class="mobile-game-number" onclick="openRulesModal()">Game ${number}</button>
+          <p class="mobile-tap-hint">Tap Game ${number} to read the rules.</p>
+        </div>
+        <div class="mobile-play-preview-block">
+          <button type="button" class="mobile-play-btn" onclick="openModeModal(0)">Play now</button>
+          <div class="mobile-preview-block">
+            ${g.preview || ''}
+            <div class="mobile-desc-block">
+              <span class="desc-title">${g.descTitle}</span>
+              <p class="mobile-desc">${g.mobileDesc || g.desc}</p>
+            </div>
+          </div>
+          <p class="mobile-device-note-full">Progress is saved per device — switching devices restarts from level 1.</p>
+        </div>
+        ${mobileNavRowHtml()}
+      </div>`;
+  }
+
+  function mobileLeaderboardSectionHtml(g){
+    const state = gameState(g);
+    const navAndDivider = mobileNavRowHtml();
+
+    if (state !== 'open'){
+      return `<div class="mobile-shifted-content">${navAndDivider}<p class="mobile-desc" style="position:absolute; top:35%; left:1.5rem; right:1.5rem; text-align:center; color:var(--ink-faint);">Unlocks with the game.</p></div>`;
+    }
+
+    return `
+      <div class="mobile-shifted-content">
+        ${navAndDivider}
+        <div class="mobile-lb-block">
+          <h2>The Sieve</h2>
+          <p class="race-end-inline">The race ends on ${g.raceEnd}</p>
+          <div class="lb-section">
+            ${podiumRowsHtml(cachedPodium)}
+          </div>
+        </div>
+        <div class="mobile-lb-divider"></div>
+        <div class="mobile-records-block">
+          <h3>Prime Rush</h3>
+          <div class="lb-section">
+            ${podiumRowsHtml(cachedPrimeRushPodium)}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function render(){
+    const grid = document.getElementById('gamesGrid');
+    const g = games[currentIndex];
+    const number = currentIndex + 1;
+
+    grid.innerHTML = gameCardHtml(g, number) + leaderboardCardHtml(g);
+
+    // etichetta centrale sopra la riga: Game X cliccabile (porta al regolamento, quando esisterà) + suggerimento
+    document.getElementById('gameLabelRow').innerHTML = `
+      <button type="button" class="game-number-btn" onclick="openRulesModal()">Game ${number}</button>
+      <span class="tap-hint">Tap Game ${number} to read the rules.</span>`;
+
+    // l'altezza di riferimento è sempre quella naturale di Eratostene (il gioco vero), non della leaderboard
+    const cards = grid.querySelectorAll('.game-card');
+    cards.forEach(c => { c.style.height = ''; });
+    const openCard = grid.querySelector('.game-card:not(.locked):not(.leaderboard-card)');
+    if (openCard){
+      cachedEratoHeight = openCard.offsetHeight;
+    }
+    if (cachedEratoHeight){
+      cards.forEach(c => { c.style.height = cachedEratoHeight + 'px'; });
+    }
+
+    document.getElementById('prevBtn').classList.toggle('disabled', currentIndex === 0);
+    document.getElementById('nextBtn').classList.toggle('disabled', currentIndex === NAV_LIMIT_INDEX);
+
+    // numero accanto alla freccia (pagina di destinazione)
+    document.getElementById('prevNumber').textContent = currentIndex > 0 ? String(currentIndex) : '';
+    document.getElementById('nextNumber').textContent = currentIndex < NAV_LIMIT_INDEX ? String(currentIndex + 2) : '';
+
+    // 12 pallini (6 sopra + 6 sotto la freccia), su entrambi i lati, si accende quello della pagina corrente
+    renderDots('prevDotsTop', 'prevDotsBottom');
+    renderDots('nextDotsTop', 'nextDotsBottom');
+
+    // --- versione mobile: stessa card di gioco e leaderboard, dentro le 2 sezioni a scorrimento ---
+    const snapGame = document.getElementById('snapGame');
+    const snapLeaderboard = document.getElementById('snapLeaderboard');
+    if (snapGame && snapLeaderboard){
+      snapGame.innerHTML = mobileGameSectionHtml(g, number);
+      snapLeaderboard.innerHTML = mobileLeaderboardSectionHtml(g);
+
+      document.querySelectorAll('.mobile-prev').forEach(el => el.onclick = () => step(-1));
+      document.querySelectorAll('.mobile-next').forEach(el => el.onclick = () => step(1));
+    }
+  }
+
+  // misura l'altezza vera di Eratostene una volta, fuori schermo, così ogni pagina (anche quelle
+  // con giochi ancora bloccati) parte già con l'altezza corretta, senza dover prima "passarci sopra"
+  function measureEratoHeight(){
+    const realGrid = document.getElementById('gamesGrid');
+    if (!realGrid) return;
+    const probe = document.createElement('div');
+    probe.className = 'games';
+    probe.style.position = 'absolute';
+    probe.style.visibility = 'hidden';
+    probe.style.pointerEvents = 'none';
+    probe.style.left = '-9999px';
+    probe.style.width = realGrid.offsetWidth + 'px';
+    probe.innerHTML = gameCardHtml(games[0], 1) + leaderboardCardHtml(games[0]);
+    document.body.appendChild(probe);
+    const card = probe.querySelector('.game-card:not(.locked):not(.leaderboard-card)');
+    if (card) cachedEratoHeight = card.offsetHeight;
+    document.body.removeChild(probe);
+  }
+
+  function renderDots(topId, bottomId){
+    const top = document.getElementById(topId);
+    const bottom = document.getElementById(bottomId);
+    top.innerHTML = '';
+    bottom.innerHTML = '';
+    for (let i = 1; i <= 12; i++){
+      const dot = document.createElement('div');
+      dot.className = 'nav-dot' + (i === currentIndex + 1 ? ' active' : '');
+      if (i <= 6) top.appendChild(dot);
+      else bottom.appendChild(dot);
+    }
+  }
+
+  function step(direction){
+    const next = currentIndex + direction;
+    if (next < 0 || next > NAV_LIMIT_INDEX) return;
+    currentIndex = next;
+    render();
+  }
+
+  // tenere premuto (mouse o dito) continua a scorrere finché non si rilascia
+  function bindHold(el, direction){
+    let holdTimer = null;
+    let repeatTimer = null;
+
+    function start(e){
+      e.preventDefault();
+      playSound('tap');
+      step(direction); // primo passo immediato
+      holdTimer = setTimeout(() => {
+        repeatTimer = setInterval(() => step(direction), 220);
+      }, 400); // piccolo ritardo prima di iniziare la ripetizione continua
+    }
+    function stop(){
+      clearTimeout(holdTimer);
+      clearInterval(repeatTimer);
+    }
+
+    el.addEventListener('mousedown', start);
+    el.addEventListener('mouseup', stop);
+    el.addEventListener('mouseleave', stop);
+    el.addEventListener('touchstart', start, { passive: false });
+    el.addEventListener('touchend', stop);
+    el.addEventListener('touchcancel', stop);
+  }
+
+  bindHold(document.getElementById('prevBtn'), -1);
+  bindHold(document.getElementById('nextBtn'), 1);
+
+  // su mobile le freccette diventano visivamente su/giù (stesso comportamento)
+  function applyMobileRotation(){
+    const isMobile = window.innerWidth <= 900;
+    document.getElementById('prevBtn').classList.toggle('rotate', isMobile);
+    document.getElementById('nextBtn').classList.toggle('rotate', isMobile);
+  }
+  applyMobileRotation();
+  window.addEventListener('resize', () => {
+    applyMobileRotation();
+    measureEratoHeight();
+    render();
+  });
+
+  measureEratoHeight();
+  render();
+  setInterval(render, 30000);
+
+  fetchLeaderboard();
+  fetchPrimeRushLeaderboard();
+  setInterval(fetchLeaderboard, 24 * 60 * 60 * 1000); // refresh una volta al giorno
+  setInterval(fetchPrimeRushLeaderboard, 24 * 60 * 60 * 1000);
+
+  // --- popup del regolamento ---
+  const rulesModal = document.getElementById('rulesModal');
+  function openRulesModal(){ playSound('tap'); rulesModal.classList.add('visible'); }
+  function closeRulesModal(){ playSound('tap'); rulesModal.classList.remove('visible'); }
+  document.getElementById('rulesCloseBtn').addEventListener('click', closeRulesModal);
+  rulesModal.addEventListener('click', (e) => {
+    if (e.target === rulesModal) closeRulesModal();
+  });
+
+  // --- popup di scelta modalità (The Sieve / Prime Rush / Infinite Primes) ---
+  const modeModal = document.getElementById('modeModal');
+  const modeOptionsEl = document.getElementById('modeOptions');
+  function openModeModal(gameIndex){
+    playSound('tap');
+    const g = games[gameIndex];
+    const sieveFinished = localStorage.getItem('erato_basic_finished_once') === 'true';
+    modeOptionsEl.innerHTML = g.modes.map(m => {
+      const isLocked = m.requiresSieveFinish && !sieveFinished;
+      const href = resumeHref(m.hrefKey, m.file);
+
+      if (isLocked){
+        return `
+          <div class="mode-option mode-option-locked" style="--mode-color: var(--${m.accent})">
+            <div class="mode-option-text">
+              <h4>${m.name}</h4>
+              <p>${m.desc}</p>
+              <p class="mode-option-details">🔒 Unlocks after finishing The Sieve.</p>
+            </div>
+          </div>`;
+      }
+
+      return `
+        <a class="mode-option" href="${href}" onclick="playSound('tap')" style="--mode-color: var(--${m.accent})">
+          <div class="mode-option-text">
+            <h4>${m.name}</h4>
+            <p>${m.desc}</p>
+            <p class="mode-option-details">${m.details}</p>
+          </div>
+        </a>`;
+    }).join('');
+    modeModal.classList.add('visible');
+  }
+  function closeModeModal(){ playSound('tap'); modeModal.classList.remove('visible'); }
+  document.getElementById('modeCloseBtn').addEventListener('click', closeModeModal);
+  modeModal.addEventListener('click', (e) => {
+    if (e.target === modeModal) closeModeModal();
+  });
+
+  // i font potrebbero non essere ancora caricati al primo render: quando lo sono davvero, rimisuro
+  if (document.fonts && document.fonts.ready){
+    document.fonts.ready.then(() => {
+      cachedEratoHeight = null;
+      render();
+    });
+  }
+
+  // --- scorrimento mobile a scatti veri: nessun movimento durante il trascinamento, scatta solo a gesto concluso ---
+  let mobileSnapIndex = 0;
+  const snapTrack = document.getElementById('snapTrack');
+  const snapScrollEl = document.getElementById('snapScroll');
+
+  function goToSnap(index){
+    mobileSnapIndex = Math.max(0, Math.min(2, index));
+    if (snapTrack) snapTrack.style.transform = `translateY(-${mobileSnapIndex * (100/3)}%)`;
+  }
+
+  if (snapScrollEl){
+    let touchStartY = null;
+
+    snapScrollEl.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    snapScrollEl.addEventListener('touchmove', (e) => {
+      // blocco lo scroll nativo: nessun movimento visivo finché il gesto non è concluso
+      e.preventDefault();
+    }, { passive: false });
+
+    snapScrollEl.addEventListener('touchend', (e) => {
+      if (touchStartY === null) return;
+      const endY = e.changedTouches[0].clientY;
+      const delta = touchStartY - endY;
+      const threshold = 50; // px minimi di trascinamento per far scattare il cambio pagina
+      if (delta > threshold) goToSnap(mobileSnapIndex + 1);
+      else if (delta < -threshold) goToSnap(mobileSnapIndex - 1);
+      touchStartY = null;
+    });
+  }
+</script>
+
+<script>window.MATHEMORY_FORCE_MUTED_ON_LOAD = true;</script>
+<script src="mathemory-audio.js"></script>
+
+</body>
+</html>

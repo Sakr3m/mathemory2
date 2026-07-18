@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eratostene</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1E2C23;
+    --bg-panel: #2E4636;
+    --ink: #F3EFE4;
+    --ink-dim: #9FB0A2;
+    --yellow: #E8C468;
+    --red: #C1554B;
+    --rule: rgba(243,239,228,0.14);
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+  }
+  body{
+    background-image:
+      radial-gradient(circle at 6% 96%, rgba(243,239,228,0.09), transparent 38%),
+      radial-gradient(circle at 95% 4%, rgba(243,239,228,0.09), transparent 38%);
+  }
+  .wrap{
+    max-width: min(1127px, calc(100% - 170px));
+    margin: 0 auto;
+    padding: 6vh 1.5rem 6vh;
+  }
+  h1{
+    font-family:'Kalam', cursive;
+    font-size: 3.192rem;
+    margin: 0 0 0.6rem;
+  }
+  h1 .accent{ color: var(--yellow); }
+  h1 .max-prime-note{ display: block; font-size: 0.54em; margin-top: 0.15rem; }
+  .rank-callout{ margin: 0 0 0.9rem; display:flex; align-items:baseline; gap: 0.7rem; flex-wrap: nowrap; }
+  .rank-badge{
+    display:inline-block;
+    flex-shrink: 0;
+    font-family:'Space Mono', monospace;
+    font-size: 0.935rem;
+    font-weight:700;
+    color: var(--bg);
+    background: var(--circle-color, var(--yellow));
+    padding: 0.275rem 0.77rem;
+    border-radius: 4px;
+  }
+  .rank-phrase{
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family:'Space Mono', monospace;
+    font-size: 0.935rem;
+    color: var(--ink-dim);
+  }
+  .instructions{
+    color: var(--ink-dim);
+    font-size: 1.14rem;
+    line-height:1.5;
+    margin: 0 0 2rem;
+    white-space: nowrap;
+  }
+
+  .level-layout{
+    display:grid;
+    grid-template-columns: 529px 1fr;
+    gap: 2.3rem;
+    align-items:start;
+  }
+  @media (max-width: 1400px){
+    .level-layout{ grid-template-columns: 1fr; }
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.6325rem;
+  }
+  .cell{
+    position:relative;
+    aspect-ratio:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: var(--bg-panel);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size: 1.265rem;
+    color: var(--ink);
+    cursor:pointer;
+    user-select:none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s ease;
+  }
+  .cell:hover{ background: #2A3D31; }
+  .cell.selected{ color: var(--circle-color, var(--yellow)); }
+  .cell svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
+  .cell circle{
+    fill:none;
+    stroke: var(--circle-color, var(--yellow));
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 169.6;
+    stroke-dashoffset: 169.6;
+    transition: stroke-dashoffset 0.35s ease;
+  }
+  .cell.selected circle{ stroke-dashoffset: 0; }
+
+  .side-panel{ display:flex; flex-direction:column; gap: 1.61rem; }
+  .picked-row{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.575rem;
+  }
+  .picked-chip{
+    aspect-ratio: 1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    color: var(--yellow);
+    background: rgba(232,196,104,0.12);
+    border-radius: 6px;
+    font-size: 1.0925rem;
+  }
+  .picked-chip.empty-slot{
+    background: transparent;
+    border: 1px dashed var(--rule);
+    color: transparent;
+  }
+  @media (min-width: 1401px){
+    .side-panel > div:first-child{ margin-bottom: -0.9rem; }
+  }
+
+  .answer-row{ display:flex; flex-direction:column; gap: 0.69rem; }
+  input[type="number"]{
+    background: var(--bg-panel);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    color: var(--ink);
+    font-family:'Space Mono', monospace;
+    font-size: 1.265rem;
+    padding: 0.92rem;
+    width: 100%;
+  }
+  input[type="number"]:focus{ outline: 2px solid var(--yellow); outline-offset: 1px; }
+  button.check{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    background: var(--yellow);
+    color: var(--bg);
+    border:none;
+    border-radius: 6px;
+    padding: 0.92rem 1.61rem;
+    cursor:pointer;
+  }
+  button.check:hover{ background:#f0d488; }
+  button.check:disabled{
+    background: var(--bg-panel);
+    color: var(--ink-dim);
+    cursor: not-allowed;
+    border: 1px solid var(--rule);
+  }
+  button.check.error{
+    background: var(--red);
+    color: var(--ink);
+    cursor: not-allowed;
+  }
+  button.check.error:hover{ background: var(--red); }
+
+  .feedback{ font-family:'Space Mono', monospace; font-size: 0.9rem; min-height: 1.4rem; margin: 0; }
+  .feedback.ok{ color: #9DC48C; }
+  .feedback.bad{ color: var(--red); }
+
+  .next-link{
+    display:inline-block;
+    margin-top: 0.6rem;
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    color: var(--yellow);
+    text-decoration:none;
+  }
+
+  .error-box{
+    background: var(--bg-panel);
+    border: 1px solid var(--red);
+    border-radius: 6px;
+    padding: 1.2rem;
+    color: var(--ink-dim);
+    font-size: 0.9rem;
+    line-height:1.6;
+  }
+  .error-box code{ color: var(--yellow); }
+
+  .title-icon-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 1rem;
+    margin-bottom: 1.4rem;
+  }
+  .title-icon-row h1{ margin: 0; flex: 1; min-width: 0; text-align: center; }
+  .mobile-icon-btn{
+    flex-shrink: 0;
+    width: 84px;
+    height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    background: var(--bg-panel);
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-family:'Space Mono', monospace;
+    font-size: 2.24rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .mobile-icon-btn:hover{ color: var(--yellow); border-color: var(--yellow); }
+
+  /* --- spazio banner --- */
+  .page-shell{
+    min-height: 100vh;
+    display:grid;
+    grid-template-columns: 160px minmax(0,1fr) 160px;
+    grid-template-areas: "adA content adB";
+    gap: 1.2rem;
+    max-width: 1980px;
+    margin: 0 auto;
+    align-items:start;
+    padding: 0 1rem;
+  }
+  .ad-a{ position: sticky; top: calc(50vh - 300px); width: 160px; height: 600px; border: 1px dashed var(--rule); border-radius: 6px; background: var(--bg-panel); display:flex; align-items:center; justify-content:center; font-family:'Space Mono', monospace; font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase; color: var(--ink-dim); grid-area: adA; }
+  .ad-b-wrapper{ grid-area: adB; position: relative; align-self: stretch; }
+  .ad-top-rect{
+    position: absolute;
+    top: 3.5vh;
+    right: 0;
+    width: 300px;
+    height: 250px;
+    border: 1px dashed var(--rule);
+    border-radius: 6px;
+    background: var(--bg-panel);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color: var(--ink-dim);
+  }
+  .ad-side-small{
+    position: sticky;
+    top: 50vh;
+    width: 160px;
+    height: 300px;
+    border: 1px dashed var(--rule);
+    border-radius: 6px;
+    background: var(--bg-panel);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color: var(--ink-dim);
+  }
+  .content-col{ grid-area: content; min-width:0; }
+
+  @media (max-width: 900px){
+    .page-shell{
+      min-height: 100vh;
+      grid-template-columns: 1fr;
+      grid-template-areas: "content";
+      padding: 0;
+      max-width: 100%;
+    }
+  }
+
+  @media (min-width: 901px) and (max-width: 1400px), (max-height: 800px){
+    .instructions{ display: none; }
+  }
+
+  /* ============================================================
+     SOLO MOBILE: da qui in giù, correzioni isolate,
+     non toccano in alcun modo lo stile desktop sopra.
+     ============================================================ */
+  @media (max-width: 900px){
+    /* i 2 banner (sopra e sotto) restano sempre visibili, fissi, "tagliano" la pagina */
+    .ad-a{
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      bottom: auto;
+      width: 320px;
+      height: 50px;
+      margin: 0 auto;
+      z-index: 9000;
+    }
+    .ad-b-wrapper{ display: contents; }
+    .ad-top-rect{ display: none; }
+    .ad-side-small{
+      position: fixed;
+      top: auto;
+      bottom: 0; left: 0; right: 0;
+      width: 320px;
+      height: 50px;
+      margin: 0 auto;
+      z-index: 9000;
+    }
+    .content-col{
+      padding-top: 50px;
+      padding-bottom: 50px;
+      min-height: 100vh;
+      min-height: 100dvh;
+      box-sizing: border-box;
+    }
+
+    /* il contenitore centrale: larghezza minore del 100%, margini automatici, un solo metodo di centraggio */
+    .wrap{
+      width: 92%;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 2vh 0 3vh;
+      box-sizing: border-box;
+    }
+
+    /* titolo: due righe centrate, pulsanti icona ai lati (dimensioni ridotte per mobile) */
+    .title-icon-row{
+      gap: 0.5rem;
+      margin-bottom: 1.2rem;
+      width: 100%;
+    }
+    .title-icon-row h1{
+      font-size: 0.85rem;
+      text-align: center;
+    }
+    .title-icon-row h1 .max-prime-note{ display: block; font-size: 0.765em; margin-top: 0.15rem; }
+    .mobile-icon-btn{
+      width: 44px;
+      height: 44px;
+      font-size: 1.2rem;
+    }
+    .mobile-icon-btn:active{ background: var(--rule); }
+
+    .instructions{ display: none; } /* niente spazio per il paragrafo lungo qui, il titolo basta */
+    .rank-callout{ flex-wrap: nowrap; width: 100%; min-height: 0.85rem; margin-bottom: 0.59rem; align-items: flex-start; }
+    .rank-badge{ font-size: 0.528rem; padding: 0.18rem 0.54rem; flex-shrink: 0; }
+    .rank-phrase{ font-size: 0.456rem; flex: 1 1 auto; min-width: 0; margin-top: -0.1rem; }
+
+    /* niente più colonne fisse: un blocco solo, la griglia occupa tutta la larghezza del contenitore */
+    .level-layout{
+      display: block;
+      width: 100%;
+    }
+    .grid{
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.4rem;
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    .cell{ font-size: 1rem; }
+
+    .side-panel{
+      display: grid;
+      grid-template-columns: 1fr 3.4rem;
+      grid-template-rows: auto auto auto;
+      column-gap: 0.6rem;
+      row-gap: 0.5rem;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+    .side-panel > div:first-child{ grid-column: 1; grid-row: 2; }
+    .answer-row{ display: contents; }
+    .answer-row input[type="number"]{ grid-column: 1; grid-row: 1; }
+    .answer-row button.check{
+      grid-column: 2;
+      grid-row: 1 / 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.4rem;
+      height: 100%;
+    }
+    .answer-row button.check .check-label{
+      display: block;
+      line-height: 1.15;
+      text-align: center;
+    }
+    .feedback{ grid-column: 1 / 3; grid-row: 3; }
+
+    .picked-row{
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.4rem;
+      min-height: 2.3rem;
+      padding: 0.2rem 0.4rem 0.2rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .picked-chip{
+      font-size: 0.9rem;
+      text-align: center;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+    }
+    .picked-chip.empty-slot{
+      background: transparent;
+      border-style: dashed;
+      color: transparent;
+    }
+    input[type="number"]{ font-size: 1.05rem; padding: 0.5rem 0.7rem; width: 100%; box-sizing: border-box; }
+  }  /* --- blocco orizzontale: nasconde tutto e mostra un avviso finché il telefono non torna verticale --- */
+  .rotate-lock-overlay{ display: none; }
+  @media (orientation: landscape) and (max-width: 900px), (orientation: landscape) and (max-height: 500px){
+    .rotate-lock-overlay{
+      display: flex;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--bg);
+      color: var(--ink);
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      font-family:'Space Mono', monospace;
+      font-size: 1rem;
+    }
+    .page-shell{ display: none; }
+  }
+  /* --- popup di fine gara (Livello 200) --- */
+  .modal-overlay{
+    display:none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 10000;
+    align-items:center;
+    justify-content:center;
+    padding: 1.5rem;
+    box-sizing: border-box;
+  }
+  .modal-overlay.visible{ display:flex; }
+  .modal-card{
+    background: var(--bg-panel);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 2rem;
+    max-width: 480px;
+    width: 100%;
+    text-align:center;
+    box-sizing: border-box;
+  }
+  .modal-card h3{
+    font-family:'Kalam', cursive;
+    font-size: 1.6rem;
+    margin: 0 0 1rem;
+    color: var(--ink);
+  }
+  .modal-card p{
+    font-family:'Space Mono', monospace;
+    font-size: 0.95rem;
+    color: var(--ink-dim);
+    margin: 0 0 1.2rem;
+    line-height: 1.5;
+  }
+  .modal-card input[type="text"]{
+    width: 100%;
+    box-sizing: border-box;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    color: var(--ink);
+    font-family:'Space Mono', monospace;
+    font-size: 1.05rem;
+    padding: 0.7rem;
+    margin-bottom: 1.4rem;
+  }
+  .modal-card input[type="text"]:focus{ outline: 2px solid var(--yellow); outline-offset: 1px; }
+  .modal-buttons{
+    display:flex;
+    justify-content:center;
+    gap: 1rem;
+  }
+  .modal-btn{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    padding: 0.7rem 1.8rem;
+    cursor:pointer;
+  }
+  .modal-btn.yes{ background: var(--yellow); color: var(--bg); }
+  .modal-btn.no{ background: transparent; color: var(--ink-dim); border: 1px solid var(--rule); }
+
+  .audio-slider-row{
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  .audio-slider-row label{
+    font-family:'Work Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink-dim);
+    min-width: 5.5rem;
+  }
+  .audio-slider-row input[type="range"]{
+    flex: 1;
+    accent-color: var(--yellow);
+  }
+  .audio-slider-row span{
+    font-family:'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--ink);
+    min-width: 2.8rem;
+    text-align: right;
+  }
+  .audio-toggle-btn{ cursor: pointer; }
+  .modal-note{
+    font-family:'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    margin-top: 0.8rem;
+  }
+</style>
+</head>
+<body>
+
+<audio id="bgMusic" src="eratostene_thesieve.mp3" loop preload="none"></audio>
+
+<div class="rotate-lock-overlay">Please rotate your device back to portrait to continue.</div>
+
+<div class="modal-overlay" id="finishModal">
+  <div class="modal-card">
+    <h3>🎉 You finished the race!</h3>
+    <p>Your total race time: <strong id="finishTotalTime"></strong></p>
+    <p>Enter a nickname to be remembered for this race. It will be sent for the leaderboard.</p>
+    <input type="text" id="finishNickname" maxlength="24" placeholder="Your nickname">
+    <div class="modal-buttons">
+      <button type="button" class="modal-btn yes" id="finishConfirmBtn">Confirm</button>
+      <button type="button" class="modal-btn no" id="finishSkipBtn">Skip</button>
+    </div>
+    <p class="modal-note" id="finishNote"></p>
+  </div>
+</div>
+
+
+<div class="page-shell">
+  <div class="ad-a" aria-hidden="true">Ad space</div>
+
+  <div class="content-col">
+  <div class="wrap" id="wrap">
+    <div class="title-icon-row">
+      <button type="button" class="mobile-icon-btn audio-toggle-btn" id="mobileSkipBtn" aria-label="Sound">🔊</button>
+      <h1 id="levelTitle"></h1>
+      <a class="mobile-icon-btn" id="homeBtn" href="index.html" aria-label="Home">🏠</a>
+    </div>
+    <p class="instructions">Tap every prime you can find. They'll drop into the box on the side to help you add them up. Then write the total.</p>
+    <div class="rank-callout" id="rankCallout"></div>
+    <div class="level-layout" id="levelLayout">
+      <p style="color:var(--ink-dim); font-family:'Space Mono', monospace; font-size:0.85rem;">Loading level…</p>
+    </div>
+  </div>
+  </div>
+
+  <div class="ad-b-wrapper">
+    <div class="ad-top-rect" aria-hidden="true">Ad 300×250</div>
+    <div class="ad-side-small" aria-hidden="true">Ad 320×50</div>
+  </div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const levelNum = parseInt(params.get('n')) || 1;
+  const STORAGE_KEY = 'erato_basic_last';
+  const TOTAL_TIME_KEY = 'erato_basic_total_race_time';
+  const SESSION_OPEN_KEY = 'erato_basic_session_open';
+  const HEARTBEAT_KEY = 'erato_basic_heartbeat_seconds';
+  const SUSPECT_RESUME_KEY = 'erato_basic_suspect_resume';
+  const PRE_LEAVE_TIME_KEY = 'erato_basic_pre_leave_time';
+  const LEAVE_THRESHOLD_SECONDS = 5;   // se sei rimasto meno di questo prima di uscire (Home o chiusura brusca)...
+  const RESUME_THRESHOLD_SECONDS = 5;  // ...E rientrando risolvi in meno di questo, è sospetto
+  const SUSPECT_PENALTY_START_LEVEL = 75;  // dal Livello 75 in poi la penalità inizia ad applicarsi
+  const SUSPECT_PENALTY_MIN = 150; // penalità al Livello 75: 2 minuti e mezzo
+  const SUSPECT_PENALTY_MAX = 600; // penalità al Livello 200: 10 minuti
+  function suspectPenaltyForLevel(lvl){
+    // scala in modo lineare da 150s (Livello 75) a 600s (Livello 200)
+    const t = Math.min(1, Math.max(0, (lvl - SUSPECT_PENALTY_START_LEVEL) / (200 - SUSPECT_PENALTY_START_LEVEL)));
+    return SUSPECT_PENALTY_MIN + (SUSPECT_PENALTY_MAX - SUSPECT_PENALTY_MIN) * t;
+  }
+
+  // se all'apertura di QUALUNQUE livello troviamo una sessione rimasta "aperta" dalla volta scorsa
+  // (nessuna uscita pulita rilevata: pagina chiusa bruscamente), deposito onestamente l'ultimo tempo
+  // conosciuto (nessuna penalità qui, chiudere per sbaglio/abitudine capita a chiunque), e registro
+  // quanto tempo era passato PRIMA di quella chiusura, per poterlo confrontare al momento del rientro.
+  if (localStorage.getItem(SESSION_OPEN_KEY) === 'true'){
+    const lastHeartbeat = parseFloat(localStorage.getItem(HEARTBEAT_KEY)) || 0;
+    const prevTotal = parseFloat(localStorage.getItem(TOTAL_TIME_KEY)) || 0;
+    localStorage.setItem(TOTAL_TIME_KEY, (prevTotal + lastHeartbeat).toFixed(1));
+    localStorage.setItem(PRE_LEAVE_TIME_KEY, lastHeartbeat.toFixed(1));
+    localStorage.setItem(SUSPECT_RESUME_KEY, 'true');
+  }
+  localStorage.removeItem(SESSION_OPEN_KEY);
+  localStorage.removeItem(HEARTBEAT_KEY);
+  const FINISHED_ONCE_KEY = 'erato_basic_finished_once';
+  const RACE_END_DATE = new Date('2026-07-31T23:59:00+02:00');
+  const wrap = document.getElementById('wrap');
+
+  // --- 3 effetti sonori: cerchio (selezione), giusto, sbagliato ---
+  // i file mp3 devono stare nella stessa cartella/repo di questo file
+  // --- 3 effetti sonori via Web Audio API: latenza minima, decodificati in memoria in anticipo ---
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const soundBuffers = {};
+  function loadSound(name, url){
+    fetch(url)
+      .then(res => res.arrayBuffer())
+      .then(data => audioCtx.decodeAudioData(data))
+      .then(buffer => { soundBuffers[name] = buffer; })
+      .catch(() => {}); // se il file manca o non si carica, il gioco funziona comunque senza audio
+  }
+  loadSound('circle', 'eratostene_circle.mp3');
+  loadSound('right', 'eratostene_right.mp3');
+  loadSound('wrong', 'eratostene_wrong.mp3');
+  loadSound('winner', 'eratostene_winner.mp3');
+  loadSound('badge', 'eratostene_badge.mp3');
+  loadSound('tap', 'tap.mp3'); // suono generico, riusabile per la maggior parte dei pulsanti della pagina
+
+  let currentCircleSource = null;
+  function playSound(name){
+    const buffer = soundBuffers[name];
+    if (!buffer) return; // non ancora decodificato (o file assente): niente audio, nessun errore
+    if (window.MathemoryAudio && window.MathemoryAudio.isMuted()) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    // solo per il cerchio: fermo l'istanza precedente, niente sovrapposizioni da tap veloci
+    if (name === 'circle' && currentCircleSource){
+      try { currentCircleSource.stop(); } catch(e){}
+    }
+
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = window.MathemoryAudio ? window.MathemoryAudio.getSfxVolume() : 1;
+    source.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    source.start(0);
+    if (name === 'circle') currentCircleSource = source;
+  }
+  let levelStartTime = null;
+  let heartbeatInterval = null;
+
+  // deposita nel totale il tempo passato su QUESTO livello quando lo risolvi davvero (Check giusto).
+  // Se il livello era segnato come "uscita sospetta" (Home o chiusura brusca troppo rapide) E anche
+  // il rientro è stato troppo rapido, applica la penalità: entrambe le condizioni devono essere vere.
+  function commitElapsedTime(){
+    const elapsed = (Date.now() - levelStartTime) / 1000;
+    let toAdd = elapsed;
+
+    if (localStorage.getItem(SUSPECT_RESUME_KEY) === 'true'){
+      const preLeaveTime = parseFloat(localStorage.getItem(PRE_LEAVE_TIME_KEY)) || 0;
+      // sotto il Livello 75 anche un genio può risolvere in pochi secondi: il controllo non si applica
+      if (levelNum >= SUSPECT_PENALTY_START_LEVEL && preLeaveTime < LEAVE_THRESHOLD_SECONDS && elapsed < RESUME_THRESHOLD_SECONDS){
+        toAdd += suspectPenaltyForLevel(levelNum);
+      }
+      localStorage.removeItem(SUSPECT_RESUME_KEY);
+      localStorage.removeItem(PRE_LEAVE_TIME_KEY);
+    }
+
+    const prevTotal = parseFloat(localStorage.getItem(TOTAL_TIME_KEY)) || 0;
+    localStorage.setItem(TOTAL_TIME_KEY, (prevTotal + toAdd).toFixed(1));
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    localStorage.removeItem(SESSION_OPEN_KEY);
+    localStorage.removeItem(HEARTBEAT_KEY);
+    return elapsed;
+  }
+
+  // Home: uscita volontaria ma il livello NON è stato risolto. Deposito il tempo, e registro
+  // quanto sei rimasto prima di uscire, per il confronto al momento del rientro.
+  function recordHomeExit(){
+    const elapsed = (Date.now() - levelStartTime) / 1000;
+    const prevTotal = parseFloat(localStorage.getItem(TOTAL_TIME_KEY)) || 0;
+    localStorage.setItem(TOTAL_TIME_KEY, (prevTotal + elapsed).toFixed(1));
+    localStorage.setItem(PRE_LEAVE_TIME_KEY, elapsed.toFixed(1));
+    localStorage.setItem(SUSPECT_RESUME_KEY, 'true');
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    localStorage.removeItem(SESSION_OPEN_KEY);
+    localStorage.removeItem(HEARTBEAT_KEY);
+  }
+
+  // --- titoli di rango, a salire per livello raggiunto ---
+  const RANKS = [
+    { level: 150, title: 'Master of the Sieve', phrase: "You've mastered the sieve itself." },
+    { level: 75,  title: 'Geometer of Primes', phrase: 'Few see the structure beneath the primes as clearly as you.' },
+    { level: 25,  title: 'Pattern Seeker', phrase: 'The patterns are starting to reveal themselves.' },
+    { level: 10,  title: 'Apprentice of Cyrene', phrase: 'A student of Cyrene, taking your first true steps.' },
+  ];
+  function rankForLevel(lvl){
+    return RANKS.find(r => lvl >= r.level) || null;
+  }
+
+  // --- colore dei cerchi/numeri selezionati, a gradini ogni 50 livelli ---
+  function circleColorForLevel(lvl){
+    if (lvl >= 150) return '#C1554B'; // rosso
+    if (lvl >= 100) return '#D9793A'; // arancione scuro
+    if (lvl >= 50)  return '#EFAE68'; // arancione chiaro
+    return '#E8C468'; // giallo base
+  }
+
+  function isPrime(n){
+    if (n < 2) return false;
+    if (n % 2 === 0) return n === 2;
+    for (let i = 3; i*i <= n; i += 2){
+      if (n % i === 0) return false;
+    }
+    return true;
+  }
+
+  function showError(message){
+    document.getElementById('levelLayout').innerHTML = `
+      <h1>Something went wrong</h1>
+      <div class="error-box">${message}</div>
+    `;
+  }
+
+  fetch('eratostene_thesieve.json')
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(sections => {
+      const allLevels = [];
+      sections.forEach(section => {
+        section.livelli.forEach(lv => {
+          allLevels.push({ ...lv, checkpoint: section.checkpoint });
+        });
+      });
+
+      if (levelNum < 1 || levelNum > allLevels.length){
+        showError(`Level ${levelNum} doesn't exist (valid range: 1-${allLevels.length}).`);
+        return;
+      }
+
+      const levelData = allLevels[levelNum - 1];
+      renderLevel(levelData);
+    })
+    .catch(err => {
+      showError(`
+        Could not load <code>eratostene_thesieve.json</code>.<br><br>
+        If you're testing this by double-clicking the file (a <code>file://</code> address), most browsers block this kind of request for security reasons.<br><br>
+        Fix: open a terminal in this folder and run <code>python -m http.server 8000</code>, then visit
+        <code>http://localhost:8000/index.html</code> instead.<br><br>
+        Technical detail: ${err.message}
+      `);
+    });
+
+  function renderLevel(levelData){
+    const grid = levelData.griglia;
+    const checkpoint = levelData.checkpoint;
+    const circleColor = circleColorForLevel(levelNum);
+    const rankInfo = rankForLevel(levelNum);
+    // se il rango di QUESTO livello è diverso da quello del livello precedente, il badge si è appena sbloccato
+    const prevRankInfo = rankForLevel(levelNum - 1);
+    if (rankInfo && (!prevRankInfo || prevRankInfo.title !== rankInfo.title)){
+      playSound('badge');
+    }
+
+    // "Check" impilato lettera per lettera solo su mobile, testo normale su desktop
+    const checkLabelHtml = window.innerWidth <= 900 ? 'C<br>h<br>e<br>c<br>k' : 'Check';
+
+    wrap.style.setProperty('--circle-color', circleColor);
+
+    document.getElementById('levelTitle').innerHTML =
+      `Eratostene <span class="accent">·</span> Level ${levelNum} <span class="accent max-prime-note">(max prime number = ${checkpoint})</span>`;
+
+    document.getElementById('rankCallout').innerHTML = rankInfo
+      ? `<span class="rank-badge">${rankInfo.title}</span><span class="rank-phrase">${rankInfo.phrase}</span>`
+      : '';
+
+    document.getElementById('levelLayout').innerHTML = `
+      <div class="grid" id="gridEl"></div>
+      <div class="side-panel">
+        <div>
+          <div class="picked-row" id="pickedRow"></div>
+        </div>
+        <div class="answer-row">
+          <input type="number" id="answerInput" placeholder="Sum of the primes" inputmode="numeric">
+          <button class="check" id="checkBtn"><span class="check-label">${checkLabelHtml}</span></button>
+        </div>
+        <p class="feedback" id="feedback"></p>
+      </div>
+    `;
+
+    levelStartTime = Date.now();
+
+    // segno la sessione come "aperta" e avvio il battito: se la pagina si chiude bruscamente,
+    // al prossimo caricamento troveremo qui l'ultimo tempo conosciuto invece di perderlo del tutto
+    localStorage.setItem(SESSION_OPEN_KEY, 'true');
+    if (heartbeatInterval) clearInterval(heartbeatInterval);
+    heartbeatInterval = setInterval(() => {
+      const elapsed = (Date.now() - levelStartTime) / 1000;
+      localStorage.setItem(HEARTBEAT_KEY, elapsed.toFixed(1));
+    }, 5000);
+
+    // Home è un'uscita volontaria come un'altra: deposito il tempo prima di lasciare la pagina
+    document.getElementById('homeBtn').addEventListener('click', () => {
+      playSound('tap');
+      recordHomeExit();
+    });
+
+    const gridEl = document.getElementById('gridEl');
+    const pickedRow = document.getElementById('pickedRow');
+    const selected = new Set();
+
+    // il pannello destro si centra sull'altezza della griglia SOLO in modalità a due colonne (desktop).
+    // Su mobile (una colonna sola) non deve imporre nulla: lascio decidere il margine al CSS.
+    const sidePanel = document.querySelector('.side-panel');
+    function alignSidePanel(){
+      if (window.innerWidth <= 1400){
+        sidePanel.style.marginTop = ''; // tolgo l'inline style, non lo forzo a 0
+        return;
+      }
+      // griglia e pannello partono dalla stessa altezza naturale (stessa riga della grid CSS,
+      // align-items:start): basta la differenza di altezza tra i due, senza contare l'offset di pagina.
+      const desiredMarginTop = (gridEl.offsetHeight - sidePanel.offsetHeight) / 2;
+      sidePanel.style.marginTop = Math.max(0, desiredMarginTop) + 'px';
+    }
+    window.addEventListener('resize', alignSidePanel);
+
+    grid.forEach((value, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.index = i;
+      cell.innerHTML = value + '<svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="27"/></svg>';
+      cell.addEventListener('click', () => toggleCell(i));
+      gridEl.appendChild(cell);
+    });
+
+    function toggleCell(i){
+      if (selected.has(i)){
+        selected.delete(i);
+      } else {
+        if (selected.size >= 5) return; // il sesto non è consentito, prima toglierne uno
+        selected.add(i);
+      }
+      checkLocked = false; // qualunque cambio di selezione sblocca il pulsante dall'errore precedente
+      render(); // prima il cerchio appare, SUBITO dopo parte il suono: mai farlo aspettare l'audio
+      if (selected.has(i)) playSound('circle');
+    }
+
+    let checkLocked = false;
+    const checkBtn = document.getElementById('checkBtn');
+
+    function updateCheckButtonState(){
+      checkBtn.classList.toggle('error', checkLocked);
+      checkBtn.disabled = checkLocked || selected.size < 5;
+    }
+
+    function render(){
+      [...gridEl.children].forEach(cell => {
+        const i = Number(cell.dataset.index);
+        cell.classList.toggle('selected', selected.has(i));
+      });
+      pickedRow.innerHTML = '';
+      const sortedSelected = [...selected].sort((a,b)=>a-b);
+
+      // sempre 5 mini riquadri, pieni o vuoti (segnaposto tratteggiato), su qualunque schermo
+      for (let slot = 0; slot < 5; slot++){
+        const chip = document.createElement('span');
+        const hasValue = slot < sortedSelected.length;
+        chip.className = 'picked-chip' + (hasValue ? '' : ' empty-slot');
+        chip.textContent = hasValue ? grid[sortedSelected[slot]] : '·';
+        pickedRow.appendChild(chip);
+      }
+      updateCheckButtonState();
+    }
+    render();
+    window.addEventListener('resize', render);
+
+    // solo ORA il pannello destro ha davvero tutti e 5 i riquadri dentro: l'altezza misurata è quella reale
+    alignSidePanel();
+
+    document.getElementById('checkBtn').addEventListener('click', () => {
+      playSound('tap');
+      const rawAnswer = document.getElementById('answerInput').value;
+      const answerProvided = rawAnswer !== '';
+      const answer = Number(rawAnswer);
+      const correctSum = grid.reduce((sum, v) => isPrime(v) ? sum + v : sum, 0);
+      const chosenAllPrimes = [...selected].every(i => isPrime(grid[i]));
+      const foundAllPrimes = grid.every((v, i) => !isPrime(v) || selected.has(i));
+
+      if (!answerProvided){
+        // la somma manca: errore veloce, ha sempre la precedenza su qualunque errore di selezione
+        triggerFastError();
+        return;
+      }
+
+      if (answer === correctSum && chosenAllPrimes && foundAllPrimes){
+        // deposito il tempo di questo livello (chiude la sessione in modo pulito)
+        const elapsed = commitElapsedTime();
+
+        if (levelNum >= 200){
+          playSound('winner');
+          localStorage.setItem(STORAGE_KEY, '200');
+          const raceEnded = Date.now() > RACE_END_DATE.getTime();
+          const alreadyFinishedOnce = localStorage.getItem(FINISHED_ONCE_KEY) === 'true';
+
+          if (raceEnded || alreadyFinishedOnce){
+            // la gara è finita per davvero, oppure l'occasione è già stata usata: niente popup, dritti in home
+            resetForNewRun();
+            window.location.href = 'index.html';
+            return;
+          } else {
+            // prima volta che si finisce, gara ancora in corso: unica occasione per il nickname
+            localStorage.setItem(FINISHED_ONCE_KEY, 'true');
+            document.getElementById('finishTotalTime').textContent = (localStorage.getItem(TOTAL_TIME_KEY) || '0') + 's';
+            document.getElementById('finishModal').classList.add('visible');
+          }
+        } else {
+          playSound('right');
+          // risposta corretta: si passa subito al livello successivo, senza messaggio intermedio
+          localStorage.setItem(STORAGE_KEY, String(levelNum + 1));
+          window.location.href = `eratostene_thesieve.html?n=${levelNum + 1}`;
+        }
+      } else if (chosenAllPrimes && foundAllPrimes){
+        // selezione giusta, solo la somma è sbagliata: errore veloce
+        triggerFastError();
+      } else {
+        // la selezione stessa è sbagliata: errore duraturo
+        playSound('wrong');
+        checkLocked = true;
+        updateCheckButtonState();
+      }
+    });
+
+    function triggerFastError(){
+      playSound('wrong');
+      checkBtn.classList.add('error');
+      checkBtn.disabled = true;
+      setTimeout(() => {
+        updateCheckButtonState();
+      }, 250);
+    }
+  }
+
+  // --- popup di fine gara: salva il nickname (o lo salta), poi torna sempre alla home ---
+  // dopo la fine gara si riparte da zero: si azzera tutto tranne il flag "nickname già usato"
+  function resetForNewRun(){
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('erato_basic') && k !== FINISHED_ONCE_KEY)
+      .forEach(k => localStorage.removeItem(k));
+  }
+
+  document.getElementById('finishConfirmBtn').addEventListener('click', () => {
+    const nickname = document.getElementById('finishNickname').value.trim();
+    const note = document.getElementById('finishNote');
+    if (!nickname || /^-+$/.test(nickname)){
+      note.textContent = 'Please enter a nickname first.';
+      note.style.color = 'var(--red)';
+      return;
+    }
+
+    localStorage.setItem('erato_basic_finisher_nickname', nickname);
+    const totalRaceTime = localStorage.getItem(TOTAL_TIME_KEY) || '0';
+
+    // invio il tempo al Worker per il podio globale; se fallisce (rete assente, Worker giù)
+    // l'utente prosegue comunque, non è bloccante
+    fetch('https://eratostene.sl-eternal-lux.workers.dev/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nickname, time: parseFloat(totalRaceTime) })
+    }).catch(() => {});
+
+    resetForNewRun();
+    window.location.href = 'index.html';
+  });
+
+  document.getElementById('finishSkipBtn').addEventListener('click', () => {
+    resetForNewRun();
+    window.location.href = 'index.html';
+  });
+</script>
+
+<script src="mathemory-audio.js"></script>
+
+</body>
+</html>
