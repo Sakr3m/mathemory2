@@ -146,7 +146,7 @@
           <input type="range" id="sfxVolSlider" min="0" max="100" step="10" value="${getSfxVol()}">
           <span id="sfxVolLabel">${getSfxVol()}%</span>
         </div>
-        <p style="font-family:'Space Mono', monospace; font-size:0.8rem; color:var(--ink-faint); margin-top:0.8rem; text-align:center;">Double-click the speaker icon to mute or unmute.</p>
+        <p style="font-family:'Space Mono', monospace; font-size:0.8rem; color:var(--ink-dim); margin-top:0.8rem; text-align:center;">Double-click the speaker icon to mute or unmute.</p>
       </div>
     `;
     document.body.appendChild(overlay);
