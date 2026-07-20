@@ -1561,7 +1561,7 @@
       requestAnimationFrame(() => {
         const eratoShift = parseFloat(grid.dataset.eratoShift || '0');
         card.style.transition = 'width 1s ease, box-shadow 0.3s ease';
-        card.style.width = (startWidth * 2 + 17.6 - eratoShift) + 'px'; // 17.6px = 1.1rem di gap tra le 2 card, ridotta dello spostamento verso il centro
+        card.style.width = (startWidth * 2 + 17.6 - eratoShift * 2) + 'px'; // 17.6px = 1.1rem di gap tra le 2 card, ridotta due volte dello spostamento verso il centro
         card.style.boxShadow = '0 10px 34px rgba(0,0,0,0.45)';
         if (lbPreview){
           lbPreview.style.transition = 'width 1s ease, opacity 1s ease';
@@ -2001,7 +2001,10 @@
       const distance = 70 + Math.random() * 70; // tragitto ampio, in una sola direzione
       const dx = Math.cos(angle) * distance;
       const dy = Math.sin(angle) * distance;
-      el.style.transition = 'transform 7s linear';
+      // aggiungo la transizione del movimento a quella già presente (es. l'opacità in dissolvenza),
+      // invece di sovrascriverla del tutto: era proprio questo a causare gli scatti
+      const existingTransition = el.style.transition;
+      el.style.transition = existingTransition ? existingTransition + ', transform 7s linear' : 'transform 7s linear';
       el.style.transform = `translate(${dx}px, ${dy}px)`;
     }
 
