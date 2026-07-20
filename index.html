@@ -130,6 +130,28 @@
     text-align: center;
   }
 
+  .play-now-split{ display:flex; gap:0.5rem; width:100%; }
+  .cta-inline.cta-split{
+    flex: 1 1 0;
+    min-width: 0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    font-size: 1.2rem;
+    padding: 0.332rem 0.4rem;
+    white-space: normal;
+    line-height:1.25;
+    box-sizing: border-box;
+  }
+  .cta-split-sub{
+    font-size: 0.6rem;
+    font-weight:400;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    opacity:0.75;
+  }
+
   .game-card h2{
     font-family:'Kalam', cursive;
     font-size: 3.192rem;
@@ -1350,7 +1372,10 @@
           <div class="game-card">
             <h2 class="game-title-centered">${g.title}</h2>
             <div class="play-preview-block">
-              <button type="button" class="cta-inline cta-full-width" onclick="openModeModal(0)">Play now</button>
+              <div class="play-now-split">
+                <button type="button" class="cta-inline cta-split" onclick="openModeModal(0, false)">Play now<span class="cta-split-sub">Normal (locked)</span></button>
+                <button type="button" class="cta-inline cta-split" onclick="openModeModal(0, true)">Play now<span class="cta-split-sub">All unlocked</span></button>
+              </div>
               <div class="preview-row">
                 ${g.preview || ''}
                 <div class="preview-text-col">
@@ -1639,10 +1664,10 @@
   // --- popup di scelta modalità (The Sieve / Prime Rush / Infinite Primes) ---
   const modeModal = document.getElementById('modeModal');
   const modeOptionsEl = document.getElementById('modeOptions');
-  function openModeModal(gameIndex){
+  function openModeModal(gameIndex, forceUnlockAll){
     playSound('tap');
     const g = games[gameIndex];
-    const sieveFinished = localStorage.getItem('erato_basic_finished_once') === 'true';
+    const sieveFinished = forceUnlockAll || localStorage.getItem('erato_basic_finished_once') === 'true';
     modeOptionsEl.innerHTML = g.modes.map(m => {
       const isLocked = m.requiresSieveFinish && !sieveFinished;
       const href = resumeHref(m.hrefKey, m.file);
