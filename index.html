@@ -148,6 +148,15 @@
     overflow: hidden;
     flex-shrink: 0;
   }
+  /* solo dentro il riquadro allargato: le 6 tabelle (Sieve + Prime Rush) hanno tutte
+     la stessa altezza, indipendentemente da quanto altro testo ha ogni metà sopra di loro,
+     e sono ristrette al 90% di larghezza, centrate. La classifica originale sotto resta invariata. */
+  .erato-lb-preview .lb-row{
+    flex: 0 0 auto;
+    height: 2.6rem;
+    width: 90%;
+    margin: 0 auto;
+  }
   @keyframes erato-border-cycle{
     0%   { border-color: #E8C468; }
     25%  { border-color: #5FA8A0; }
