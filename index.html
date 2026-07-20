@@ -625,7 +625,7 @@
   .math-constellation text{
     font-family:'Kalam', cursive;
     font-size: 1.5rem;
-    fill: rgba(159, 176, 162, 0.9);
+    fill: rgba(159, 176, 162, 0.15);
   }
   @keyframes constellation-drift{
     0%, 100%{ transform: translate(0, 0); }
@@ -1487,10 +1487,12 @@
     const leaderboardCard = grid.querySelector('.game-slot:last-child .leaderboard-card');
 
     let hoverReady = false;
+    let isExpanded = false;
     setTimeout(() => { hoverReady = true; }, 950); // poco più della comparsa più lenta (0.3s ritardo + 0.6s durata)
 
     card.addEventListener('mouseenter', () => {
-      if (!hoverReady) return;
+      if (!hoverReady || isExpanded) return;
+      isExpanded = true;
       const startWidth = card.getBoundingClientRect().width;
       const style = getComputedStyle(card);
       const contentWidth = card.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
@@ -1534,6 +1536,8 @@
     });
 
     card.addEventListener('mouseleave', () => {
+      if (!isExpanded) return;
+      isExpanded = false;
       const primeCells = card.querySelectorAll('.mc.prime');
       primeCells.forEach(c => { c.style.animationPlayState = 'paused'; });
       clearTimeout(card._lightUpResumeTimer);
