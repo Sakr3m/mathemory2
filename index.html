@@ -1803,6 +1803,7 @@
     grid.innerHTML = gameCardHtml(g, number) + leaderboardCardHtml(g);
     initEratoHoverExpand(grid);
     positionIndexSoundBtn();
+    centerEratoRightEdge();
 
     // etichetta centrale sopra la riga: Game X cliccabile (porta al regolamento, quando esisterà) + suggerimento
     document.getElementById('gameLabelRow').innerHTML = `
@@ -1867,6 +1868,27 @@
   // body e posizionato con coordinate reali di pagina, per scorrere insieme al contenuto
   // (i due riferimenti — titolo e card — non condividono lo stesso genitore diretto)
   let indexSoundBtnMovedToBody = false;
+  // sposta l'intera griglia dei 2 giochi in modo che il lato destro della card di
+  // Eratostene (il confine tra le 2 card) cada esattamente al centro reale della finestra,
+  // non solo al centro della sua colonna. Misurato dal vero, non un valore fisso.
+  function centerEratoRightEdge(){
+    if (window.innerWidth <= 900) return;
+    const gamesGrid = document.getElementById('gamesGrid');
+    if (!gamesGrid) return;
+    const firstSlot = gamesGrid.querySelector('.game-slot:first-child');
+    if (!firstSlot) return;
+
+    gamesGrid.style.transform = 'none'; // azzero prima di misurare, altrimenti la misura include lo spostamento precedente
+    void gamesGrid.offsetWidth;
+
+    const rightEdge = firstSlot.getBoundingClientRect().right;
+    const viewportCenter = window.innerWidth / 2;
+    const shift = viewportCenter - rightEdge;
+
+    gamesGrid.style.transform = `translateX(${shift}px)`;
+  }
+  window.addEventListener('resize', centerEratoRightEdge);
+
   function positionIndexSoundBtn(){
     if (window.innerWidth <= 900) return;
     const btn = document.getElementById('indexSoundBtn');
