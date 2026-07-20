@@ -130,6 +130,21 @@
   .game-card:not(.locked):not(.leaderboard-card){
     border-width: 2px;
     animation: erato-border-cycle 6s linear infinite;
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .erato-fixed-content{
+    display: flex;
+    flex-direction: column;
+    gap: 0.475rem;
+    width: 100%;
+    flex-shrink: 0;
+  }
+  .erato-lb-preview{
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+    flex-shrink: 0;
   }
   @keyframes erato-border-cycle{
     0%   { border-color: #E8C468; }
@@ -1185,36 +1200,36 @@
   <div class="content-col">
   <div class="wrap">
     <svg class="math-constellation" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <text x="549" y="312" text-anchor="middle">π</text>
-      <text x="412" y="692" text-anchor="middle">√</text>
-      <text x="952" y="288" text-anchor="middle">Σ</text>
-      <text x="749" y="524" text-anchor="middle">∞</text>
-      <text x="825" y="377" text-anchor="middle">∫</text>
-      <text x="127" y="591" text-anchor="middle">Δ</text>
-      <text x="364" y="269" text-anchor="middle">θ</text>
-      <text x="732" y="610" text-anchor="middle">×</text>
-      <text x="127" y="196" text-anchor="middle">÷</text>
-      <text x="395" y="140" text-anchor="middle">π</text>
-      <text x="395" y="367" text-anchor="middle">√</text>
-      <text x="267" y="233" text-anchor="middle">Σ</text>
-      <text x="110" y="376" text-anchor="middle">∞</text>
-      <text x="658" y="662" text-anchor="middle">∫</text>
-      <text x="131" y="105" text-anchor="middle">Δ</text>
-      <text x="852" y="747" text-anchor="middle">θ</text>
-      <text x="45" y="272" text-anchor="middle">×</text>
-      <text x="857" y="484" text-anchor="middle">÷</text>
-      <text x="756" y="148" text-anchor="middle">π</text>
-      <text x="245" y="493" text-anchor="middle">√</text>
-      <text x="317" y="749" text-anchor="middle">Σ</text>
-      <text x="635" y="511" text-anchor="middle">∞</text>
-      <text x="169" y="316" text-anchor="middle">∫</text>
-      <text x="678" y="254" text-anchor="middle">Δ</text>
-      <text x="586" y="632" text-anchor="middle">θ</text>
-      <text x="165" y="461" text-anchor="middle">×</text>
-      <text x="951" y="752" text-anchor="middle">÷</text>
-      <text x="879" y="160" text-anchor="middle">π</text>
-      <text x="913" y="680" text-anchor="middle">√</text>
-      <text x="846" y="596" text-anchor="middle">Σ</text>
+      <text x="355" y="550" text-anchor="middle">π</text>
+      <text x="631" y="417" text-anchor="middle">√</text>
+      <text x="311" y="495" text-anchor="middle">Σ</text>
+      <text x="867" y="755" text-anchor="middle">∞</text>
+      <text x="518" y="600" text-anchor="middle">∫</text>
+      <text x="958" y="302" text-anchor="middle">Δ</text>
+      <text x="851" y="354" text-anchor="middle">θ</text>
+      <text x="721" y="449" text-anchor="middle">×</text>
+      <text x="197" y="659" text-anchor="middle">÷</text>
+      <text x="87" y="505" text-anchor="middle">π</text>
+      <text x="694" y="269" text-anchor="middle">√</text>
+      <text x="462" y="430" text-anchor="middle">Σ</text>
+      <text x="173" y="573" text-anchor="middle">∞</text>
+      <text x="564" y="829" text-anchor="middle">∫</text>
+      <text x="654" y="836" text-anchor="middle">Δ</text>
+      <text x="193" y="280" text-anchor="middle">θ</text>
+      <text x="620" y="484" text-anchor="middle">×</text>
+      <text x="892" y="468" text-anchor="middle">÷</text>
+      <text x="789" y="460" text-anchor="middle">π</text>
+      <text x="415" y="645" text-anchor="middle">√</text>
+      <text x="129" y="797" text-anchor="middle">Σ</text>
+      <text x="702" y="358" text-anchor="middle">∞</text>
+      <text x="74" y="285" text-anchor="middle">∫</text>
+      <text x="611" y="353" text-anchor="middle">Δ</text>
+      <text x="123" y="439" text-anchor="middle">θ</text>
+      <text x="913" y="659" text-anchor="middle">×</text>
+      <text x="747" y="582" text-anchor="middle">÷</text>
+      <text x="511" y="339" text-anchor="middle">π</text>
+      <text x="562" y="652" text-anchor="middle">√</text>
+      <text x="64" y="710" text-anchor="middle">Σ</text>
     </svg>
   <header>
     <div class="title-row">
@@ -1468,6 +1483,9 @@
     if (!slot) return;
     const card = slot.querySelector('.game-card:not(.locked):not(.leaderboard-card)');
     if (!card) return;
+    const fixedContent = card.querySelector('.erato-fixed-content');
+    const lbPreview = card.querySelector('.erato-lb-preview');
+    const leaderboardCard = grid.querySelector('.game-slot:last-child .leaderboard-card');
 
     let hoverReady = false;
     setTimeout(() => { hoverReady = true; }, 950); // poco più della comparsa più lenta (0.3s ritardo + 0.6s durata)
@@ -1478,11 +1496,16 @@
       const style = getComputedStyle(card);
       const contentWidth = card.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
 
-      // il contenuto interno resta fermo alla sua larghezza originale, non si allarga insieme alla card
-      Array.from(card.children).forEach(child => {
-        child.style.width = contentWidth + 'px';
-        child.style.flexShrink = '0';
-      });
+      // il contenuto originale resta fermo alla sua larghezza di partenza, non si allarga insieme alla card
+      if (fixedContent){
+        fixedContent.style.width = contentWidth + 'px';
+        fixedContent.style.flexShrink = '0';
+      }
+
+      // copia (non sposta) il contenuto già renderizzato della classifica: nessun nuovo fetch, nessun tocco al Worker
+      if (lbPreview && leaderboardCard){
+        lbPreview.innerHTML = leaderboardCard.innerHTML;
+      }
 
       // l'animazione della mini-griglia va in pausa per tutta la durata del movimento
       const primeCells = card.querySelectorAll('.mc.prime');
@@ -1503,6 +1526,11 @@
         card.style.transition = 'width 1s ease, box-shadow 0.3s ease';
         card.style.width = (startWidth * 2 + 17.6) + 'px'; // 17.6px = 1.1rem di gap tra le 2 card
         card.style.boxShadow = '0 10px 34px rgba(0,0,0,0.45)';
+        if (lbPreview){
+          lbPreview.style.transition = 'width 1s ease, opacity 1s ease';
+          lbPreview.style.width = startWidth + 'px'; // stesso ingombro della card originale, cresce insieme
+          lbPreview.style.opacity = '1';
+        }
       });
     });
 
@@ -1522,10 +1550,16 @@
       card.style.boxShadow = '';
       card.style.transition = '';
 
-      Array.from(card.children).forEach(child => {
-        child.style.width = '';
-        child.style.flexShrink = '';
-      });
+      if (fixedContent){
+        fixedContent.style.width = '';
+        fixedContent.style.flexShrink = '';
+      }
+      if (lbPreview){
+        lbPreview.style.width = '';
+        lbPreview.style.opacity = '';
+        lbPreview.style.transition = '';
+        setTimeout(() => { lbPreview.innerHTML = ''; }, 1000);
+      }
     });
   }
 
@@ -1572,20 +1606,23 @@
       return `
         <div class="game-slot entrance-anim">
           <div class="game-card">
-            <h2 class="game-title-centered">${g.title}</h2>
-            <div class="play-preview-block">
-              <div class="play-now-split">
-                <button type="button" class="cta-inline cta-split" onclick="openModeModal(0, false)">Play now<span class="cta-split-sub">Normal (locked)</span></button>
-                <button type="button" class="cta-inline cta-split" onclick="openModeModal(0, true)">Play now<span class="cta-split-sub">All unlocked</span></button>
-              </div>
-              <div class="preview-row">
-                ${g.preview || ''}
-                <div class="preview-text-col">
-                  <p class="desc"><span class="desc-title">${g.descTitle}</span>${g.desc}</p>
+            <div class="erato-fixed-content">
+              <h2 class="game-title-centered">${g.title}</h2>
+              <div class="play-preview-block">
+                <div class="play-now-split">
+                  <button type="button" class="cta-inline cta-split" onclick="openModeModal(0, false)">Play now<span class="cta-split-sub">Normal (locked)</span></button>
+                  <button type="button" class="cta-inline cta-split" onclick="openModeModal(0, true)">Play now<span class="cta-split-sub">All unlocked</span></button>
                 </div>
+                <div class="preview-row">
+                  ${g.preview || ''}
+                  <div class="preview-text-col">
+                    <p class="desc"><span class="desc-title">${g.descTitle}</span>${g.desc}</p>
+                  </div>
+                </div>
+                <p class="device-note-old device-note-full">Progress is saved per device — switching devices restarts from level 1.</p>
               </div>
-              <p class="device-note-old device-note-full">Progress is saved per device — switching devices restarts from level 1.</p>
             </div>
+            <div class="erato-lb-preview"></div>
           </div>
         </div>`;
     } else {
