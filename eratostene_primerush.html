@@ -41,7 +41,7 @@
     margin: 0 0 0.6rem;
   }
   h1 .accent{ color: var(--yellow); }
-  h1 .max-prime-note{ display: block; font-size: 0.6em; margin-top: 0.2rem; }
+  h1 .max-prime-note{ display: block; font-size: 0.54em; margin-top: 0.08rem; }
   .rank-callout{ margin: 0 0 0.9rem; display:flex; align-items:baseline; gap: 0.7rem; flex-wrap: nowrap; }
   .rank-badge{
     display:inline-block;
@@ -66,6 +66,7 @@
     font-size: 1.14rem;
     line-height:1.5;
     margin: 0 0 2rem;
+    text-align: center;
     white-space: nowrap;
   }
 
@@ -180,6 +181,21 @@
   button.check.error:hover{ background: var(--red); }
 
   .feedback{ font-family:'Space Mono', monospace; font-size: 0.9rem; min-height: 1.4rem; margin: 0; }
+  .side-panel-wrap{ display:flex; flex-direction:column; }
+  .dev-skip-btn{
+    display: block;
+    width: 100%;
+    margin-top: 3rem;
+    padding: 0.5rem;
+    font-family:'Space Mono', monospace;
+    font-size: 1rem;
+    background: transparent;
+    color: var(--ink-dim);
+    border: 1px dashed var(--rule);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .dev-skip-btn:hover{ border-color: var(--yellow); color: var(--yellow); }
   .feedback.ok{ color: #9DC48C; }
   .feedback.bad{ color: var(--red); }
 
@@ -289,6 +305,7 @@
       padding: 0;
       max-width: 100%;
     }
+    .dev-skip-btn{ display: none; }
   }
 
   @media (min-width: 901px) and (max-width: 1400px), (max-height: 800px){
@@ -562,6 +579,18 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="devSkipModal">
+  <div class="modal-card" style="position:relative;">
+    <button type="button" id="devSkipCloseBtn" aria-label="Close" style="position:absolute; top:0.7rem; right:0.7rem; width:2rem; height:2rem; border-radius:50%; border:none; background:var(--bg); color:var(--ink); font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+    <div class="modal-buttons" style="flex-direction:column;">
+      <button type="button" class="modal-btn yes" id="devSkip1Btn">+1</button>
+      <button type="button" class="modal-btn yes" id="devSkip25Btn">+25</button>
+      <button type="button" class="modal-btn yes" id="devSkip200Btn">200</button>
+      <button type="button" class="modal-btn no" id="devSkipResetBtn">Reset</button>
+    </div>
+  </div>
+</div>
+
 
 <div class="page-shell">
   <div class="ad-a" aria-hidden="true">Ad space</div>
@@ -766,15 +795,18 @@
 
     document.getElementById('levelLayout').innerHTML = `
       <div class="grid" id="gridEl"></div>
-      <div class="side-panel">
-        <div>
-          <div class="picked-row" id="pickedRow"></div>
+      <div class="side-panel-wrap">
+        <div class="side-panel">
+          <div>
+            <div class="picked-row" id="pickedRow"></div>
+          </div>
+          <div class="answer-row">
+            <input type="number" id="answerInput" placeholder="Sum of the primes" inputmode="numeric">
+            <button class="check" id="checkBtn"><span class="check-label">${checkLabelHtml}</span></button>
+          </div>
+          <p class="feedback" id="feedback"></p>
         </div>
-        <div class="answer-row">
-          <input type="number" id="answerInput" placeholder="Sum of the primes" inputmode="numeric">
-          <button class="check" id="checkBtn"><span class="check-label">${checkLabelHtml}</span></button>
-        </div>
-        <p class="feedback" id="feedback"></p>
+        <button type="button" id="devSkipBtn" class="dev-skip-btn" aria-label="Dev skip">»</button>
       </div>
     `;
 
@@ -866,6 +898,30 @@
 
     // solo ORA il pannello destro ha davvero tutti e 5 i riquadri dentro: l'altezza misurata è quella reale
     alignSidePanel();
+
+    // --- pulsante skip (solo PC, solo test): apre il popup con le 4 opzioni ---
+    document.getElementById('devSkipBtn').addEventListener('click', () => {
+      document.getElementById('devSkipModal').classList.add('visible');
+    });
+    document.getElementById('devSkipCloseBtn').addEventListener('click', () => {
+      document.getElementById('devSkipModal').classList.remove('visible');
+    });
+    document.getElementById('devSkipModal').addEventListener('click', (e) => {
+      if (e.target.id === 'devSkipModal') document.getElementById('devSkipModal').classList.remove('visible');
+    });
+    document.getElementById('devSkip1Btn').addEventListener('click', () => {
+      window.location.href = `eratostene_primerush.html?n=${levelNum + 1}`;
+    });
+    document.getElementById('devSkip25Btn').addEventListener('click', () => {
+      window.location.href = `eratostene_primerush.html?n=${Math.min(200, levelNum + 25)}`;
+    });
+    document.getElementById('devSkip200Btn').addEventListener('click', () => {
+      window.location.href = 'eratostene_primerush.html?n=200';
+    });
+    document.getElementById('devSkipResetBtn').addEventListener('click', () => {
+      Object.keys(localStorage).filter(k => k.startsWith('erato_primerush')).forEach(k => localStorage.removeItem(k));
+      window.location.href = 'eratostene_primerush.html?n=1';
+    });
 
     document.getElementById('checkBtn').addEventListener('click', () => {
       playSound('tap');
