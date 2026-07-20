@@ -1559,8 +1559,9 @@
       card.style.zIndex = '5';
       void card.offsetWidth; // forzo il reflow prima di avviare la transizione, altrimenti parte già estesa
       requestAnimationFrame(() => {
+        const eratoShift = parseFloat(grid.dataset.eratoShift || '0');
         card.style.transition = 'width 1s ease, box-shadow 0.3s ease';
-        card.style.width = (startWidth * 2 + 17.6) + 'px'; // 17.6px = 1.1rem di gap tra le 2 card
+        card.style.width = (startWidth * 2 + 17.6 - eratoShift) + 'px'; // 17.6px = 1.1rem di gap tra le 2 card, ridotta dello spostamento verso il centro
         card.style.boxShadow = '0 10px 34px rgba(0,0,0,0.45)';
         if (lbPreview){
           lbPreview.style.transition = 'width 1s ease, opacity 1s ease';
@@ -1886,6 +1887,7 @@
     const shift = viewportCenter - rightEdge;
 
     gamesGrid.style.transform = `translateX(${shift}px)`;
+    gamesGrid.dataset.eratoShift = shift;
   }
   window.addEventListener('resize', centerEratoRightEdge);
 
@@ -1989,6 +1991,11 @@
     const symbolPool = ['π', '√', 'Σ', '∞', '∫', 'Δ', 'θ', '×', '÷'];
     const texts = Array.from(svg.querySelectorAll('text'));
 
+    // aggiunge un po' di imprecisione naturale a ogni durata, invece di tempi identici e meccanici
+    function jitter(baseMs, spreadMs){
+      return baseMs + (Math.random() * 2 - 1) * spreadMs;
+    }
+
     function driftAway(el){
       const angle = Math.random() * Math.PI * 2;
       const distance = 70 + Math.random() * 70; // tragitto ampio, in una sola direzione
@@ -1999,7 +2006,8 @@
     }
 
     function respawn(el){
-      el.style.transition = 'opacity 1s ease';
+      const fadeOutMs = jitter(1500, 300); // sparizione: ~1.5s
+      el.style.transition = `opacity ${(fadeOutMs / 1000).toFixed(2)}s ease`;
       el.style.opacity = '0';
       setTimeout(() => {
         const newX = 30 + Math.random() * 940;
@@ -2010,21 +2018,24 @@
         el.style.transition = 'none';
         el.style.transform = 'translate(0, 0)';
         void el.getBoundingClientRect(); // forzo il reflow prima di far ripartire la dissolvenza
+        const gapMs = jitter(1000, 250); // attesa dopo la sparizione, prima di ricomparire: ~1s
         setTimeout(() => {
-          el.style.transition = 'opacity 1s ease';
+          const fadeInMs = jitter(1500, 300); // comparsa: ~1.5s
+          el.style.transition = `opacity ${(fadeInMs / 1000).toFixed(2)}s ease`;
           el.style.opacity = '';
           driftAway(el);
           lifeLoop(el);
-        }, 500); // ricompaiono dopo mezzo secondo
-      }, 1000); // durata della dissolvenza
+        }, gapMs);
+      }, fadeOutMs);
     }
 
     function lifeLoop(el){
-      setTimeout(() => { respawn(el); }, 3000); // vivono 3 secondi prima di sfumare
+      const lifeMs = jitter(3000, 500); // vita: ~3s
+      setTimeout(() => { respawn(el); }, lifeMs);
     }
 
-    texts.forEach((el, i) => {
-      const initialStagger = i * 130; // partenza sfalsata, così non muoiono mai tutti insieme
+    texts.forEach((el) => {
+      const initialStagger = 500 + Math.random() * 1000; // partenza tra 0.5s e 1.5s, mai tutti insieme
       setTimeout(() => {
         driftAway(el);
         lifeLoop(el);
