@@ -126,6 +126,21 @@
 
   .cta-inline:focus-visible{ outline: 2px solid var(--ink); outline-offset: 3px; }
 
+  /* bordo con colore animato, solo sulla card di Eratostene; prosegue anche durante l'espansione hover */
+  .game-card:not(.locked):not(.leaderboard-card){
+    animation: erato-border-cycle 6s linear infinite;
+  }
+  @keyframes erato-border-cycle{
+    0%   { border-color: #E8C468; }
+    25%  { border-color: #5FA8A0; }
+    50%  { border-color: #C1554B; }
+    75%  { border-color: #7F77DD; }
+    100% { border-color: #E8C468; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .game-card:not(.locked):not(.leaderboard-card){ animation: none; }
+  }
+
   .card-top-row{
     display:flex;
     align-items:center;
@@ -1173,44 +1188,56 @@
   <div class="content-col">
   <div class="wrap">
     <svg class="math-constellation" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <line x1="735" y1="281" x2="711" y2="331" />
-      <line x1="69" y1="446" x2="61" y2="516" />
-      <line x1="915" y1="433" x2="924" y2="507" />
-      <line x1="258" y1="623" x2="272" y2="682" />
-      <line x1="429" y1="209" x2="356" y2="215" />
-      <line x1="709" y1="677" x2="727" y2="614" />
-      <line x1="66" y1="774" x2="83" y2="826" />
-      <line x1="56" y1="262" x2="67" y2="337" />
-      <line x1="905" y1="119" x2="818" y2="190" />
-      <line x1="278" y1="834" x2="280" y2="772" />
-      <line x1="506" y1="606" x2="483" y2="681" />
-      <line x1="260" y1="456" x2="253" y2="526" />
-      <line x1="848" y1="844" x2="760" y2="776" />
-      <line x1="55" y1="618" x2="54" y2="685" />
-      <line x1="303" y1="110" x2="303" y2="172" />
-      <line x1="410" y1="734" x2="337" y2="729" />
-      <text x="753" y="244">π</text>
-      <text x="75" y="393">√</text>
-      <text x="909" y="377">Σ</text>
-      <text x="248" y="579">∞</text>
-      <text x="483" y="205">∫</text>
-      <text x="695" y="724">Δ</text>
-      <text x="54" y="735">θ</text>
-      <text x="48" y="206">×</text>
-      <text x="970" y="65">÷</text>
-      <text x="277" y="880">∑</text>
-      <text x="95" y="865">≈</text>
-      <text x="524" y="550">φ</text>
-      <text x="693" y="368">π</text>
-      <text x="741" y="567">√</text>
-      <text x="265" y="404">Σ</text>
-      <text x="913" y="896">∞</text>
-      <text x="55" y="568">∫</text>
-      <text x="304" y="63">Δ</text>
-      <text x="930" y="563">θ</text>
-      <text x="302" y="219">×</text>
-      <text x="465" y="737">÷</text>
-      <text x="282" y="726">∑</text>
+      <line x1="218" y1="498" x2="248" y2="549" />
+      <line x1="747" y1="528" x2="758" y2="468" />
+      <line x1="758" y1="468" x2="802" y2="496" />
+      <line x1="615" y1="346" x2="579" y2="264" />
+      <line x1="579" y1="264" x2="541" y2="341" />
+      <line x1="541" y1="341" x2="606" y2="293" />
+      <line x1="919" y1="107" x2="924" y2="57" />
+      <line x1="924" y1="57" x2="870" y2="43" />
+      <line x1="141" y1="243" x2="132" y2="197" />
+      <line x1="298" y1="816" x2="356" y2="775" />
+      <line x1="356" y1="775" x2="346" y2="825" />
+      <line x1="525" y1="548" x2="452" y2="550" />
+      <line x1="452" y1="550" x2="484" y2="606" />
+      <line x1="854" y1="712" x2="916" y2="777" />
+      <line x1="916" y1="777" x2="857" y2="753" />
+      <line x1="391" y1="114" x2="332" y2="57" />
+      <line x1="332" y1="57" x2="371" y2="75" />
+      <line x1="371" y1="75" x2="314" y2="96" />
+      <line x1="624" y1="805" x2="566" y2="805" />
+      <line x1="566" y1="805" x2="587" y2="775" />
+      <text x="218" y="498">π</text>
+      <text x="248" y="549">√</text>
+      <text x="747" y="528">Σ</text>
+      <text x="758" y="468">∞</text>
+      <text x="802" y="496">∫</text>
+      <text x="615" y="346">Δ</text>
+      <text x="579" y="264">θ</text>
+      <text x="541" y="341">×</text>
+      <text x="606" y="293">÷</text>
+      <text x="919" y="107">∑</text>
+      <text x="924" y="57">≈</text>
+      <text x="870" y="43">φ</text>
+      <text x="141" y="243">π</text>
+      <text x="132" y="197">√</text>
+      <text x="298" y="816">Σ</text>
+      <text x="356" y="775">∞</text>
+      <text x="346" y="825">∫</text>
+      <text x="525" y="548">Δ</text>
+      <text x="452" y="550">θ</text>
+      <text x="484" y="606">×</text>
+      <text x="854" y="712">÷</text>
+      <text x="916" y="777">∑</text>
+      <text x="857" y="753">≈</text>
+      <text x="391" y="114">φ</text>
+      <text x="332" y="57">π</text>
+      <text x="371" y="75">√</text>
+      <text x="314" y="96">Σ</text>
+      <text x="624" y="805">∞</text>
+      <text x="566" y="805">∫</text>
+      <text x="587" y="775">Δ</text>
     </svg>
   <header>
     <div class="title-row">
