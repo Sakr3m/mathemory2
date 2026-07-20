@@ -1490,7 +1490,7 @@
     let hoverReady = false;
     setTimeout(() => { hoverReady = true; }, 950); // poco più della comparsa più lenta (0.3s ritardo + 0.6s durata)
 
-    slot.addEventListener('mouseenter', () => {
+    card.addEventListener('mouseenter', () => {
       if (!hoverReady) return;
       const startWidth = card.getBoundingClientRect().width;
       const style = getComputedStyle(card);
@@ -1534,7 +1534,7 @@
       });
     });
 
-    slot.addEventListener('mouseleave', () => {
+    card.addEventListener('mouseleave', () => {
       const primeCells = card.querySelectorAll('.mc.prime');
       primeCells.forEach(c => { c.style.animationPlayState = 'paused'; });
       clearTimeout(card._lightUpResumeTimer);
