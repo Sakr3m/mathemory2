@@ -142,6 +142,8 @@
   }
   .erato-lb-preview{
     width: 0;
+    height: 100%;
+    min-height: 0;
     opacity: 0;
     overflow: hidden;
     flex-shrink: 0;
@@ -625,7 +627,7 @@
   .math-constellation text{
     font-family:'Kalam', cursive;
     font-size: 1.5rem;
-    fill: rgba(159, 176, 162, 0.15);
+    fill: rgba(159, 176, 162, 0.20);
   }
   @keyframes constellation-drift{
     0%, 100%{ transform: translate(0, 0); }
@@ -1199,36 +1201,56 @@
   <div class="content-col">
   <div class="wrap">
     <svg class="math-constellation" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <text x="355" y="550" text-anchor="middle">π</text>
-      <text x="631" y="417" text-anchor="middle">√</text>
-      <text x="311" y="495" text-anchor="middle">Σ</text>
-      <text x="867" y="755" text-anchor="middle">∞</text>
-      <text x="518" y="600" text-anchor="middle">∫</text>
-      <text x="958" y="302" text-anchor="middle">Δ</text>
-      <text x="851" y="354" text-anchor="middle">θ</text>
-      <text x="721" y="449" text-anchor="middle">×</text>
-      <text x="197" y="659" text-anchor="middle">÷</text>
-      <text x="87" y="505" text-anchor="middle">π</text>
-      <text x="694" y="269" text-anchor="middle">√</text>
-      <text x="462" y="430" text-anchor="middle">Σ</text>
-      <text x="173" y="573" text-anchor="middle">∞</text>
-      <text x="564" y="829" text-anchor="middle">∫</text>
-      <text x="654" y="836" text-anchor="middle">Δ</text>
-      <text x="193" y="280" text-anchor="middle">θ</text>
-      <text x="620" y="484" text-anchor="middle">×</text>
-      <text x="892" y="468" text-anchor="middle">÷</text>
-      <text x="789" y="460" text-anchor="middle">π</text>
-      <text x="415" y="645" text-anchor="middle">√</text>
-      <text x="129" y="797" text-anchor="middle">Σ</text>
-      <text x="702" y="358" text-anchor="middle">∞</text>
-      <text x="74" y="285" text-anchor="middle">∫</text>
-      <text x="611" y="353" text-anchor="middle">Δ</text>
-      <text x="123" y="439" text-anchor="middle">θ</text>
-      <text x="913" y="659" text-anchor="middle">×</text>
-      <text x="747" y="582" text-anchor="middle">÷</text>
-      <text x="511" y="339" text-anchor="middle">π</text>
-      <text x="562" y="652" text-anchor="middle">√</text>
-      <text x="64" y="710" text-anchor="middle">Σ</text>
+      <text x="848" y="288" text-anchor="middle">π</text>
+      <text x="363" y="232" text-anchor="middle">√</text>
+      <text x="276" y="227" text-anchor="middle">Σ</text>
+      <text x="872" y="147" text-anchor="middle">∞</text>
+      <text x="329" y="517" text-anchor="middle">∫</text>
+      <text x="601" y="656" text-anchor="middle">Δ</text>
+      <text x="706" y="542" text-anchor="middle">θ</text>
+      <text x="32" y="316" text-anchor="middle">×</text>
+      <text x="59" y="539" text-anchor="middle">÷</text>
+      <text x="206" y="841" text-anchor="middle">π</text>
+      <text x="862" y="225" text-anchor="middle">√</text>
+      <text x="549" y="427" text-anchor="middle">Σ</text>
+      <text x="217" y="369" text-anchor="middle">∞</text>
+      <text x="359" y="150" text-anchor="middle">∫</text>
+      <text x="119" y="594" text-anchor="middle">Δ</text>
+      <text x="576" y="510" text-anchor="middle">θ</text>
+      <text x="226" y="103" text-anchor="middle">×</text>
+      <text x="112" y="234" text-anchor="middle">÷</text>
+      <text x="743" y="603" text-anchor="middle">π</text>
+      <text x="952" y="478" text-anchor="middle">√</text>
+      <text x="639" y="751" text-anchor="middle">Σ</text>
+      <text x="581" y="108" text-anchor="middle">∞</text>
+      <text x="132" y="850" text-anchor="middle">∫</text>
+      <text x="754" y="787" text-anchor="middle">Δ</text>
+      <text x="247" y="790" text-anchor="middle">θ</text>
+      <text x="502" y="111" text-anchor="middle">×</text>
+      <text x="968" y="830" text-anchor="middle">÷</text>
+      <text x="833" y="580" text-anchor="middle">π</text>
+      <text x="139" y="308" text-anchor="middle">√</text>
+      <text x="485" y="672" text-anchor="middle">Σ</text>
+      <text x="154" y="389" text-anchor="middle">∞</text>
+      <text x="878" y="820" text-anchor="middle">∫</text>
+      <text x="443" y="799" text-anchor="middle">Δ</text>
+      <text x="573" y="283" text-anchor="middle">θ</text>
+      <text x="254" y="616" text-anchor="middle">×</text>
+      <text x="785" y="171" text-anchor="middle">÷</text>
+      <text x="816" y="853" text-anchor="middle">π</text>
+      <text x="423" y="43" text-anchor="middle">√</text>
+      <text x="65" y="83" text-anchor="middle">Σ</text>
+      <text x="70" y="793" text-anchor="middle">∞</text>
+      <text x="956" y="606" text-anchor="middle">∫</text>
+      <text x="87" y="696" text-anchor="middle">Δ</text>
+      <text x="512" y="738" text-anchor="middle">θ</text>
+      <text x="700" y="127" text-anchor="middle">×</text>
+      <text x="967" y="391" text-anchor="middle">÷</text>
+      <text x="455" y="619" text-anchor="middle">π</text>
+      <text x="843" y="522" text-anchor="middle">√</text>
+      <text x="956" y="57" text-anchor="middle">Σ</text>
+      <text x="747" y="38" text-anchor="middle">∞</text>
+      <text x="934" y="168" text-anchor="middle">∫</text>
     </svg>
   <header>
     <div class="title-row">
@@ -1494,8 +1516,16 @@
       if (!hoverReady || isExpanded) return;
       isExpanded = true;
       const startWidth = card.getBoundingClientRect().width;
+      const startHeight = card.getBoundingClientRect().height;
       const style = getComputedStyle(card);
       const contentWidth = card.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+
+      // l'altezza resta bloccata a quella di partenza per tutta la durata dell'hover:
+      // senza questo, il contenuto clonato della classifica (altezza naturale diversa)
+      // può far "saltare" l'altezza della card proprio mentre il mouse ci sta sopra,
+      // facendo credere al browser che il cursore sia uscito — causa quasi certa
+      // della sparizione a intermittenza segnalata
+      card.style.height = startHeight + 'px';
 
       // il contenuto originale resta fermo alla sua larghezza di partenza, non si allarga insieme alla card
       if (fixedContent){
@@ -1546,6 +1576,7 @@
       }, 1000);
 
       card.style.width = '';
+      card.style.height = '';
       card.style.position = '';
       card.style.top = '';
       card.style.left = '';
