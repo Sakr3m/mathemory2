@@ -291,20 +291,6 @@
   @media (prefers-reduced-motion: reduce){
     .lb-row.rank-1, .lb-row.rank-2, .lb-row.rank-3{ animation: none; }
   }
-  .lb-row-dual{ gap: 0.5rem; }
-  .lb-value-outer, .lb-value-inner{
-    font-family:'Space Mono', monospace;
-    font-size: 0.8rem;
-    flex: 1 1 0;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .lb-value-outer{ color: var(--ink-dim); }
-  .lb-value-inner{ color: var(--yellow); font-weight:700; }
-  .lb-row-dual .lb-value-outer:first-child, .lb-row-dual .lb-value-inner:nth-child(2){ text-align: right; }
-  .lb-row-dual .lb-value-outer:last-child, .lb-row-dual .lb-value-inner:nth-child(4){ text-align: left; }
   .lb-divider{
     flex-shrink: 0;
     height: 1px;
@@ -603,7 +589,7 @@
     height: 100%;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.5;
+    opacity: 0.75;
     animation: constellation-drift 14s ease-in-out infinite;
   }
   .math-constellation line{
@@ -1188,19 +1174,21 @@
   <div class="wrap">
     <svg class="math-constellation" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <line x1="753" y1="244" x2="693" y2="368" />
-      <line x1="75" y1="393" x2="48" y2="206" />
       <line x1="75" y1="393" x2="55" y2="568" />
       <line x1="909" y1="377" x2="930" y2="563" />
-      <line x1="248" y1="579" x2="265" y2="404" />
       <line x1="248" y1="579" x2="282" y2="726" />
       <line x1="483" y1="205" x2="302" y2="219" />
       <line x1="695" y1="724" x2="741" y2="567" />
       <line x1="54" y1="735" x2="95" y2="865" />
-      <line x1="54" y1="735" x2="55" y2="568" />
-      <line x1="277" y1="880" x2="95" y2="865" />
+      <line x1="48" y1="206" x2="75" y2="393" />
+      <line x1="970" y1="65" x2="753" y2="244" />
       <line x1="277" y1="880" x2="282" y2="726" />
-      <line x1="741" y1="567" x2="930" y2="563" />
-      <line x1="265" y1="404" x2="302" y2="219" />
+      <line x1="524" y1="550" x2="465" y2="737" />
+      <line x1="265" y1="404" x2="248" y2="579" />
+      <line x1="913" y1="896" x2="695" y2="724" />
+      <line x1="55" y1="568" x2="54" y2="735" />
+      <line x1="304" y1="63" x2="302" y2="219" />
+      <line x1="465" y1="737" x2="282" y2="726" />
       <text x="753" y="244">π</text>
       <text x="75" y="393">√</text>
       <text x="909" y="377">Σ</text>
@@ -1546,17 +1534,13 @@
     for (let i = 0; i < 3; i++){
       const leftEntry = leftPodium && leftPodium[i];
       const rightEntry = rightPodium && rightPodium[i];
-      const leftNickname = leftEntry ? leftEntry.nickname : '';
-      const leftTime = leftEntry ? `${leftEntry.time}s` : '—';
-      const rightNickname = rightEntry ? rightEntry.nickname : '';
-      const rightTime = rightEntry ? `${rightEntry.time}s` : '—';
+      const leftLabel = leftEntry ? `${leftEntry.nickname} — ${leftEntry.time}s` : '—';
+      const rightLabel = rightEntry ? `${rightEntry.nickname} — ${rightEntry.time}s` : '—';
       html += `
         <div class="lb-row lb-row-dual ${rankClasses[i]}">
-          <span class="lb-value-outer">${leftTime}</span>
-          <span class="lb-value-inner">${leftNickname}</span>
+          <span class="lb-value">${leftLabel}</span>
           <span class="lb-medal">${medals[i]}</span>
-          <span class="lb-value-inner">${rightNickname}</span>
-          <span class="lb-value-outer">${rightTime}</span>
+          <span class="lb-value">${rightLabel}</span>
         </div>`;
     }
     return html;
