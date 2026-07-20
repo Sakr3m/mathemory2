@@ -390,8 +390,8 @@
   .mc.prime{
     font-weight:700;
     border-radius: 6px;
-    animation: mc-light-up 0.5s ease forwards;
-    animation-delay: calc(var(--i) * 90ms + 0.3s);
+    animation: mc-light-up 1.5s ease forwards;
+    animation-delay: calc(var(--i) * 90ms + 1.4s);
   }
   @keyframes mc-light-up{
     from{ color: var(--ink); background: transparent; box-shadow: none; }
@@ -604,6 +604,7 @@
     z-index: 0;
     pointer-events: none;
     opacity: 0.5;
+    animation: constellation-drift 14s ease-in-out infinite;
   }
   .math-constellation line{
     stroke: var(--ink-dim);
@@ -611,8 +612,15 @@
   }
   .math-constellation text{
     font-family:'Kalam', cursive;
-    font-size: 2.4rem;
+    font-size: 1.5rem;
     fill: var(--ink-dim);
+  }
+  @keyframes constellation-drift{
+    0%, 100%{ transform: translate(0, 0); }
+    50%{ transform: translate(4px, -4px); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .math-constellation{ animation: none; }
   }
 
   .carousel-row .games{ flex: 1; min-width: 0; }
@@ -1179,28 +1187,42 @@
   <div class="content-col">
   <div class="wrap">
     <svg class="math-constellation" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <line x1="60" y1="90" x2="160" y2="180" />
-      <line x1="160" y1="180" x2="110" y2="320" />
-      <line x1="860" y1="80" x2="930" y2="210" />
-      <line x1="930" y1="210" x2="870" y2="360" />
-      <line x1="480" y1="60" x2="540" y2="140" />
-      <line x1="90" y1="520" x2="170" y2="600" />
-      <line x1="880" y1="540" x2="940" y2="650" />
-      <line x1="500" y1="780" x2="440" y2="700" />
-      <text x="55" y="100">π</text>
-      <text x="155" y="190">√</text>
-      <text x="105" y="335">Σ</text>
-      <text x="855" y="95">∞</text>
-      <text x="925" y="220">∫</text>
-      <text x="865" y="375">Δ</text>
-      <text x="475" y="55">θ</text>
-      <text x="535" y="150">×</text>
-      <text x="85" y="535">÷</text>
-      <text x="165" y="615">π</text>
-      <text x="875" y="555">√</text>
-      <text x="935" y="665">Σ</text>
-      <text x="495" y="795">∞</text>
-      <text x="435" y="695">∫</text>
+      <line x1="753" y1="244" x2="693" y2="368" />
+      <line x1="75" y1="393" x2="48" y2="206" />
+      <line x1="75" y1="393" x2="55" y2="568" />
+      <line x1="909" y1="377" x2="930" y2="563" />
+      <line x1="248" y1="579" x2="265" y2="404" />
+      <line x1="248" y1="579" x2="282" y2="726" />
+      <line x1="483" y1="205" x2="302" y2="219" />
+      <line x1="695" y1="724" x2="741" y2="567" />
+      <line x1="54" y1="735" x2="95" y2="865" />
+      <line x1="54" y1="735" x2="55" y2="568" />
+      <line x1="277" y1="880" x2="95" y2="865" />
+      <line x1="277" y1="880" x2="282" y2="726" />
+      <line x1="741" y1="567" x2="930" y2="563" />
+      <line x1="265" y1="404" x2="302" y2="219" />
+      <text x="753" y="244">π</text>
+      <text x="75" y="393">√</text>
+      <text x="909" y="377">Σ</text>
+      <text x="248" y="579">∞</text>
+      <text x="483" y="205">∫</text>
+      <text x="695" y="724">Δ</text>
+      <text x="54" y="735">θ</text>
+      <text x="48" y="206">×</text>
+      <text x="970" y="65">÷</text>
+      <text x="277" y="880">∑</text>
+      <text x="95" y="865">≈</text>
+      <text x="524" y="550">φ</text>
+      <text x="693" y="368">π</text>
+      <text x="741" y="567">√</text>
+      <text x="265" y="404">Σ</text>
+      <text x="913" y="896">∞</text>
+      <text x="55" y="568">∫</text>
+      <text x="304" y="63">Δ</text>
+      <text x="930" y="563">θ</text>
+      <text x="302" y="219">×</text>
+      <text x="465" y="737">÷</text>
+      <text x="282" y="726">∑</text>
     </svg>
   <header>
     <div class="title-row">
@@ -1461,6 +1483,23 @@
     slot.addEventListener('mouseenter', () => {
       if (!hoverReady) return;
       const startWidth = card.getBoundingClientRect().width;
+      const style = getComputedStyle(card);
+      const contentWidth = card.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+
+      // il contenuto interno resta fermo alla sua larghezza originale, non si allarga insieme alla card
+      Array.from(card.children).forEach(child => {
+        child.style.width = contentWidth + 'px';
+        child.style.flexShrink = '0';
+      });
+
+      // l'animazione della mini-griglia va in pausa per tutta la durata del movimento
+      const primeCells = card.querySelectorAll('.mc.prime');
+      primeCells.forEach(c => { c.style.animationPlayState = 'paused'; });
+      clearTimeout(card._lightUpResumeTimer);
+      card._lightUpResumeTimer = setTimeout(() => {
+        primeCells.forEach(c => { c.style.animationPlayState = 'running'; });
+      }, 1000);
+
       card.style.transition = 'none';
       card.style.position = 'absolute';
       card.style.top = '0px';
@@ -1476,6 +1515,13 @@
     });
 
     slot.addEventListener('mouseleave', () => {
+      const primeCells = card.querySelectorAll('.mc.prime');
+      primeCells.forEach(c => { c.style.animationPlayState = 'paused'; });
+      clearTimeout(card._lightUpResumeTimer);
+      card._lightUpResumeTimer = setTimeout(() => {
+        primeCells.forEach(c => { c.style.animationPlayState = 'running'; });
+      }, 1000);
+
       card.style.width = '';
       card.style.position = '';
       card.style.top = '';
@@ -1483,6 +1529,11 @@
       card.style.zIndex = '';
       card.style.boxShadow = '';
       card.style.transition = '';
+
+      Array.from(card.children).forEach(child => {
+        child.style.width = '';
+        child.style.flexShrink = '';
+      });
     });
   }
 
@@ -1495,9 +1546,9 @@
     for (let i = 0; i < 3; i++){
       const leftEntry = leftPodium && leftPodium[i];
       const rightEntry = rightPodium && rightPodium[i];
-      const leftNickname = leftEntry ? leftEntry.nickname : '—';
+      const leftNickname = leftEntry ? leftEntry.nickname : '';
       const leftTime = leftEntry ? `${leftEntry.time}s` : '—';
-      const rightNickname = rightEntry ? rightEntry.nickname : '—';
+      const rightNickname = rightEntry ? rightEntry.nickname : '';
       const rightTime = rightEntry ? `${rightEntry.time}s` : '—';
       html += `
         <div class="lb-row lb-row-dual ${rankClasses[i]}">
