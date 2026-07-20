@@ -622,12 +622,13 @@
     height: 100%;
     z-index: 0;
     pointer-events: none;
-    animation: constellation-drift 14s ease-in-out infinite;
+    animation: constellation-drift 7s ease-in-out infinite;
   }
   .math-constellation text{
     font-family:'Kalam', cursive;
     font-size: 1.5rem;
     fill: rgba(159, 176, 162, 0.20);
+    transition: opacity 1.2s ease;
   }
   @keyframes constellation-drift{
     0%, 100%{ transform: translate(0, 0); }
@@ -1535,6 +1536,7 @@
 
       // copia (non sposta) il contenuto già renderizzato della classifica: nessun nuovo fetch, nessun tocco al Worker
       if (lbPreview && leaderboardCard){
+        clearTimeout(card._lbClearTimer);
         lbPreview.innerHTML = leaderboardCard.innerHTML;
       }
 
@@ -1592,7 +1594,8 @@
         lbPreview.style.width = '';
         lbPreview.style.opacity = '';
         lbPreview.style.transition = '';
-        setTimeout(() => { lbPreview.innerHTML = ''; }, 1000);
+        clearTimeout(card._lbClearTimer);
+        card._lbClearTimer = setTimeout(() => { lbPreview.innerHTML = ''; }, 1000);
       }
     });
   }
@@ -1951,6 +1954,39 @@
 
   measureEratoHeight();
   render();
+
+  // ogni simbolo della costellazione ha un suo ciclo di vita indipendente:
+  // compare, dopo un tempo casuale sfuma, riappare altrove con un simbolo diverso
+  function initConstellationLifecycle(){
+    const svg = document.querySelector('.math-constellation');
+    if (!svg) return;
+    const symbolPool = ['π', '√', 'Σ', '∞', '∫', 'Δ', 'θ', '×', '÷'];
+    const texts = Array.from(svg.querySelectorAll('text'));
+
+    function respawn(el){
+      el.style.opacity = '0';
+      setTimeout(() => {
+        const newX = 30 + Math.random() * 940;
+        const newY = 30 + Math.random() * 840;
+        el.setAttribute('x', newX.toFixed(0));
+        el.setAttribute('y', newY.toFixed(0));
+        el.textContent = symbolPool[Math.floor(Math.random() * symbolPool.length)];
+        el.style.opacity = '';
+      }, 1200); // combacia con la transizione CSS di 1.2s
+    }
+
+    texts.forEach(el => {
+      function scheduleNext(){
+        const delay = 4000 + Math.random() * 6000; // ogni 4-10 secondi, sfalsato per ognuno
+        setTimeout(() => {
+          respawn(el);
+          scheduleNext();
+        }, delay);
+      }
+      scheduleNext();
+    });
+  }
+  initConstellationLifecycle();
 
   fetchLeaderboard();
   fetchPrimeRushLeaderboard();
