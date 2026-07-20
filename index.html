@@ -154,7 +154,7 @@
   .erato-lb-preview .lb-row{
     flex: 0 0 auto;
     height: 2.6rem;
-    width: 90%;
+    width: 85%;
     margin: 0 auto;
   }
   @keyframes erato-border-cycle{
@@ -1972,12 +1972,12 @@
       const distance = 70 + Math.random() * 70; // tragitto ampio, in una sola direzione
       const dx = Math.cos(angle) * distance;
       const dy = Math.sin(angle) * distance;
-      el.style.transition = 'transform 5s linear';
+      el.style.transition = 'transform 7s linear';
       el.style.transform = `translate(${dx}px, ${dy}px)`;
     }
 
     function respawn(el){
-      el.style.transition = 'opacity 0.8s ease';
+      el.style.transition = 'opacity 1s ease';
       el.style.opacity = '0';
       setTimeout(() => {
         const newX = 30 + Math.random() * 940;
@@ -1989,12 +1989,12 @@
         el.style.transform = 'translate(0, 0)';
         void el.getBoundingClientRect(); // forzo il reflow prima di far ripartire la dissolvenza
         setTimeout(() => {
-          el.style.transition = 'opacity 0.8s ease';
+          el.style.transition = 'opacity 1s ease';
           el.style.opacity = '';
           driftAway(el);
           lifeLoop(el);
         }, 500); // ricompaiono dopo mezzo secondo
-      }, 800); // durata della dissolvenza
+      }, 1000); // durata della dissolvenza
     }
 
     function lifeLoop(el){
