@@ -133,9 +133,9 @@
     overlay.className = 'modal-overlay';
     overlay.id = 'audioSettingsModal';
     overlay.innerHTML = `
-        <div class="modal-card" style="position:relative; text-align:left; background:var(--bg-panel); border:1px solid var(--rule); border-radius:10px; padding:2rem; max-width:480px; width:100%; box-sizing:border-box;">
+        <div class="modal-card" style="position:relative; text-align:left; background:var(--bg-panel); border:1px solid var(--rule); border-radius:10px; padding:2.4rem; max-width:576px; width:100%; box-sizing:border-box;">
         <button type="button" id="audioSettingsCloseBtn" aria-label="Close" style="position:absolute; top:0.7rem; right:0.7rem; width:2rem; height:2rem; border-radius:50%; border:none; background:var(--bg); color:var(--ink); font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
-        <h3 style="text-align:center;">🔊 Audio settings</h3>
+        <h3 style="text-align:center; font-size:1.76rem;">🔊 Audio settings</h3>
         <div class="audio-slider-row">
           <label>Music</label>
           <input type="range" id="musicVolSlider" min="0" max="100" step="10" value="${getMusicVol()}">
@@ -146,7 +146,7 @@
           <input type="range" id="sfxVolSlider" min="0" max="100" step="10" value="${getSfxVol()}">
           <span id="sfxVolLabel">${getSfxVol()}%</span>
         </div>
-        <p style="font-family:'Space Mono', monospace; font-size:0.8rem; color:var(--ink-dim); margin-top:0.8rem; text-align:center;">Double-click the speaker icon to mute or unmute.</p>
+        <p style="font-family:'Space Mono', monospace; font-size:0.88rem; color:var(--ink-dim); margin-top:0.8rem; text-align:center;">Double-click the speaker icon to mute or unmute.</p>
       </div>
     `;
     document.body.appendChild(overlay);
