@@ -103,17 +103,17 @@
     transition: background 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   }
   .cell:hover{
-    background: #2A3D31;
-    box-shadow: 0 0 10px 1px rgba(232,196,104,0.22);
-    border-color: rgba(232,196,104,0.35);
+    background: rgba(232,196,104,0.14);
+    box-shadow: 0 0 13px 2px rgba(232,196,104,0.32);
+    border-color: rgba(232,196,104,0.55);
   }
   .cell.selected{
-    color: var(--circle-color, var(--yellow));
-    background: rgba(232,196,104,0.10);
+    color: #1C1F16;
+    background: var(--circle-color, var(--yellow));
     border-color: var(--circle-color, var(--yellow));
     box-shadow:
       0 0 8px 1px var(--circle-color, var(--yellow)),
-      0 0 20px 5px rgba(232,196,104,0.35);
+      0 0 24px 7px var(--circle-color, var(--yellow));
   }
   .cell svg{ display:none; }
   .cell circle{
@@ -188,6 +188,20 @@
     color: var(--ink);
     cursor: not-allowed;
   }
+  .dev-skip-btn{
+    display: block;
+    width: 100%;
+    margin-top: 0.6rem;
+    padding: 0.5rem;
+    font-family:'Space Mono', monospace;
+    font-size: 1rem;
+    background: transparent;
+    color: var(--ink-dim);
+    border: 1px dashed var(--rule);
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .dev-skip-btn:hover{ border-color: var(--yellow); color: var(--yellow); }
   button.check.error:hover{ background: var(--red); }
 
   .feedback{ font-family:'Space Mono', monospace; font-size: 0.9rem; min-height: 1.4rem; margin: 0; }
@@ -300,6 +314,7 @@
       padding: 0;
       max-width: 100%;
     }
+    .dev-skip-btn{ display: none; }
   }
 
   @media (min-width: 901px) and (max-width: 1400px), (max-height: 800px){
@@ -573,6 +588,17 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="devSkipModal">
+  <div class="modal-card" style="position:relative;">
+    <button type="button" id="devSkipCloseBtn" aria-label="Close" style="position:absolute; top:0.7rem; right:0.7rem; width:2rem; height:2rem; border-radius:50%; border:none; background:var(--bg); color:var(--ink); font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+    <div class="modal-buttons" style="flex-direction:column;">
+      <button type="button" class="modal-btn yes" id="devSkip1Btn">+1</button>
+      <button type="button" class="modal-btn yes" id="devSkip25Btn">+25</button>
+      <button type="button" class="modal-btn yes" id="devSkip200Btn">200</button>
+      <button type="button" class="modal-btn no" id="devSkipResetBtn">Reset</button>
+    </div>
+  </div>
+</div>
 
 <div class="page-shell">
   <div class="ad-a" aria-hidden="true">Ad space</div>
@@ -815,6 +841,7 @@
           <input type="number" id="answerInput" placeholder="Sum of the primes" inputmode="numeric">
           <button class="check" id="checkBtn"><span class="check-label">${checkLabelHtml}</span></button>
         </div>
+        <button type="button" id="devSkipBtn" class="dev-skip-btn" aria-label="Dev skip">»</button>
         <p class="feedback" id="feedback"></p>
       </div>
     `;
@@ -907,6 +934,30 @@
 
     // solo ORA il pannello destro ha davvero tutti e 5 i riquadri dentro: l'altezza misurata è quella reale
     alignSidePanel();
+
+    // --- pulsante skip (solo PC, solo test): apre il popup con le 4 opzioni ---
+    document.getElementById('devSkipBtn').addEventListener('click', () => {
+      document.getElementById('devSkipModal').classList.add('visible');
+    });
+    document.getElementById('devSkipCloseBtn').addEventListener('click', () => {
+      document.getElementById('devSkipModal').classList.remove('visible');
+    });
+    document.getElementById('devSkipModal').addEventListener('click', (e) => {
+      if (e.target.id === 'devSkipModal') document.getElementById('devSkipModal').classList.remove('visible');
+    });
+    document.getElementById('devSkip1Btn').addEventListener('click', () => {
+      window.location.href = `eratostene_thesieve.html?n=${levelNum + 1}`;
+    });
+    document.getElementById('devSkip25Btn').addEventListener('click', () => {
+      window.location.href = `eratostene_thesieve.html?n=${Math.min(200, levelNum + 25)}`;
+    });
+    document.getElementById('devSkip200Btn').addEventListener('click', () => {
+      window.location.href = 'eratostene_thesieve.html?n=200';
+    });
+    document.getElementById('devSkipResetBtn').addEventListener('click', () => {
+      Object.keys(localStorage).filter(k => k.startsWith('erato_basic')).forEach(k => localStorage.removeItem(k));
+      window.location.href = 'eratostene_thesieve.html?n=1';
+    });
 
     document.getElementById('checkBtn').addEventListener('click', () => {
       playSound('tap');
