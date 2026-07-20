@@ -275,6 +275,10 @@
   .lb-row.rank-1{ border-color: #E8C468; }
   .lb-row.rank-2{ border-color: #C7CDD6; }
   .lb-row.rank-3{ border-color: #D08A52; }
+  .lb-split{ display:flex; gap: 0.6rem; flex: 1 1 0; min-height: 0; }
+  .lb-split .lb-section{ flex: 1 1 0; }
+  .lb-section-centered .lb-row{ justify-content: center; gap: 0.5rem; padding: 0 0.5rem; }
+  .lb-section-centered .lb-value{ text-align: center; }
   .lb-divider{
     flex-shrink: 0;
     height: 1px;
@@ -1446,14 +1450,17 @@
     });
   }
 
-  function podiumRowsHtml(podium){
+  function podiumRowsHtml(podium, count){
+    count = count || 3;
     const medals = ['🥇', '🥈', '🥉'];
     const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
     let html = '';
-    for (let i = 0; i < 3; i++){
+    for (let i = 0; i < count; i++){
       const entry = podium && podium[i];
       const label = entry ? `${entry.nickname} — ${entry.time}s` : '—';
-      html += `<div class="lb-row ${rankClasses[i]}"><span class="lb-medal">${medals[i]}</span><span class="lb-value">${label}</span></div>`;
+      const medal = medals[i] || `${i + 1}.`;
+      const rankClass = rankClasses[i] || '';
+      html += `<div class="lb-row ${rankClass}"><span class="lb-medal">${medal}</span><span class="lb-value">${label}</span></div>`;
     }
     return html;
   }
@@ -1511,8 +1518,13 @@
             <div class="lb-divider"></div>
             <div class="lb-half">
               <h3>Prime Rush</h3>
-              <div class="lb-section">
-                ${podiumRowsHtml(cachedPrimeRushPodium)}
+              <div class="lb-split">
+                <div class="lb-section lb-section-centered">
+                  ${podiumRowsHtml(cachedPrimeRushPodium, 6)}
+                </div>
+                <div class="lb-section lb-section-centered">
+                  ${podiumRowsHtml(null, 6)}
+                </div>
               </div>
             </div>
           </div>
