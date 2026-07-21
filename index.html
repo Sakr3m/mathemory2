@@ -257,6 +257,26 @@
     margin-top: 0.4rem;
   }
 
+  /* --- card "Coming Soon" (pagine dopo Eratosthenes): stessa dimensione esatta della
+     card di Eratosthenes, posizionata via JS (vedi buildComingSoonCard) --- */
+  .coming-soon-card{
+    position: absolute;
+    box-sizing: border-box;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-align: center;
+    background: var(--bg-panel-locked);
+    border: 1px dashed var(--rule);
+    border-radius: 6px;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .coming-soon-card .game-title-centered{ color: var(--ink-faint); }
+
   /* --- leaderboard vera: podio + record personali, due blocchi esattamente uguali --- */
   .leaderboard-card{
     display:flex;
@@ -1196,7 +1216,8 @@
     font-family:'Work Sans', sans-serif;
     font-size: 0.99rem;
     color: var(--ink-dim);
-    min-width: 6.05rem;
+    width: 6.05rem;
+    flex-shrink: 0;
   }
   .audio-slider-row input[type="range"]{
     flex: 1;
@@ -1206,7 +1227,8 @@
     font-family:'Space Mono', monospace;
     font-size: 0.935rem;
     color: var(--ink);
-    min-width: 3.08rem;
+    width: 3.08rem;
+    flex-shrink: 0;
     text-align: right;
   }
   .audio-toggle-btn{ cursor: pointer; }
@@ -1429,6 +1451,15 @@
     '2026-11-29T00:00:00+01:00',
   ];
 
+  // data mostrata solo sulla seconda card (il primo "Coming Soon" dopo Eratosthenes):
+  // 12 giorni dopo il 1 agosto, cioè il 13 agosto 2026. Calcolata in UTC puro (solo
+  // anno/mese/giorno, senza orario né fuso) per non dipendere dal fuso orario di chi
+  // esegue il codice: con un fuso indietro rispetto a +02:00, leggere l'ora locale
+  // del 1 agosto 00:00+02:00 darebbe ancora "31 luglio", sballando il conteggio di un giorno
+  const secondComingSoonUnlockDate = new Date(Date.UTC(2026, 7, 1));
+  secondComingSoonUnlockDate.setUTCDate(secondComingSoonUnlockDate.getUTCDate() + 12);
+  const secondComingSoonDateLabel = secondComingSoonUnlockDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+
   // --- progressi salvati per dispositivo ---
   function resumeHref(key, baseUrl){
     const last = localStorage.getItem(key) || '1';
@@ -1531,10 +1562,51 @@
 
   let cachedEratoHeight = null;
 
+  // posizione/dimensione condivisa da Eratosthenes e da tutte le card "Coming Soon": calcolata
+  // una sola volta (vedi computeCardGeometry), così restano sempre esattamente identiche
+  let cardGeometry = null;
+  // overlay "Coming Soon" già costruiti, indicizzati per pagina (currentIndex): costruiti al
+  // primo passaggio, poi solo mostrati/nascosti
+  const comingSoonOverlays = {};
+  // id dei setTimeout della sequenza di apertura di Eratosthenes ancora in attesa: se si
+  // naviga via prima che scadano, vanno cancellati (vedi playEratoIntroOverlay/render)
+  let eratoIntroTimeoutIds = [];
+  // true solo quando i font (Kalam/Work Sans) sono DAVVERO pronti: finché non lo sono,
+  // computeCardGeometry calcola comunque un valore (necessario per costruire una card
+  // "Coming Soon" richiesta troppo presto) ma non lo mette in cache, per non bloccare per
+  // sempre una misura fatta con font di fallback
+  let fontsReadyForGeometry = !(document.fonts && document.fonts.ready);
+  if (document.fonts && document.fonts.ready){
+    document.fonts.ready.then(() => { fontsReadyForGeometry = true; });
+  }
+
   // --- podio globale: letto dal Cloudflare Worker, null finché non arriva la prima risposta ---
   let cachedPodium = null;
   let cachedPrimeRushPodium = null;
   let eratoOverlayEl = null; // riferimento alla card animata (se già creata), per aggiornare la classifica quando arrivano dati freschi dal Worker
+
+  // margine destro della classifica: misurato dal vero (dipende solo dal padding interno,
+  // non dalla larghezza della card), condiviso tra refreshEratoLeaderboard (quando i dati
+  // arrivano dopo che la card è già finalizzata) e playEratoIntroOverlay (applicato subito
+  // dopo la creazione, mentre la card è ancora invisibile, per evitare il salto visibile)
+  function applyEratoLbMargin(overlay, lbHalf){
+    const miniSieve = overlay.querySelector('.mini-sieve');
+    if (!miniSieve) return;
+    // il bordo della card va tolto dal gap misurato: altrimenti finisce contato due volte
+    // (una volta implicito nel leftGap, una volta nel bordo destro reale quando il margine
+    // viene applicato), spostando la classifica di 1px in più rispetto alla griglia invece
+    // di restare alla stessa identica distanza
+    const overlayBorderWidth = parseFloat(getComputedStyle(overlay).borderLeftWidth) || 0;
+    const leftGap = miniSieve.getBoundingClientRect().left - overlay.getBoundingClientRect().left - overlayBorderWidth;
+    const lbHalfPaddingRight = lbHalf ? (parseFloat(getComputedStyle(lbHalf).paddingRight) || 0) : 0;
+    const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
+    overlay.dataset.eratoLbMarginRight = marginRight;
+    overlay.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
+      el.style.width = '85%';
+      el.style.marginRight = marginRight + 'px';
+      el.style.marginLeft = 'auto';
+    });
+  }
 
   // aggiorna la classifica dentro la card già visibile, se esiste — altrimenti i dati
   // arrivati dopo la comparsa non si vedrebbero mai (l'overlay non viene ricostruito
@@ -1563,18 +1635,7 @@
       return;
     }
 
-    const miniSieve = eratoOverlayEl.querySelector('.mini-sieve');
-    if (miniSieve){
-      const leftGap = miniSieve.getBoundingClientRect().left - eratoOverlayEl.getBoundingClientRect().left;
-      const lbHalfPaddingRight = parseFloat(getComputedStyle(lbHalf).paddingRight) || 0;
-      const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
-      eratoOverlayEl.dataset.eratoLbMarginRight = marginRight;
-      eratoOverlayEl.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
-        el.style.width = '85%';
-        el.style.marginRight = marginRight + 'px';
-        el.style.marginLeft = 'auto';
-      });
-    }
+    applyEratoLbMargin(eratoOverlayEl, lbHalf);
     // catturato QUI, dopo i margini: mai più uno snapshot "sporco" senza allineamento
     lbHalf._realLbHtml = lbHalf.innerHTML;
   }
@@ -1662,8 +1723,8 @@
       // animata indipendente
       return '';
     } else {
-      // le pagine diverse da Eratosthenes restano vuote per ora, di proposito —
-      // le rimetteremo quando sarà il momento
+      // stesso discorso per le pagine "Coming Soon": niente segnaposto nella griglia,
+      // la card vera vive nella copia indipendente costruita da showComingSoonPage()
       return '';
     }
   }
@@ -1846,8 +1907,12 @@
   // ============================================================
   // SEZIONE: RENDER PRINCIPALE — chiamato a ogni cambio pagina del
   // carosello, ridimensionamento, arrivo dati classifiche, ecc.
+  // isNavigation è true solo quando la chiamata arriva da un vero cambio pagina
+  // (freccette del carosello): solo in quel caso la card fa la sua comparsa
+  // (fade-in, nessun movimento) — un resize o un aggiornamento della classifica
+  // non devono far ricomparire nulla
   // ============================================================
-  function render(){
+  function render(isNavigation){
     const grid = document.getElementById('gamesGrid');
     const g = games[currentIndex];
     const number = currentIndex + 1;
@@ -1857,18 +1922,32 @@
     centerEratoRightEdge();
     if (gameState(g) === 'open'){
       // la card vera (l'overlay) vive fuori dalla griglia: se era stata nascosta
-      // per una pagina diversa, la rimostro
-      if (eratoOverlayEl) eratoOverlayEl.style.display = 'flex';
+      // per una pagina diversa, la rimostro; le eventuali card "Coming Soon" vanno
+      // invece nascoste, altrimenti resterebbero visibili sopra a tutto anche qui
+      Object.values(comingSoonOverlays).forEach(el => { el.style.display = 'none'; });
       if (grid.dataset.eratoIntroPlayed !== 'true'){
         handleEratoIntro(grid, g, number);
+      } else if (isNavigation){
+        // ritorno alla prima pagina dal carosello: solo dissolvenza, niente
+        // movimento verticale, il contenuto interno (mini-griglia, ecc.) non si tocca
+        fadeInCardContainer(eratoOverlayEl);
+      } else if (eratoOverlayEl){
+        eratoOverlayEl.style.display = 'flex';
+        eratoOverlayEl.style.opacity = '1';
       }
-      // se era già stata mostrata in precedenza, non si tocca più nulla: niente
-      // animazione, niente ricentraggio dei pulsanti — restano esattamente dove sono
     } else {
       // pagina diversa da Eratosthenes: la sua card (l'overlay) va nascosta, altrimenti
       // resterebbe visibile sopra a tutto anche qui
-      if (eratoOverlayEl) eratoOverlayEl.style.display = 'none';
-      playLockedPageIntro(grid);
+      if (eratoOverlayEl){
+        eratoOverlayEl.style.display = 'none';
+        // se la sequenza di apertura era ancora in corso (utente ha cliccato "next"
+        // molto rapidamente), i timeout residui vanno cancellati: altrimenti
+        // scatterebbero più tardi su un overlay nascosto, misurando rettangoli a
+        // zero e scrivendo dividerX=0 in modo permanente (vedi FIX 2)
+        eratoIntroTimeoutIds.forEach(id => clearTimeout(id));
+        eratoIntroTimeoutIds.length = 0;
+      }
+      showComingSoonPage(currentIndex, isNavigation);
     }
 
     document.getElementById('prevBtn').classList.toggle('disabled', currentIndex === 0);
@@ -1953,46 +2032,106 @@
     });
   }
 
-  // per le pagine bloccate (Game 2, 3, ecc.): niente comparsa dal basso, la card parte
-  // già visibile al centro della pagina e scorre verso la sua posizione normale — ad
-  // ogni cambio pagina, non solo la prima volta
-  function playLockedPageIntro(grid){
-    if (window.innerWidth <= 900) return;
-    const card = grid.querySelector('.game-card.locked');
-    if (!card) return;
-
-    const finalRect = card.getBoundingClientRect();
-    const finalTop = finalRect.top + window.scrollY;
-    const finalLeft = finalRect.left + window.scrollX;
-    const finalWidth = finalRect.width;
-    const finalHeight = finalRect.height;
-
-    // i pulsanti di navigazione non si ricentrano più qui: restano fermi dove sono
-    // stati messi la prima volta, come richiesto
+  // calcola una sola volta la posizione/dimensione comune a TUTTE le card (Eratosthenes
+  // e ognuna delle "Coming Soon" che la seguono): le une copiano gli stessi identici
+  // valori delle altre, così restano sempre esattamente della stessa dimensione
+  function computeCardGeometry(g, number){
+    if (cardGeometry) return cardGeometry;
+    const grid = document.getElementById('gamesGrid');
+    // larghezza calcolata come una singola colonna della griglia, immaginata con il
+    // lato destro al centro della pagina, poi raddoppiata verso destra: quello è il
+    // totale per la card di Eratosthenes + classifica
+    const gridRect = grid.getBoundingClientRect();
+    const gridStyle = getComputedStyle(grid);
+    const gap = parseFloat(gridStyle.columnGap || gridStyle.gap) || 0;
+    const singleColWidth = (gridRect.width - gap) / 2;
 
     const viewportCenter = window.innerWidth / 2;
-    const centerLeft = viewportCenter - finalWidth / 2;
+    const targetWidth = singleColWidth * 2;
+    const targetLeft = viewportCenter - singleColWidth;
+    const targetTop = gridRect.top + window.scrollY;
 
-    card.style.transition = 'none';
-    card.style.position = 'absolute';
-    card.style.top = finalTop + 'px';
-    card.style.left = centerLeft + 'px';
-    card.style.width = finalWidth + 'px';
-    card.style.zIndex = '5';
-    void card.offsetWidth; // forzo il reflow prima di avviare la transizione
-    requestAnimationFrame(() => {
-      card.style.transition = 'left 1.25s ease';
-      card.style.left = finalLeft + 'px';
-      setTimeout(() => {
-        // torno alla normale posizione nel flusso, per non lasciare stili appiccicati
-        card.style.transition = '';
-        card.style.position = '';
-        card.style.top = '';
-        card.style.left = '';
-        card.style.width = '';
-        card.style.zIndex = '';
-      }, 1250);
+    // l'altezza la misuro qui, da zero, con una prova di contenuto vero, apposta
+    // per NON dipendere mai da cachedEratoHeight — quella variabile è condivisa con
+    // altri punti del codice ed è già stata causa di bug quando qualcosa la sporcava
+    // in un momento sbagliato
+    const targetHeight = measureEratoContentHeight(g, number, targetWidth);
+
+    const geometry = { top: targetTop, left: targetLeft, width: targetWidth, height: targetHeight };
+    // memoizzo solo se i font sono già davvero pronti: se qualcuno chiama questa funzione
+    // prima (es. buildComingSoonCard invocata troppo presto), il valore misurato con font
+    // di fallback NON va in cache, altrimenti resterebbe sbagliato per sempre anche dopo
+    // che handleEratoIntro la richiama a font ormai pronti
+    if (fontsReadyForGeometry) cardGeometry = geometry;
+    return geometry;
+  }
+
+  // riallinea le eventuali card "Coming Soon" già costruite alla geometria corrente
+  // (fresca): usata sia quando i font finiscono di caricarsi (possono essere state
+  // costruite prima, con misure sbagliate) sia al resize della finestra, visto che la
+  // card vera di Eratosthenes si ricentra dinamicamente a ogni render() mentre queste
+  // erano rimaste fisse ai pixel calcolati una tantum
+  function repositionComingSoonOverlays(){
+    cardGeometry = null;
+    const overlays = Object.values(comingSoonOverlays);
+    if (!overlays.length) return;
+    const geometry = computeCardGeometry(games[0], 1);
+    overlays.forEach(el => {
+      el.style.top = geometry.top + 'px';
+      el.style.left = geometry.left + 'px';
+      el.style.width = geometry.width + 'px';
+      el.style.height = geometry.height + 'px';
     });
+  }
+
+  // card "Coming Soon": stessa identica dimensione/posizione di Eratosthenes (vedi
+  // computeCardGeometry), titolo con lo stesso font del titolo di Eratosthenes, ed
+  // eventualmente una data più piccola sotto (solo sulla primissima, vedi chiamante)
+  function buildComingSoonCard(index){
+    const geometry = computeCardGeometry(games[0], 1);
+    const overlay = document.createElement('div');
+    overlay.className = 'coming-soon-card';
+    const dateHtml = index === 1 ? `<p class="unlock-date">${secondComingSoonDateLabel}</p>` : '';
+    overlay.innerHTML = `<h2 class="game-title-centered">COMING SOON</h2>${dateHtml}`;
+    overlay.style.top = geometry.top + 'px';
+    overlay.style.left = geometry.left + 'px';
+    overlay.style.width = geometry.width + 'px';
+    overlay.style.height = geometry.height + 'px';
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  // dissolvenza pura del contenitore della card, nessun movimento: usata per il cambio
+  // pagina dal carosello (avanti, indietro, ritorno a Eratosthenes), sia per la card
+  // "Coming Soon" sia per il ritorno alla card di Eratosthenes già esistente — il suo
+  // contenuto interno (mini-griglia, ecc.) non viene toccato, solo il contenitore
+  function fadeInCardContainer(el){
+    if (!el) return;
+    el.style.display = 'flex';
+    el.style.transition = 'none';
+    el.style.opacity = '0';
+    void el.offsetWidth; // forzo il reflow prima di avviare la dissolvenza
+    requestAnimationFrame(() => {
+      el.style.transition = `opacity ${CARD_PAGE_CHANGE_FADE_MS}ms ease`;
+      el.style.opacity = '1';
+    });
+  }
+
+  // mostra la card "Coming Soon" della pagina data, nascondendo le altre; la costruisce
+  // al primo passaggio, poi la riusa. isNavigation distingue un vero cambio pagina dal
+  // carosello (fade-in) da un semplice re-render (resize, ecc: nessuna animazione)
+  function showComingSoonPage(index, isNavigation){
+    if (window.innerWidth <= 900) return; // su mobile la schermata "Coming Soon" è un'altra (vedi mobileGameSectionHtml)
+    Object.keys(comingSoonOverlays).forEach(key => {
+      if (Number(key) !== index) comingSoonOverlays[key].style.display = 'none';
+    });
+    if (!comingSoonOverlays[index]){
+      comingSoonOverlays[index] = buildComingSoonCard(index);
+    }
+    const overlay = comingSoonOverlays[index];
+    if (isNavigation || overlay.style.display !== 'flex'){
+      fadeInCardContainer(overlay);
+    }
   }
 
   function handleEratoIntro(grid, g, number){
@@ -2001,28 +2140,9 @@
     grid.dataset.eratoIntroPlayed = 'true';
 
     function measureAndPlay(){
-      // larghezza calcolata come una singola colonna della griglia (la stessa
-      // larghezza delle vecchie card "coming soon" nelle altre pagine), immaginata con
-      // il lato destro al centro della pagina, poi raddoppiata verso destra: quello è
-      // il totale per la card di Eratosthenes + classifica
-      const gridRect = grid.getBoundingClientRect();
-      const gridStyle = getComputedStyle(grid);
-      const gap = parseFloat(gridStyle.columnGap || gridStyle.gap) || 0;
-      const singleColWidth = (gridRect.width - gap) / 2;
-
-      const viewportCenter = window.innerWidth / 2;
-      const targetWidth = singleColWidth * 2;
-      const targetLeft = viewportCenter - singleColWidth;
-      const targetTop = gridRect.top + window.scrollY;
-
-      // l'altezza la misuro qui, da zero, con una prova di contenuto vero, apposta
-      // per NON dipendere mai da cachedEratoHeight — quella variabile è condivisa con
-      // altri punti del codice ed è già stata causa di bug quando qualcosa la sporcava
-      // in un momento sbagliato
-      const targetHeight = measureEratoContentHeight(g, number, targetWidth);
-
-      centerNavColumns(targetTop, targetHeight);
-      playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, g, number);
+      const geometry = computeCardGeometry(g, number);
+      centerNavColumns(geometry.top, geometry.height);
+      playEratoIntroOverlay(geometry.top, geometry.left, geometry.width, geometry.height, g, number);
     }
 
     // aspetto che i font siano DAVVERO pronti prima di misurare qualunque cosa: il
@@ -2235,8 +2355,14 @@
     }
   }
 
+  // durata della comparsa iniziale (movimento verso l'alto), condivisa con qualunque
+  // altra card copi questa stessa animazione al caricamento della pagina
+  const CARD_INITIAL_FADE_MS = 1500;
+  // durata della dissolvenza al semplice cambio pagina dal carosello (nessun movimento)
+  const CARD_PAGE_CHANGE_FADE_MS = 750;
+
   function playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, g, number){
-    const fadeInDuration = 1500;   // comparsa: un secondo e mezzo
+    const fadeInDuration = CARD_INITIAL_FADE_MS; // comparsa: un secondo e mezzo
     const pauseDuration = 250;    // pausa ferma al centro: un quarto di secondo
     const expandDuration = 1250;  // allargamento: un secondo e un quarto
 
@@ -2282,19 +2408,7 @@
     // dalla larghezza della card (che cambierà durante l'animazione), quindi è già
     // corretta ora — applicarla qui invece che a fine animazione evita il salto
     // visibile che si vedeva prima
-    const miniSieveEarly = overlay.querySelector('.mini-sieve');
-    if (miniSieveEarly){
-      const lbHalfEarly = overlay.querySelector('.erato-leaderboard-half');
-      const leftGapEarly = miniSieveEarly.getBoundingClientRect().left - overlay.getBoundingClientRect().left;
-      const lbHalfPaddingRightEarly = lbHalfEarly ? (parseFloat(getComputedStyle(lbHalfEarly).paddingRight) || 0) : 0;
-      const marginRightEarly = Math.max(0, leftGapEarly - lbHalfPaddingRightEarly);
-      overlay.dataset.eratoLbMarginRight = marginRightEarly;
-      overlay.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
-        el.style.width = '85%';
-        el.style.marginRight = marginRightEarly + 'px';
-        el.style.marginLeft = 'auto';
-      });
-    }
+    applyEratoLbMargin(overlay, overlay.querySelector('.erato-leaderboard-half'));
 
     // la card resta ferma qui, pronta e invisibile, finché la pagina non è DAVVERO
     // finita di caricare (non solo il DOM: immagini, font, tutto) — solo allora parte
@@ -2307,21 +2421,28 @@
           overlay.style.opacity = '1';
           overlay.style.transform = 'translateY(0)';
 
-          setTimeout(() => {
+          // id dei timeout salvati man mano: se l'utente naviga via (overlay nascosto)
+          // prima che scadano, render() li cancella — altrimenti finalizeEratoLayout
+          // finirebbe per misurare un overlay display:none, scrivendo margini a zero
+          // in modo permanente (vedi FIX 2)
+          const t1 = setTimeout(() => {
             // pausa ferma al centro, poi l'allargamento
-            setTimeout(() => {
+            const t2 = setTimeout(() => {
               overlay.style.transition = `left ${expandDuration}ms ease, width ${expandDuration}ms ease`;
               overlay.style.left = targetLeft + 'px';
               overlay.style.width = targetWidth + 'px';
-              setTimeout(() => {
+              const t3 = setTimeout(() => {
                 // solo ORA la card è davvero alla larghezza finale: qui, e non prima,
                 // ha senso misurare dove sono davvero le tabelle della classifica
                 finalizeEratoLayout(overlay);
                 // l'animazione intera è finita: ora sì che si può interagire
                 overlay.style.pointerEvents = 'auto';
               }, expandDuration);
+              eratoIntroTimeoutIds.push(t3);
             }, pauseDuration);
+            eratoIntroTimeoutIds.push(t2);
           }, fadeInDuration);
+          eratoIntroTimeoutIds.push(t1);
         });
       });
     }
@@ -2418,7 +2539,7 @@
     const next = currentIndex + direction;
     if (next < 0 || next > NAV_LIMIT_INDEX) return;
     currentIndex = next;
-    render();
+    render(true);
   }
 
   // tenere premuto (mouse o dito) continua a scorrere finché non si rilascia
@@ -2463,6 +2584,7 @@
   window.addEventListener('resize', () => {
     applyMobileRotation();
     measureEratoHeight();
+    repositionComingSoonOverlays();
     render();
   });
 
@@ -2623,6 +2745,10 @@
     document.fonts.ready.then(() => {
       cachedEratoHeight = null;
       measureEratoHeight();
+      // eventuali card "Coming Soon" già costruite prima che i font fossero pronti
+      // (es. navigazione molto rapida al caricamento) vanno riallineate ora che la
+      // misura è finalmente corretta (vedi computeCardGeometry/FIX 1)
+      repositionComingSoonOverlays();
       render();
     });
   }
