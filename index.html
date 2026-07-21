@@ -84,6 +84,7 @@
     display:grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.1rem;
+    margin-top: 2.2rem; /* compenso stimato: senza, si salirebbe di tutto lo spazio della vecchia etichetta, non solo di "mezzo pulsante". Da verificare e aggiustare dal vero. */
   }
 
   .game-slot{
@@ -249,6 +250,15 @@
     justify-content: center;
   }
   .game-card.locked p.desc{ color: var(--ink-faint); }
+
+  .game-x-slot{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    text-align: center;
+  }
 
   .unlock-date{
     font-family:'Space Mono', monospace;
@@ -1276,7 +1286,6 @@
     </div>
 
     <div class="games-column">
-      <div class="game-label-row" id="gameLabelRow"></div>
       <div class="games" id="gamesGrid"></div>
     </div>
 
@@ -1711,6 +1720,19 @@
       </div>`;
   }
 
+  // pannello "Game X" (etichetta + invito al regolamento) nel secondo slot della griglia,
+  // dove prima stava la card della leaderboard
+  function gameXSlotHtml(number){
+    const heightStyle = cachedEratoHeight ? `style="height:${cachedEratoHeight}px"` : '';
+    return `
+      <div class="game-slot entrance-anim">
+        <div class="game-card game-x-slot" ${heightStyle}>
+          <button type="button" class="game-number-btn" onclick="openRulesModal()">Game ${number}</button>
+          <span class="tap-hint">Tap Game ${number} to read the rules.</span>
+        </div>
+      </div>`;
+  }
+
   function leaderboardCardHtml(g){
     const state = gameState(g);
     const heightStyle = cachedEratoHeight ? `style="height:${cachedEratoHeight}px"` : '';
@@ -1834,15 +1856,10 @@
     const g = games[currentIndex];
     const number = currentIndex + 1;
 
-    grid.innerHTML = gameCardHtml(g, number) + leaderboardCardHtml(g);
+    grid.innerHTML = gameCardHtml(g, number) + gameXSlotHtml(number);
     initEratoHoverExpand(grid, g);
     positionIndexSoundBtn();
     centerEratoRightEdge();
-
-    // etichetta centrale sopra la riga: Game X cliccabile (porta al regolamento, quando esisterà) + suggerimento
-    document.getElementById('gameLabelRow').innerHTML = `
-      <button type="button" class="game-number-btn" onclick="openRulesModal()">Game ${number}</button>
-      <span class="tap-hint">Tap Game ${number} to read the rules.</span>`;
 
     // l'altezza di riferimento è sempre quella naturale di Eratosthenes (il gioco vero), non della leaderboard
     const cards = grid.querySelectorAll('.game-card');
