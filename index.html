@@ -449,11 +449,10 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: flex-end;
     gap: 1rem;
     height: 100%;
-    text-align: center;
-    padding: 0 0.5rem;
+    text-align: right;
     box-sizing: border-box;
   }
   .erato-rules-preview h3{
@@ -468,7 +467,6 @@
     line-height: 1.55;
     color: var(--ink);
     margin: 0;
-    max-width: 90%;
   }
   .erato-rules-preview p.device-note-old{
     font-family:'Space Mono', monospace;
@@ -1517,6 +1515,7 @@
       const leftGap = miniSieve.getBoundingClientRect().left - eratoOverlayEl.getBoundingClientRect().left;
       const lbHalfPaddingRight = parseFloat(getComputedStyle(lbHalf).paddingRight) || 0;
       const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
+      eratoOverlayEl.dataset.eratoLbMarginRight = marginRight;
       eratoOverlayEl.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
         el.style.width = '85%';
         el.style.marginRight = marginRight + 'px';
@@ -2017,6 +2016,13 @@
         lbHalf.style.opacity = '0';
         swapTimer = setTimeout(() => {
           lbHalf.innerHTML = rulesPreviewHtml;
+          const rulesPreviewEl = lbHalf.querySelector('.erato-rules-preview');
+          if (rulesPreviewEl){
+            const savedMarginRight = overlay.dataset.eratoLbMarginRight || '0';
+            rulesPreviewEl.style.width = '85%';
+            rulesPreviewEl.style.marginRight = savedMarginRight + 'px';
+            rulesPreviewEl.style.marginLeft = 'auto';
+          }
           void lbHalf.offsetWidth; // forzo il reflow prima di far ripartire la dissolvenza
           lbHalf.style.opacity = '1';
         }, fadeMs);
@@ -2042,6 +2048,7 @@
       const lbHalfEl = overlay.querySelector('.erato-leaderboard-half');
       const lbHalfPaddingRight = lbHalfEl ? (parseFloat(getComputedStyle(lbHalfEl).paddingRight) || 0) : 0;
       const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
+      overlay.dataset.eratoLbMarginRight = marginRight;
       overlay.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
         el.style.width = '85%';
         el.style.marginRight = marginRight + 'px';
