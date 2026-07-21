@@ -1939,9 +1939,30 @@
         // ritorno alla prima pagina dal carosello: stessa sequenza delle altre pagine
         // (stretta, fade in, pausa, allargamento), solo che qui la card riparte dalla
         // sua identica dimensione finale già nota; il contenuto interno (mini-griglia,
-        // classifica, ecc.) resta quello che era, non viene ricostruito
+        // classifica, ecc.) resta quello che era, non viene ricostruito.
+        // riga divisoria/GAME 1/ritratto hanno una posizione X fissa in pixel calcolata
+        // sulla larghezza piena: se la card si restringe con loro già visibili, l'overflow
+        // hidden li taglia via finché l'allargamento non li "raggiunge" di nuovo (il
+        // "pezzettino di RESET" segnalato). Li nascondo prima di restringere, e li
+        // faccio ricomparire con la stessa dissolvenza di 0.9s usata alla primissima
+        // comparsa, ma solo a sequenza (fade+pausa+allargamento) completamente finita
         const geometry = computeCardGeometry(g, number);
-        playCardNavAnimation(eratoOverlayEl, geometry.top, geometry.left, geometry.width, geometry.height);
+        const dividerLine = eratoOverlayEl.querySelector('.erato-mid-divider');
+        const gamexTag = eratoOverlayEl.querySelector('.erato-gamex-tag');
+        const faceImg = eratoOverlayEl.querySelector('.erato-face-img');
+        [dividerLine, gamexTag, faceImg].forEach(el => {
+          if (!el) return;
+          el.style.transition = 'none';
+          el.style.opacity = '0';
+        });
+        playCardNavAnimation(eratoOverlayEl, geometry.top, geometry.left, geometry.width, geometry.height, () => {
+          [dividerLine, gamexTag, faceImg].forEach(el => {
+            if (!el) return;
+            void el.offsetWidth;
+            el.style.transition = 'opacity 0.9s ease';
+            el.style.opacity = '1';
+          });
+        });
       } else if (eratoOverlayEl){
         eratoOverlayEl.style.display = 'flex';
         eratoOverlayEl.style.opacity = '1';
@@ -2354,7 +2375,7 @@
   // altra card copi questa stessa animazione al caricamento della pagina
   const CARD_INITIAL_FADE_MS = 1500;
   // durata della dissolvenza al semplice cambio pagina dal carosello (nessun movimento)
-  const CARD_PAGE_CHANGE_FADE_MS = 750;
+  const CARD_PAGE_CHANGE_FADE_MS = 1000;
   // pausa ferma al centro e allargamento: condivisi tra la comparsa iniziale di
   // Eratosthenes e la sequenza di cambio pagina dal carosello, stessa identica durata
   const CARD_PAUSE_MS = 250;
@@ -2367,7 +2388,7 @@
   // e SENZA il movimento verticale di 30px, che appartiene solo alla comparsa iniziale
   // dal caricamento pagina. Usata sia per le card "Coming Soon" sia per il ritorno alla
   // card di Eratosthenes via freccette
-  function playCardNavAnimation(overlay, targetTop, targetLeft, targetWidth, targetHeight){
+  function playCardNavAnimation(overlay, targetTop, targetLeft, targetWidth, targetHeight, onDone){
     const narrowWidth = targetWidth / 2;
     const viewportCenter = window.innerWidth / 2;
     const centerLeft = viewportCenter - narrowWidth / 2;
@@ -2394,6 +2415,7 @@
             overlay.style.width = targetWidth + 'px';
             setTimeout(() => {
               overlay.style.pointerEvents = 'auto';
+              if (onDone) onDone();
             }, CARD_EXPAND_MS);
           }, CARD_PAUSE_MS);
         }, CARD_PAGE_CHANGE_FADE_MS);
