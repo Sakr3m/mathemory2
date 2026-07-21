@@ -1726,9 +1726,8 @@
     const heightStyle = cachedEratoHeight ? `style="height:${cachedEratoHeight}px"` : '';
     return `
       <div class="game-slot entrance-anim">
-        <div class="game-card game-x-slot" ${heightStyle}>
+        <div class="game-x-slot" ${heightStyle}>
           <button type="button" class="game-number-btn" onclick="openRulesModal()">Game ${number}</button>
-          <span class="tap-hint">Tap Game ${number} to read the rules.</span>
         </div>
       </div>`;
   }
