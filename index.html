@@ -156,9 +156,8 @@
   }
   @keyframes erato-border-cycle{
     0%   { border-color: rgba(232,196,104,0.85); box-shadow: 0 0 0 1px rgba(232,196,104,0.55), 0 0 0 2px rgba(232,196,104,0.25); }
-    25%  { border-color: rgba(95,168,160,0.85); box-shadow: 0 0 0 1px rgba(95,168,160,0.55), 0 0 0 2px rgba(95,168,160,0.25); }
-    50%  { border-color: rgba(193,85,75,0.85); box-shadow: 0 0 0 1px rgba(193,85,75,0.55), 0 0 0 2px rgba(193,85,75,0.25); }
-    75%  { border-color: rgba(127,119,221,0.85); box-shadow: 0 0 0 1px rgba(127,119,221,0.55), 0 0 0 2px rgba(127,119,221,0.25); }
+    33%  { border-color: rgba(217,121,58,0.85); box-shadow: 0 0 0 1px rgba(217,121,58,0.55), 0 0 0 2px rgba(217,121,58,0.25); }
+    66%  { border-color: rgba(193,85,75,0.85); box-shadow: 0 0 0 1px rgba(193,85,75,0.55), 0 0 0 2px rgba(193,85,75,0.25); }
     100% { border-color: rgba(232,196,104,0.85); box-shadow: 0 0 0 1px rgba(232,196,104,0.55), 0 0 0 2px rgba(232,196,104,0.25); }
   }
   @media (prefers-reduced-motion: reduce){
@@ -1457,6 +1456,25 @@
   // --- podio globale: letto dal Cloudflare Worker, null finché non arriva la prima risposta ---
   let cachedPodium = null;
   let cachedPrimeRushPodium = null;
+  let eratoOverlayEl = null; // riferimento alla card animata (se già creata), per aggiornare la classifica quando arrivano dati freschi dal Worker
+
+  // aggiorna la classifica dentro la card già visibile, se esiste — altrimenti i dati
+  // arrivati dopo la comparsa non si vedrebbero mai (l'overlay non viene ricostruito
+  // da render(), che tocca solo il segnaposto invisibile nella griglia)
+  function refreshEratoLeaderboard(){
+    if (!eratoOverlayEl) return;
+    const lbHalf = eratoOverlayEl.querySelector('.erato-leaderboard-half');
+    if (!lbHalf) return;
+    lbHalf.innerHTML = eratoLbPreviewHtml(games[0]);
+    const miniSieve = eratoOverlayEl.querySelector('.mini-sieve');
+    if (miniSieve){
+      const leftGap = miniSieve.getBoundingClientRect().left - eratoOverlayEl.getBoundingClientRect().left;
+      eratoOverlayEl.querySelectorAll('.lb-row').forEach(row => {
+        row.style.marginRight = leftGap + 'px';
+        row.style.marginLeft = 'auto';
+      });
+    }
+  }
   const LEADERBOARD_API = 'https://eratostene.sl-eternal-lux.workers.dev';
 
   // ============================================================
@@ -1468,6 +1486,7 @@
       .then(data => {
         cachedPodium = data.podium || [];
         render();
+        refreshEratoLeaderboard();
       })
       .catch(() => {
         // se il Worker non risponde, restano i trattini: nessun errore mostrato all'utente
@@ -1480,6 +1499,7 @@
       .then(data => {
         cachedPrimeRushPodium = data.podium || [];
         render();
+        refreshEratoLeaderboard();
       })
       .catch(() => {
         // se il Worker non risponde, restano i trattini: nessun errore mostrato all'utente
@@ -1889,13 +1909,27 @@
       border: 1px solid rgba(232,196,104,0.85);
       border-radius: 6px;
       box-shadow: 0 0 0 1px rgba(232,196,104,0.55), 0 0 0 2px rgba(232,196,104,0.25);
+      animation: erato-border-cycle 14s ease-in-out infinite;
       z-index: 999;
       opacity: 0;
       transform: translateY(30px);
       pointer-events: none;
     `;
     document.body.appendChild(overlay);
+    eratoOverlayEl = overlay;
     loopMiniSievePreview(overlay);
+
+    // il bordo destro delle tabelle della classifica deve distare dal bordo destro della
+    // card tanto quanto l'anteprima della griglia dista dal bordo sinistro: misurato dal
+    // vero, non un valore fisso (queste sono tutte uguali, la parte più lunga della classifica)
+    const miniSieve = overlay.querySelector('.mini-sieve');
+    if (miniSieve){
+      const leftGap = miniSieve.getBoundingClientRect().left - overlay.getBoundingClientRect().left;
+      overlay.querySelectorAll('.lb-row').forEach(row => {
+        row.style.marginRight = leftGap + 'px';
+        row.style.marginLeft = 'auto';
+      });
+    }
 
     // la card resta ferma qui, pronta e invisibile, finché la pagina non è DAVVERO
     // finita di caricare (non solo il DOM: immagini, font, tutto) — solo allora parte
