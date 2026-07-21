@@ -457,7 +457,7 @@
   .erato-rules-preview{
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: stretch;
     gap: 1rem;
     height: 100%;
@@ -1519,7 +1519,11 @@
     if (!eratoOverlayEl) return;
     const lbHalf = eratoOverlayEl.querySelector('.erato-leaderboard-half');
     if (!lbHalf) return;
-    lbHalf.innerHTML = eratoLbPreviewHtml(games[0]);
+    const freshHtml = eratoLbPreviewHtml(games[0]);
+    lbHalf._realLbHtml = freshHtml; // sempre aggiornato, anche se in questo momento non è visibile
+    if (lbHalf._isShowingRules) return; // RULES è in vista ora: non lo disturbo, verrà mostrato al mouseleave
+
+    lbHalf.innerHTML = freshHtml;
     const miniSieve = eratoOverlayEl.querySelector('.mini-sieve');
     if (miniSieve){
       const leftGap = miniSieve.getBoundingClientRect().left - eratoOverlayEl.getBoundingClientRect().left;
@@ -1815,7 +1819,19 @@
     grid.innerHTML = gameCardHtml(g, number);
     positionIndexSoundBtn();
     centerEratoRightEdge();
-    handleEratoIntro(grid, g, number);
+    if (gameState(g) === 'open'){
+      if (grid.dataset.eratoIntroPlayed === 'true' && eratoOverlayEl){
+        // già mostrata in precedenza: niente animazione, ma ricentro comunque i
+        // pulsanti sulla sua altezza vera (nel frattempo si potrebbe essere passati
+        // da altre pagine, con unaltezza diversa)
+        const overlayRect = eratoOverlayEl.getBoundingClientRect();
+        centerNavColumns(overlayRect.top + window.scrollY, overlayRect.height);
+      } else {
+        handleEratoIntro(grid, g, number);
+      }
+    } else {
+      playLockedPageIntro(grid);
+    }
 
     document.getElementById('prevBtn').classList.toggle('disabled', currentIndex === 0);
     document.getElementById('nextBtn').classList.toggle('disabled', currentIndex === NAV_LIMIT_INDEX);
@@ -1896,6 +1912,47 @@
       const navCenterY = navRect.top + window.scrollY + navRect.height / 2;
       const shift = cardCenterY - navCenterY;
       nav.style.transform = `translateY(${shift}px)`;
+    });
+  }
+
+  // per le pagine bloccate (Game 2, 3, ecc.): niente comparsa dal basso, la card parte
+  // già visibile al centro della pagina e scorre verso la sua posizione normale — ad
+  // ogni cambio pagina, non solo la prima volta
+  function playLockedPageIntro(grid){
+    if (window.innerWidth <= 900) return;
+    const card = grid.querySelector('.game-card.locked');
+    if (!card) return;
+
+    const finalRect = card.getBoundingClientRect();
+    const finalTop = finalRect.top + window.scrollY;
+    const finalLeft = finalRect.left + window.scrollX;
+    const finalWidth = finalRect.width;
+    const finalHeight = finalRect.height;
+
+    centerNavColumns(finalTop, finalHeight);
+
+    const viewportCenter = window.innerWidth / 2;
+    const centerLeft = viewportCenter - finalWidth / 2;
+
+    card.style.transition = 'none';
+    card.style.position = 'absolute';
+    card.style.top = finalTop + 'px';
+    card.style.left = centerLeft + 'px';
+    card.style.width = finalWidth + 'px';
+    card.style.zIndex = '5';
+    void card.offsetWidth; // forzo il reflow prima di avviare la transizione
+    requestAnimationFrame(() => {
+      card.style.transition = 'left 1.25s ease';
+      card.style.left = finalLeft + 'px';
+      setTimeout(() => {
+        // torno alla normale posizione nel flusso, per non lasciare stili appiccicati
+        card.style.transition = '';
+        card.style.position = '';
+        card.style.top = '';
+        card.style.left = '';
+        card.style.width = '';
+        card.style.zIndex = '';
+      }, 1250);
     });
   }
 
@@ -2015,13 +2072,19 @@
           <p>Happy prime hunting.</p>
           <p class="device-note-old">Progress is saved per device — switching devices restarts from level 1.</p>
         </div>`;
-      let savedLbContent = '';
+      // stato esplicito, mai dedotto leggendo l'HTML attuale: leggere lbHalf.innerHTML
+      // per "indovinare" cosa c'è dentro era la causa del blocco — con hover ripetuti
+      // veloci, a volte veniva letto mentre RULES era già in vista, salvando quel
+      // testo come se fosse la classifica vera, corrompendo il ripristino per sempre
+      lbHalf._realLbHtml = lbHalf.innerHTML;
+      lbHalf._isShowingRules = false;
       let swapTimer = null;
       const fadeMs = 350;
 
       rulesBtn.addEventListener('mouseenter', () => {
+        if (lbHalf._isShowingRules) return; // già in vista o in transizione: ignoro il re-trigger
+        lbHalf._isShowingRules = true;
         clearTimeout(swapTimer);
-        savedLbContent = lbHalf.innerHTML; // fresco ad ogni hover, mai una copia vecchia
         lbHalf.style.transition = `opacity ${fadeMs}ms ease`;
         lbHalf.style.opacity = '0';
         swapTimer = setTimeout(() => {
@@ -2038,11 +2101,13 @@
         }, fadeMs);
       });
       rulesBtn.addEventListener('mouseleave', () => {
+        if (!lbHalf._isShowingRules) return; // non era in vista: nulla da ripristinare
+        lbHalf._isShowingRules = false;
         clearTimeout(swapTimer);
         lbHalf.style.transition = `opacity ${fadeMs}ms ease`;
         lbHalf.style.opacity = '0';
         swapTimer = setTimeout(() => {
-          lbHalf.innerHTML = savedLbContent;
+          lbHalf.innerHTML = lbHalf._realLbHtml; // sempre il contenuto vero, mai una copia sporcata
           void lbHalf.offsetWidth;
           lbHalf.style.opacity = '1';
         }, fadeMs);
