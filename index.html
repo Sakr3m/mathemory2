@@ -265,7 +265,7 @@
     flex: 1 1 0;
     display:flex;
     flex-direction:column;
-    justify-content: space-evenly;
+    justify-content: center;
     gap: 0.5rem;
     min-height: 0;
   }
@@ -424,7 +424,7 @@
   .game-number-btn:hover{ color: var(--yellow); border-color: var(--yellow); }
   .erato-gamex-tag{
     position: absolute;
-    top: 0;
+    top: -2px;
     left: 50%;
     transform: translateX(-50%);
     background: var(--bg-panel);
@@ -436,7 +436,8 @@
     text-transform: uppercase;
     color: var(--ink-dim);
     border: 2px solid var(--ink-dim);
-    border-radius: 6px;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
     padding: 0.25rem 0.9rem;
   }
   .erato-title-row{
@@ -497,7 +498,7 @@
     bottom: 0.3rem;
     left: 0;
     transform: translateX(-50%);
-    max-height: 22.95%;
+    max-height: 21.8%;
     width: auto;
     pointer-events: none;
     z-index: 2;
@@ -2101,7 +2102,7 @@
       const gamexTag = overlay.querySelector('.erato-gamex-tag');
       if (gamexTag){
         gamexTag.style.left = dividerX + 'px';
-        gamexTag.style.top = '0px';
+        gamexTag.style.top = '-2px';
         // ora che è nel posto giusto, lo faccio comparire gradualmente — mai visibile
         // nella posizione sbagliata, nessun salto
         requestAnimationFrame(() => {
