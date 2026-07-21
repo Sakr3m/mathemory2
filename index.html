@@ -340,13 +340,6 @@
     color: rgba(243,239,228,0.5);
     margin: 0;
   }
-  .device-note-full{
-    width: 100%;
-    text-align: center;
-    margin-top: -0.275rem;
-    margin-bottom: -0.655rem;
-  }
-
   /* --- mini crivello 5x5, dentro le card attive --- */
   .preview-row{
     display:flex;
@@ -473,7 +466,7 @@
     font-family:'Work Sans', sans-serif;
     font-size: 1.097rem;
     line-height: 1.55;
-    color: var(--ink-dim);
+    color: var(--ink);
     margin: 0;
     max-width: 90%;
   }
@@ -1643,7 +1636,6 @@
             <p class="desc"><span class="desc-title">${g.descTitle}</span>${g.desc}</p>
           </div>
         </div>
-        <p class="device-note-old device-note-full">Progress is saved per device — switching devices restarts from level 1.</p>
       </div>`;
   }
 
@@ -2006,7 +1998,7 @@
           <p><strong>Modes:</strong> each mode has its own rules on time limits and leaderboards — check them when choosing your mode.</p>
           <p><strong>Fair play:</strong> out of respect for all participants, please don't cheat.</p>
           <p>Happy prime hunting.</p>
-          <p>Progress is saved per device — switching devices restarts from level 1.</p>
+          <p class="device-note-old">Progress is saved per device — switching devices restarts from level 1.</p>
         </div>`;
       let savedLbContent = '';
       let swapTimer = null;
