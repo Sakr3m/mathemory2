@@ -447,7 +447,7 @@
     top: 50%;
     transform: translateY(-50%);
     font-family:'Space Mono', monospace;
-    font-size: 1rem;
+    font-size: 1.15rem;
     letter-spacing: 0.06em;
     color: var(--ink-dim);
     text-transform: uppercase;
@@ -2006,14 +2006,14 @@
       const rulesPreviewHtml = `
         <div class="erato-rules-preview">
           <h3>Rules</h3>
-          <p>Find the 5 hidden primes in the 5×5 grid and add them up.</p>
-          <p>Enter the total — correct answer, next level.</p>
-          <p>Each mode has its own time limit and leaderboard.</p>
-          <p class="erato-rules-fairplay">Play fair. Happy hunting.</p>
+          <p>Find the 5 hidden primes in the grid and add them up.</p>
+          <p>Enter the total — get it right to advance.</p>
+          <p>Each mode runs its own timed leaderboard race.</p>
+          <p class="erato-rules-fairplay">Play fair, and happy hunting.</p>
         </div>`;
       let savedLbContent = '';
       let swapTimer = null;
-      const fadeMs = 500;
+      const fadeMs = 350;
 
       rulesBtn.addEventListener('mouseenter', () => {
         clearTimeout(swapTimer);
