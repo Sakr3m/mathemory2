@@ -1526,25 +1526,7 @@
     if (lbHalf._isShowingRules) return; // RULES è in vista ora: non lo disturbo, verrà mostrato al mouseleave
 
     lbHalf.innerHTML = freshHtml;
-
-    // se l'animazione di apertura non è ancora finita (la card potrebbe essere ancora
-    // a metà dell'allargamento), non calcolo qui i margini: misurare una larghezza
-    // "a metà strada" darebbe un valore sbagliato. finalizeEratoLayout() li applicherà
-    // correttamente lui stesso, appena l'allargamento sarà davvero completo
-    if (eratoOverlayEl.dataset.eratoFinalized !== 'true') return;
-
-    const miniSieve = eratoOverlayEl.querySelector('.mini-sieve');
-    if (miniSieve){
-      const leftGap = miniSieve.getBoundingClientRect().left - eratoOverlayEl.getBoundingClientRect().left;
-      const lbHalfPaddingRight = parseFloat(getComputedStyle(lbHalf).paddingRight) || 0;
-      const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
-      eratoOverlayEl.dataset.eratoLbMarginRight = marginRight;
-      eratoOverlayEl.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
-        el.style.width = '85%';
-        el.style.marginRight = marginRight + 'px';
-        el.style.marginLeft = 'auto';
-      });
-    }
+    // TEST: tolto il calcolo dinamico del margine, resta solo la centratura semplice via CSS
   }
   const LEADERBOARD_API = 'https://eratostene.sl-eternal-lux.workers.dev';
 
@@ -2066,23 +2048,9 @@
     overlay.dataset.eratoFinalized = 'true'; // da qui in poi, è sicuro calcolare margini basati sulla larghezza finale
     const lbHalf = overlay.querySelector('.erato-leaderboard-half');
 
-    // il bordo destro delle tabelle della classifica deve distare dal bordo destro della
-    // card tanto quanto l'anteprima della griglia dista dal bordo sinistro: misurato dal
-    // vero, non un valore fisso (queste sono tutte uguali, la parte più lunga della classifica).
-    // Questo va fatto PRIMA di catturare il contenuto "vero" per RULES qui sotto, altrimenti
-    // il ripristino al mouseleave riporterebbe una versione senza questo margine applicato
-    const miniSieve = overlay.querySelector('.mini-sieve');
-    if (miniSieve){
-      const leftGap = miniSieve.getBoundingClientRect().left - overlay.getBoundingClientRect().left;
-      const lbHalfPaddingRight = lbHalf ? (parseFloat(getComputedStyle(lbHalf).paddingRight) || 0) : 0;
-      const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
-      overlay.dataset.eratoLbMarginRight = marginRight;
-      overlay.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
-        el.style.width = '85%';
-        el.style.marginRight = marginRight + 'px';
-        el.style.marginLeft = 'auto';
-      });
-    }
+    // TEST: tolto il calcolo dinamico del margine (misurato dal vero), che si è
+    // dimostrato fragile e difficile da diagnosticare — resta solo la centratura
+    // semplice via CSS (width:85%; margin:0 auto), già definita come regola base
 
     // riga divisoria: a metà esatta tra il bordo destro del pulsante "Play now" di
     // destra e il bordo sinistro delle tabelle della classifica — misurata dal vero
@@ -2185,10 +2153,8 @@
           lbHalf.innerHTML = rulesPreviewHtml;
           const rulesPreviewEl = lbHalf.querySelector('.erato-rules-preview');
           if (rulesPreviewEl){
-            const savedMarginRight = overlay.dataset.eratoLbMarginRight || '0';
             rulesPreviewEl.style.width = '85%';
-            rulesPreviewEl.style.marginRight = savedMarginRight + 'px';
-            rulesPreviewEl.style.marginLeft = 'auto';
+            rulesPreviewEl.style.margin = '0 auto';
           }
           void lbHalf.offsetWidth; // forzo il reflow prima di far ripartire la dissolvenza
           lbHalf.style.opacity = '1';
