@@ -1544,8 +1544,13 @@
     const lbHalf = eratoOverlayEl.querySelector('.erato-leaderboard-half');
     if (!lbHalf) return;
     const freshHtml = eratoLbPreviewHtml(games[0]);
-    lbHalf._realLbHtml = freshHtml; // sempre aggiornato, anche se in questo momento non è visibile
-    if (lbHalf._isShowingRules) return; // RULES è in vista ora: non lo disturbo, verrà mostrato al mouseleave
+    if (lbHalf._isShowingRules){
+      // RULES è in vista ora, non tocco il DOM: i margini verranno comunque
+      // riapplicati al mouseleave leggendo overlay.dataset.eratoLbMarginRight,
+      // quindi qui va bene salvare la versione ancora senza margini
+      lbHalf._realLbHtml = freshHtml;
+      return;
+    }
 
     lbHalf.innerHTML = freshHtml;
 
@@ -1553,7 +1558,10 @@
     // a metà dell'allargamento), non calcolo qui i margini: misurare una larghezza
     // "a metà strada" darebbe un valore sbagliato. finalizeEratoLayout() li applicherà
     // correttamente lui stesso, appena l'allargamento sarà davvero completo
-    if (eratoOverlayEl.dataset.eratoFinalized !== 'true') return;
+    if (eratoOverlayEl.dataset.eratoFinalized !== 'true'){
+      lbHalf._realLbHtml = lbHalf.innerHTML;
+      return;
+    }
 
     const miniSieve = eratoOverlayEl.querySelector('.mini-sieve');
     if (miniSieve){
@@ -1567,6 +1575,8 @@
         el.style.marginLeft = 'auto';
       });
     }
+    // catturato QUI, dopo i margini: mai più uno snapshot "sporco" senza allineamento
+    lbHalf._realLbHtml = lbHalf.innerHTML;
   }
   const LEADERBOARD_API = 'https://eratostene.sl-eternal-lux.workers.dev';
 
@@ -2210,6 +2220,14 @@
         lbHalf.style.opacity = '0';
         swapTimer = setTimeout(() => {
           lbHalf.innerHTML = lbHalf._realLbHtml; // sempre il contenuto vero, mai una copia sporcata
+          // riapplico comunque il margine salvato: anche se lo snapshot non lo avesse
+          // già, la classifica torna sempre allineata a destra
+          const savedMarginRight = overlay.dataset.eratoLbMarginRight || '0';
+          lbHalf.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
+            el.style.width = '85%';
+            el.style.marginRight = savedMarginRight + 'px';
+            el.style.marginLeft = 'auto';
+          });
           void lbHalf.offsetWidth;
           lbHalf.style.opacity = '1';
         }, fadeMs);
