@@ -1630,14 +1630,9 @@
       // animata indipendente
       return '';
     } else {
-      const heightStyle = cachedEratoHeight ? `style="height:${cachedEratoHeight}px"` : '';
-      return `
-        <div class="game-slot entrance-anim">
-          <div class="game-card locked" ${heightStyle}>
-            <h2>COMING SOON</h2>
-            <p class="unlock-date">${g.unlockLabel}</p>
-          </div>
-        </div>`;
+      // le pagine diverse da Eratosthenes restano vuote per ora, di proposito —
+      // le rimetteremo quando sarà il momento
+      return '';
     }
   }
 
