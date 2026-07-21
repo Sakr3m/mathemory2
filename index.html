@@ -410,7 +410,7 @@
     font-weight:700;
     border-radius: 6px;
     animation: mc-light-up 1s ease forwards;
-    animation-delay: calc(var(--i) * 1000ms + 3.5s);
+    animation-delay: calc(var(--i) * 750ms + 3.5s);
   }
   @keyframes mc-light-up{
     from{ color: var(--ink); background: transparent; box-shadow: none; }
@@ -1469,8 +1469,10 @@
     const miniSieve = eratoOverlayEl.querySelector('.mini-sieve');
     if (miniSieve){
       const leftGap = miniSieve.getBoundingClientRect().left - eratoOverlayEl.getBoundingClientRect().left;
+      const lbHalfPaddingRight = parseFloat(getComputedStyle(lbHalf).paddingRight) || 0;
+      const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
       eratoOverlayEl.querySelectorAll('.lb-row').forEach(row => {
-        row.style.marginRight = leftGap + 'px';
+        row.style.marginRight = marginRight + 'px';
         row.style.marginLeft = 'auto';
       });
     }
@@ -1872,10 +1874,13 @@
         c.style.animation = 'none';
         void c.offsetWidth; // forzo il reflow prima di far ripartire l'animazione
         c.style.animation = 'mc-light-up 1s ease forwards';
-        c.style.animationDelay = `${i * 1000}ms`;
+        c.style.animationDelay = `${i * 750}ms`;
       });
     }
-    setInterval(replay, 60000);
+    setInterval(() => {
+      // un secondo di pausa prima di far ripartire la sequenza di accensione
+      setTimeout(replay, 1000);
+    }, 60000);
   }
 
   function playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, g){
@@ -1925,8 +1930,11 @@
     const miniSieve = overlay.querySelector('.mini-sieve');
     if (miniSieve){
       const leftGap = miniSieve.getBoundingClientRect().left - overlay.getBoundingClientRect().left;
+      const lbHalfEl = overlay.querySelector('.erato-leaderboard-half');
+      const lbHalfPaddingRight = lbHalfEl ? (parseFloat(getComputedStyle(lbHalfEl).paddingRight) || 0) : 0;
+      const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
       overlay.querySelectorAll('.lb-row').forEach(row => {
-        row.style.marginRight = leftGap + 'px';
+        row.style.marginRight = marginRight + 'px';
         row.style.marginLeft = 'auto';
       });
     }
