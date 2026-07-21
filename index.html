@@ -1539,20 +1539,10 @@
     const fixedContent = card.querySelector('.erato-fixed-content');
     const lbPreview = card.querySelector('.erato-lb-preview');
 
-    let hoverReady = false;
-    let isExpanded = false;
-    setTimeout(() => { hoverReady = true; }, 950); // poco più della comparsa più lenta (0.3s ritardo + 0.6s durata)
-
-    card.addEventListener('mouseenter', () => {
-      if (!hoverReady || isExpanded) return;
-      isExpanded = true;
-      performEratoExpand(card, fixedContent, lbPreview, g, grid, { startLeft: 0, animateLeft: false, widthDuration: '1s' });
-    });
-
-    // apertura automatica al caricamento: la card compare al centro della pagina
-    // (comparsa 25% più lenta di quella normale), poi scorre verso la sua posizione
-    // abituale mentre si allarga, rivelando la classifica — nessun hover richiesto
-    // per questa prima apertura. L'hover manuale resta comunque attivo da qui in poi.
+    // apertura automatica al caricamento (una sola volta): la card compare al centro
+    // della pagina (comparsa 25% più lenta di quella normale), poi scorre verso la sua
+    // posizione abituale mentre si allarga alla stessa velocità che aveva l'hover,
+    // rivelando la classifica. Resta aperta da lì in poi, nessun hover manuale.
     if (grid.dataset.eratoIntroPlayed !== 'true'){
       grid.dataset.eratoIntroPlayed = 'true';
       const normalWidth = card.getBoundingClientRect().width;
@@ -1571,45 +1561,9 @@
       const introFadeDuration = 750; // 0.6s di base, 25% più lento
       const introStagger = 100; // combacia con lo scaglionamento della comparsa
       setTimeout(() => {
-        if (!isExpanded){
-          isExpanded = true;
-          performEratoExpand(card, fixedContent, lbPreview, g, grid, { startLeft: centerLeft, animateLeft: true, widthDuration: '1s' });
-        }
+        performEratoExpand(card, fixedContent, lbPreview, g, grid, { startLeft: centerLeft, animateLeft: true, widthDuration: '1s' });
       }, introStagger + introFadeDuration);
     }
-
-
-    card.addEventListener('mouseleave', () => {
-      if (!isExpanded) return;
-      isExpanded = false;
-      const primeCells = card.querySelectorAll('.mc.prime');
-      primeCells.forEach(c => { c.style.animationPlayState = 'paused'; });
-      clearTimeout(card._lightUpResumeTimer);
-      card._lightUpResumeTimer = setTimeout(() => {
-        primeCells.forEach(c => { c.style.animationPlayState = 'running'; });
-      }, 1000);
-
-      card.style.width = '';
-      card.style.height = '';
-      card.style.position = '';
-      card.style.top = '';
-      card.style.left = '';
-      card.style.zIndex = '';
-      card.style.boxShadow = '';
-      card.style.transition = '';
-
-      if (fixedContent){
-        fixedContent.style.width = '';
-        fixedContent.style.flexShrink = '';
-      }
-      if (lbPreview){
-        lbPreview.style.width = '';
-        lbPreview.style.opacity = '';
-        lbPreview.style.transition = '';
-        clearTimeout(card._lbClearTimer);
-        card._lbClearTimer = setTimeout(() => { lbPreview.innerHTML = ''; }, 1000);
-      }
-    });
   }
 
   // 3 righe, ognuna ospita 2 classifiche affiancate con la stessa medaglia al centro:
