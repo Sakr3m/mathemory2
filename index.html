@@ -1437,10 +1437,8 @@
   }
 
   // le 11 date mostrate su ciascuna card "Coming Soon": la seconda card (il primo
-  // "Coming Soon" dopo Eratosthenes) è il 1 agosto 2026. Da lì in poi, ogni data è la
-  // precedente +12 giorni contando anche il giorno di partenza (cioè +11 giorni di
-  // calendario per il primo salto: dall'1 al 12 agosto, contando le 24h dell'1, sono
-  // 12 giorni), poi +12 giorni di calendario per tutti i salti successivi.
+  // "Coming Soon" dopo Eratosthenes) è il 1 agosto 2026, poi ogni data successiva è
+  // +12 giorni di calendario uniformi (stesso schema di raceEndLabels/unlockLabels).
   // Calcolata in UTC puro (solo anno/mese/giorno, senza orario né fuso) per non
   // dipendere dal fuso orario di chi esegue il codice
   const comingSoonUnlockLabels = [];
@@ -1449,7 +1447,7 @@
     for (let i = 0; i < 11; i++){
       comingSoonUnlockLabels.push(d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }));
       d = new Date(d);
-      d.setUTCDate(d.getUTCDate() + (i === 0 ? 11 : 12));
+      d.setUTCDate(d.getUTCDate() + 12);
     }
   }
 
