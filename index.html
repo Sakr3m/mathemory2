@@ -1762,17 +1762,6 @@
     centerEratoRightEdge();
     handleEratoIntro(grid, g);
 
-    // l'altezza di riferimento è sempre quella naturale di Eratosthenes (il gioco vero), non della leaderboard
-    const cards = grid.querySelectorAll('.game-card');
-    cards.forEach(c => { c.style.height = ''; });
-    const openCard = grid.querySelector('.game-card:not(.locked):not(.leaderboard-card)');
-    if (openCard){
-      cachedEratoHeight = openCard.offsetHeight;
-    }
-    if (cachedEratoHeight){
-      cards.forEach(c => { c.style.height = cachedEratoHeight + 'px'; });
-    }
-
     document.getElementById('prevBtn').classList.toggle('disabled', currentIndex === 0);
     document.getElementById('nextBtn').classList.toggle('disabled', currentIndex === NAV_LIMIT_INDEX);
 
