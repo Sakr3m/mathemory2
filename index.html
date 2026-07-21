@@ -126,6 +126,7 @@
 
   /* bordo con colore animato, sulla card (ormai statica) di Eratosthenes */
   .erato-slot-wide{ grid-column: 1 / -1; }
+  .erato-placeholder{ opacity: 0; pointer-events: none; }
   .erato-final-card{
     border-width: 1px;
     animation: erato-border-cycle 14s ease-in-out infinite;
@@ -1513,7 +1514,7 @@
     const state = gameState(g);
     if (state === 'open'){
       return `
-        <div class="game-slot entrance-anim erato-slot-wide">
+        <div class="game-slot entrance-anim erato-slot-wide erato-placeholder">
           <div class="game-card erato-final-card">
             <div class="erato-content-half">
               <h2 class="game-title-centered">${g.title}</h2>
@@ -1774,34 +1775,21 @@
   // resta nascosta finché la copia animata indipendente non ha finito il suo lavoro
   function handleEratoIntro(grid){
     if (window.innerWidth <= 900) return;
+    if (grid.dataset.eratoIntroPlayed === 'true') return;
     const card = grid.querySelector('.erato-final-card');
     if (!card) return;
+    grid.dataset.eratoIntroPlayed = 'true';
 
-    if (grid.dataset.eratoIntroPlayed !== 'true'){
-      grid.dataset.eratoIntroPlayed = 'true';
+    // il segnaposto è già invisibile via CSS (opacity:0), riservava solo lo spazio nella
+    // griglia: mi basta misurarlo e leggere il contenuto, senza spostare nulla
+    const targetRect = card.getBoundingClientRect();
+    const targetTop = targetRect.top + window.scrollY;
+    const targetLeft = targetRect.left + window.scrollX;
+    const targetWidth = targetRect.width;
+    const targetHeight = targetRect.height;
+    const contentHalfHtml = (card.querySelector('.erato-content-half') || {}).innerHTML || '';
 
-      // misuro PRIMA di spostarla: questa è la posizione/dimensione che la card nuova dovrà raggiungere
-      const targetRect = card.getBoundingClientRect();
-      const targetTop = targetRect.top + window.scrollY;
-      const targetLeft = targetRect.left + window.scrollX;
-      const targetWidth = targetRect.width;
-      const targetHeight = targetRect.height;
-      const contentHalfHtml = (card.querySelector('.erato-content-half') || {}).innerHTML || '';
-
-      card.style.position = 'absolute';
-      card.style.top = '0px';
-      card.style.left = '0px';
-      card.style.zIndex = '3';
-
-      playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, contentHalfHtml);
-    } else {
-      // un render successivo (font, fetch, ecc.) ha ricreato la card da capo: la
-      // rilocalizzo comunque sopra al titolo, staticamente, senza rifare l'animazione
-      card.style.position = 'absolute';
-      card.style.top = '0px';
-      card.style.left = '0px';
-      card.style.zIndex = '3';
-    }
+    playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, contentHalfHtml);
   }
 
   // "card nuova": indipendente, prende tutto lo spazio che le serve. Compare al centro
