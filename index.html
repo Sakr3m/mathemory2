@@ -50,15 +50,14 @@
   header{
     margin-bottom: calc(2.2vh + 3px);
   }
-  header::after{
-    content: '';
+  .header-divider{
     display: block;
     width: 22.3rem;
     max-width: 100%;
-    height: 3px;
-    background: var(--rule);
+    height: 10px;
     margin: 2.2vh auto 0;
   }
+  .header-divider path{ fill: var(--rule); }
 
   .mark{
     font-family:'Kalam', cursive;
@@ -104,7 +103,7 @@
     opacity: 0;
     animation: card-entrance 0.6s ease forwards;
   }
-  .game-slot.entrance-anim:nth-child(1){ animation-delay: 0.1s; }
+  .game-slot.entrance-anim:nth-child(1){ animation-delay: 0.1s; animation-duration: 0.75s; } /* 25% più lenta, per la card di Eratosthenes */
   .game-slot.entrance-anim:nth-child(2){ animation-delay: 0.3s; }
   @media (prefers-reduced-motion: reduce){
     .game-slot.entrance-anim{ animation: none; opacity: 1; }
@@ -158,11 +157,11 @@
     margin: 0 auto;
   }
   @keyframes erato-border-cycle{
-    0%   { border-color: #E8C468; }
-    25%  { border-color: #5FA8A0; }
-    50%  { border-color: #C1554B; }
-    75%  { border-color: #7F77DD; }
-    100% { border-color: #E8C468; }
+    0%   { border-color: rgba(232,196,104,0.55); }
+    25%  { border-color: rgba(95,168,160,0.55); }
+    50%  { border-color: rgba(193,85,75,0.55); }
+    75%  { border-color: rgba(127,119,221,0.55); }
+    100% { border-color: rgba(232,196,104,0.55); }
   }
   @media (prefers-reduced-motion: reduce){
     .game-card:not(.locked):not(.leaderboard-card){ animation: none; }
@@ -1226,6 +1225,9 @@
       <span class="mark">Mathemory</span>
     </div>
     <p class="subtitle">A collection of math games, unlocking one after another over time.<br>Each one runs its own ~12-day race with a leaderboard ranked by fastest completion time.<br>Your progress is saved automatically, so you can always pick up right where you left off.</p>
+    <svg class="header-divider" viewBox="0 0 356 10" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,5 Q89,2 178,3.5 Q267,2 356,5 Q267,8 178,6.5 Q89,8 0,5 Z" />
+    </svg>
   </header>
 
   <div class="carousel-row">
@@ -1465,6 +1467,69 @@
   // Resta disattivata finché l'effetto a comparsa non ha finito, per non sovrapporre le due
   // animazioni. Se un giorno l'effetto a comparsa viene tolto, questo timer va rimosso o
   // azzerato: senza comparsa non serve più aspettare nulla.
+  // logica di espansione condivisa: usata sia dall'hover manuale sia dall'apertura
+  // automatica al caricamento. startLeft è la posizione (in px, relativa alla normale)
+  // da cui parte lo scorrimento; se animateLeft è true, la posizione scorre verso 0
+  // insieme all'allargamento (usato per l'apertura automatica centrata)
+  function performEratoExpand(card, fixedContent, lbPreview, g, grid, options){
+    options = options || {};
+    const startWidth = card.getBoundingClientRect().width;
+    const startHeight = card.getBoundingClientRect().height;
+    const style = getComputedStyle(card);
+    const contentWidth = card.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+
+    card.style.height = startHeight + 'px';
+
+    if (fixedContent){
+      fixedContent.style.width = contentWidth + 'px';
+      fixedContent.style.flexShrink = '0';
+    }
+
+    if (lbPreview){
+      clearTimeout(card._lbClearTimer);
+      lbPreview.innerHTML = eratoLbPreviewHtml(g);
+      const miniSieve = card.querySelector('.mini-sieve');
+      if (miniSieve){
+        const leftGap = miniSieve.getBoundingClientRect().left - card.getBoundingClientRect().left;
+        lbPreview.querySelectorAll('.lb-row').forEach(row => {
+          row.style.marginRight = leftGap + 'px';
+          row.style.marginLeft = 'auto';
+        });
+      }
+    }
+
+    const primeCells = card.querySelectorAll('.mc.prime');
+    primeCells.forEach(c => { c.style.animationPlayState = 'paused'; });
+    clearTimeout(card._lightUpResumeTimer);
+    card._lightUpResumeTimer = setTimeout(() => {
+      primeCells.forEach(c => { c.style.animationPlayState = 'running'; });
+    }, 1000);
+
+    const startLeft = options.startLeft || 0;
+    const widthDuration = options.widthDuration || '1s';
+
+    card.style.transition = 'none';
+    card.style.position = 'absolute';
+    card.style.top = '0px';
+    card.style.left = startLeft + 'px';
+    card.style.width = startWidth + 'px';
+    card.style.zIndex = '5';
+    void card.offsetWidth;
+    requestAnimationFrame(() => {
+      const eratoShift = parseFloat(grid.dataset.eratoShift || '0');
+      const leftPart = options.animateLeft ? `, left ${widthDuration} ease` : '';
+      card.style.transition = `width ${widthDuration} ease, box-shadow 0.3s ease${leftPart}`;
+      card.style.left = '0px';
+      card.style.width = (startWidth * 2 + 17.6 - eratoShift * 2) + 'px';
+      card.style.boxShadow = '0 10px 34px rgba(0,0,0,0.45)';
+      if (lbPreview){
+        lbPreview.style.transition = `width ${widthDuration} ease, opacity ${widthDuration} ease`;
+        lbPreview.style.width = startWidth + 'px';
+        lbPreview.style.opacity = '1';
+      }
+    });
+  }
+
   function initEratoHoverExpand(grid, g){
     if (window.innerWidth <= 900) return;
     const slot = grid.querySelector('.game-slot:first-child');
@@ -1481,69 +1546,38 @@
     card.addEventListener('mouseenter', () => {
       if (!hoverReady || isExpanded) return;
       isExpanded = true;
-      const startWidth = card.getBoundingClientRect().width;
-      const startHeight = card.getBoundingClientRect().height;
-      const style = getComputedStyle(card);
-      const contentWidth = card.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      performEratoExpand(card, fixedContent, lbPreview, g, grid, { startLeft: 0, animateLeft: false, widthDuration: '1s' });
+    });
 
-      // l'altezza resta bloccata a quella di partenza per tutta la durata dell'hover:
-      // senza questo, il contenuto clonato della classifica (altezza naturale diversa)
-      // può far "saltare" l'altezza della card proprio mentre il mouse ci sta sopra,
-      // facendo credere al browser che il cursore sia uscito — causa quasi certa
-      // della sparizione a intermittenza segnalata
-      card.style.height = startHeight + 'px';
+    // apertura automatica al caricamento: la card compare al centro della pagina
+    // (comparsa 25% più lenta di quella normale), poi scorre verso la sua posizione
+    // abituale mentre si allarga, rivelando la classifica — nessun hover richiesto
+    // per questa prima apertura. L'hover manuale resta comunque attivo da qui in poi.
+    if (grid.dataset.eratoIntroPlayed !== 'true'){
+      grid.dataset.eratoIntroPlayed = 'true';
+      const normalWidth = card.getBoundingClientRect().width;
+      const viewportCenter = window.innerWidth / 2;
+      const cardLeftAtRest = card.getBoundingClientRect().left;
+      const centerLeft = (viewportCenter - normalWidth / 2) - cardLeftAtRest;
 
-      // il contenuto originale resta fermo alla sua larghezza di partenza, non si allarga insieme alla card
-      if (fixedContent){
-        fixedContent.style.width = contentWidth + 'px';
-        fixedContent.style.flexShrink = '0';
-      }
-
-      // genera il contenuto della classifica direttamente dai dati in cache: nessun nuovo
-      // fetch, nessun tocco al Worker, e non dipende più dall'esistenza della vecchia card
-      if (lbPreview){
-        clearTimeout(card._lbClearTimer);
-        lbPreview.innerHTML = eratoLbPreviewHtml(g);
-
-        // il bordo destro delle tabelle deve distare dal bordo destro della card tanto quanto
-        // l'anteprima della griglia dista dal bordo sinistro: misurato dal vero, non un valore fisso
-        const miniSieve = card.querySelector('.mini-sieve');
-        if (miniSieve){
-          const leftGap = miniSieve.getBoundingClientRect().left - card.getBoundingClientRect().left;
-          lbPreview.querySelectorAll('.lb-row').forEach(row => {
-            row.style.marginRight = leftGap + 'px';
-            row.style.marginLeft = 'auto';
-          });
-        }
-      }
-
-      // l'animazione della mini-griglia va in pausa per tutta la durata del movimento
-      const primeCells = card.querySelectorAll('.mc.prime');
-      primeCells.forEach(c => { c.style.animationPlayState = 'paused'; });
-      clearTimeout(card._lightUpResumeTimer);
-      card._lightUpResumeTimer = setTimeout(() => {
-        primeCells.forEach(c => { c.style.animationPlayState = 'running'; });
-      }, 1000);
-
-      card.style.transition = 'none';
+      // subito, prima che la comparsa sia visibile, sposto la card (ancora invisibile)
+      // al centro: eredita l'opacità 0 dallo slot, quindi lo spostamento non si vede
       card.style.position = 'absolute';
       card.style.top = '0px';
-      card.style.left = '0px';
-      card.style.width = startWidth + 'px';
+      card.style.left = centerLeft + 'px';
+      card.style.width = normalWidth + 'px';
       card.style.zIndex = '5';
-      void card.offsetWidth; // forzo il reflow prima di avviare la transizione, altrimenti parte già estesa
-      requestAnimationFrame(() => {
-        const eratoShift = parseFloat(grid.dataset.eratoShift || '0');
-        card.style.transition = 'width 1s ease, box-shadow 0.3s ease';
-        card.style.width = (startWidth * 2 + 17.6 - eratoShift * 2) + 'px'; // 17.6px = 1.1rem di gap tra le 2 card, ridotta due volte dello spostamento verso il centro
-        card.style.boxShadow = '0 10px 34px rgba(0,0,0,0.45)';
-        if (lbPreview){
-          lbPreview.style.transition = 'width 1s ease, opacity 1s ease';
-          lbPreview.style.width = startWidth + 'px'; // stesso ingombro della card originale, cresce insieme
-          lbPreview.style.opacity = '1';
+
+      const introFadeDuration = 750; // 0.6s di base, 25% più lento
+      const introStagger = 100; // combacia con lo scaglionamento della comparsa
+      setTimeout(() => {
+        if (!isExpanded){
+          isExpanded = true;
+          performEratoExpand(card, fixedContent, lbPreview, g, grid, { startLeft: centerLeft, animateLeft: true, widthDuration: '1s' });
         }
-      });
-    });
+      }, introStagger + introFadeDuration);
+    }
+
 
     card.addEventListener('mouseleave', () => {
       if (!isExpanded) return;
