@@ -1858,18 +1858,18 @@
   function loopMiniSievePreview(overlay){
     const cells = Array.from(overlay.querySelectorAll('.mc.prime'));
     if (!cells.length) return;
-    function replay(){
-      cells.forEach((c, i) => {
-        c.style.animation = 'none';
-        void c.offsetWidth; // forzo il reflow prima di far ripartire l'animazione
-        c.style.animation = 'mc-light-up 1s ease forwards';
-        c.style.animationDelay = `${i * 750}ms`;
-      });
-    }
     setInterval(() => {
-      // un secondo di pausa prima di far ripartire la sequenza di accensione
-      setTimeout(replay, 1000);
-    }, 60000);
+      // spegnimento immediato di tutti i numeri
+      cells.forEach(c => { c.style.animation = 'none'; });
+      // un secondo di buio, poi riparte la sequenza di accensione a scaglioni
+      setTimeout(() => {
+        cells.forEach((c, i) => {
+          void c.offsetWidth; // forzo il reflow prima di far ripartire l'animazione
+          c.style.animation = 'mc-light-up 1s ease forwards';
+          c.style.animationDelay = `${i * 750}ms`;
+        });
+      }, 1000);
+    }, 30000);
   }
 
   function playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, g){
