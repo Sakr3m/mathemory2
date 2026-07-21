@@ -1820,16 +1820,18 @@
     positionIndexSoundBtn();
     centerEratoRightEdge();
     if (gameState(g) === 'open'){
-      if (grid.dataset.eratoIntroPlayed === 'true' && eratoOverlayEl){
-        // già mostrata in precedenza: niente animazione, ma ricentro comunque i
-        // pulsanti sulla sua altezza vera (nel frattempo si potrebbe essere passati
-        // da altre pagine, con unaltezza diversa)
-        const overlayRect = eratoOverlayEl.getBoundingClientRect();
-        centerNavColumns(overlayRect.top + window.scrollY, overlayRect.height);
-      } else {
+      // la card vera (l'overlay) vive fuori dalla griglia: se era stata nascosta
+      // per una pagina diversa, la rimostro
+      if (eratoOverlayEl) eratoOverlayEl.style.display = '';
+      if (grid.dataset.eratoIntroPlayed !== 'true'){
         handleEratoIntro(grid, g, number);
       }
+      // se era già stata mostrata in precedenza, non si tocca più nulla: niente
+      // animazione, niente ricentraggio dei pulsanti — restano esattamente dove sono
     } else {
+      // pagina diversa da Eratosthenes: la sua card (l'overlay) va nascosta, altrimenti
+      // resterebbe visibile sopra a tutto anche qui
+      if (eratoOverlayEl) eratoOverlayEl.style.display = 'none';
       playLockedPageIntro(grid);
     }
 
@@ -1929,7 +1931,8 @@
     const finalWidth = finalRect.width;
     const finalHeight = finalRect.height;
 
-    centerNavColumns(finalTop, finalHeight);
+    // i pulsanti di navigazione non si ricentrano più qui: restano fermi dove sono
+    // stati messi la prima volta, come richiesto
 
     const viewportCenter = window.innerWidth / 2;
     const centerLeft = viewportCenter - finalWidth / 2;
