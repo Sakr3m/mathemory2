@@ -169,13 +169,6 @@
     .game-card:not(.locked):not(.leaderboard-card){ animation: none; }
   }
 
-  .card-top-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap: 1rem;
-  }
-
   .play-preview-block{
     display:flex;
     flex-direction:column;
@@ -323,7 +316,6 @@
     padding: 0 1rem;
   }
   .lb-medal{ font-size: 1.452rem; line-height:1; }
-  .lb-label{ color: var(--ink-dim); font-size: 1rem; }
   .lb-value{ color: var(--yellow); font-weight:700; font-size: 1rem; }
   .lb-row.rank-1{ border-color: #E8C468; animation: rank-glow-gold 2.4s ease-in-out infinite; }
   .lb-row.rank-2{ border-color: #C7CDD6; animation: rank-glow-silver 2.4s ease-in-out infinite; }
@@ -367,12 +359,6 @@
     cursor: pointer;
   }
 
-  .device-note{
-    font-family:'Space Mono', monospace;
-    font-size: 0.75rem;
-    color: var(--ink-dim);
-    margin: 0;
-  }
 
   .device-note-old{
     font-family:'Space Mono', monospace;
@@ -449,30 +435,11 @@
   }
 
   /* --- carosello: contatore sopra, freccette ai lati dei giochi --- */
-  .game-number{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    min-height: 2rem;
-    font-family:'Space Mono', monospace;
-    font-size: 1.3rem;
-    letter-spacing: 0.06em;
-    color: var(--ink-dim);
-    margin-bottom: 0.938rem;
-  }
   .games-column{
     display:flex;
     flex-direction:column;
     flex: 1;
     min-width: 0;
-  }
-  .game-label-row{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap: 0.7rem;
-    min-height: 2rem;
-    margin-bottom: 0.938rem;
   }
   .game-number-btn{
     font-family:'Work Sans', sans-serif;
@@ -487,19 +454,6 @@
     cursor: pointer;
   }
   .game-number-btn:hover{ color: var(--yellow); border-color: var(--yellow); }
-  .tap-hint{
-    font-family:'Space Mono', monospace;
-    font-size: 0.85rem;
-    color: rgba(243,239,228,0.5);
-  }
-  .game-number.race-end-label{
-    font-size: 0.95rem;
-  }
-  .game-number .race-end{
-    font-size: 0.9rem;
-    color: var(--ink-faint);
-  }
-
   /* --- overlay condiviso da tutti i popup (regole, scelta modalità, ecc.) --- */
   .modal-overlay{
     display:none;
