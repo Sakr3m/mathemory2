@@ -131,7 +131,7 @@
     width: 50%;
     flex-shrink: 0;
   }
-  .erato-leaderboard-half.leaderboard-card{
+  .erato-leaderboard-half{
     display: flex;
     flex-direction: row;
     flex: 1 1 auto;
@@ -1808,7 +1808,7 @@
     if (gameState(g) === 'open'){
       // la card vera (l'overlay) vive fuori dalla griglia: se era stata nascosta
       // per una pagina diversa, la rimostro
-      if (eratoOverlayEl) eratoOverlayEl.style.display = '';
+      if (eratoOverlayEl) eratoOverlayEl.style.display = 'flex';
       if (grid.dataset.eratoIntroPlayed !== 'true'){
         handleEratoIntro(grid, g, number);
       }
