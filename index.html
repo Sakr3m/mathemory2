@@ -1872,13 +1872,20 @@
       box-shadow: 0 0 0 1px rgba(232,196,104,0.55), 0 0 0 2px rgba(232,196,104,0.25);
       z-index: 999;
       opacity: 0;
+      transform: translateY(16px);
       pointer-events: none;
     `;
     document.body.appendChild(overlay);
 
+    // doppio requestAnimationFrame: garantisce che il browser abbia davvero dipinto lo
+    // stato iniziale (invisibile, leggermente più in basso) prima di avviare la
+    // transizione — altrimenti salta dritto al risultato finale, senza animare nulla
     requestAnimationFrame(() => {
-      overlay.style.transition = `opacity ${fadeInDuration}ms ease`;
-      overlay.style.opacity = '1';
+      requestAnimationFrame(() => {
+        overlay.style.transition = `opacity ${fadeInDuration}ms ease, transform ${fadeInDuration}ms ease`;
+        overlay.style.opacity = '1';
+        overlay.style.transform = 'translateY(0)';
+      });
     });
 
     setTimeout(() => {
