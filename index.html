@@ -1526,6 +1526,13 @@
     if (lbHalf._isShowingRules) return; // RULES è in vista ora: non lo disturbo, verrà mostrato al mouseleave
 
     lbHalf.innerHTML = freshHtml;
+
+    // se l'animazione di apertura non è ancora finita (la card potrebbe essere ancora
+    // a metà dell'allargamento), non calcolo qui i margini: misurare una larghezza
+    // "a metà strada" darebbe un valore sbagliato. finalizeEratoLayout() li applicherà
+    // correttamente lui stesso, appena l'allargamento sarà davvero completo
+    if (eratoOverlayEl.dataset.eratoFinalized !== 'true') return;
+
     const miniSieve = eratoOverlayEl.querySelector('.mini-sieve');
     if (miniSieve){
       const leftGap = miniSieve.getBoundingClientRect().left - eratoOverlayEl.getBoundingClientRect().left;
@@ -1623,8 +1630,14 @@
       // animata indipendente
       return '';
     } else {
-      // TEST: pagine diverse da Eratosthenes lasciate completamente vuote
-      return '';
+      const heightStyle = cachedEratoHeight ? `style="height:${cachedEratoHeight}px"` : '';
+      return `
+        <div class="game-slot entrance-anim">
+          <div class="game-card locked" ${heightStyle}>
+            <h2>COMING SOON</h2>
+            <p class="unlock-date">${g.unlockLabel}</p>
+          </div>
+        </div>`;
     }
   }
 
@@ -2055,6 +2068,7 @@
   // l'allargamento è completamente finito, altrimenti si misura la card ancora
   // stretta e tutto risulta fuori posto
   function finalizeEratoLayout(overlay){
+    overlay.dataset.eratoFinalized = 'true'; // da qui in poi, è sicuro calcolare margini basati sulla larghezza finale
     const lbHalf = overlay.querySelector('.erato-leaderboard-half');
 
     // il bordo destro delle tabelle della classifica deve distare dal bordo destro della
@@ -2501,12 +2515,15 @@
   }
   initConstellationLifecycle();
 
-  // ritardate di proposito: l'apertura automatica dura circa 1.85s in tutto, e se questi dati
-  // arrivassero prima, il render() che ne segue distruggerebbe la card a metà animazione
+  // ritardate di proposito: l'apertura automatica dura ora 3s in tutto (0.75s+0.25s+1.25s
+  // erano i tempi vecchi, poi allungati) — questo valore va SEMPRE tenuto più alto della
+  // somma di quei 3 tempi, altrimenti i dati arrivano a metà dell'allargamento e la
+  // classifica viene ricalcolata con margini sbagliati (misurati su una larghezza ancora
+  // "a metà strada", non quella finale)
   setTimeout(() => {
     fetchLeaderboard();
     fetchPrimeRushLeaderboard();
-  }, 2000);
+  }, 3500);
   setInterval(fetchLeaderboard, 24 * 60 * 60 * 1000); // refresh una volta al giorno
   setInterval(fetchPrimeRushLeaderboard, 24 * 60 * 60 * 1000);
 
