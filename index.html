@@ -1781,11 +1781,13 @@
       grid.dataset.eratoIntroPlayed = 'true';
       grid.dataset.eratoOverlayActive = 'true';
       card.style.visibility = 'hidden';
+      card.style.zIndex = '-1';
       playEratoIntroOverlay(grid);
     } else if (grid.dataset.eratoOverlayActive === 'true'){
       // se nel frattempo scattasse un altro render(), anche la card appena ricreata
       // resta nascosta finché l'overlay non ha davvero finito
       card.style.visibility = 'hidden';
+      card.style.zIndex = '-1';
     }
   }
 
@@ -1849,7 +1851,7 @@
             // cerco la card ATTUALE (potrebbe essere stata ricreata da un render nel
             // frattempo): mai un riferimento ormai obsoleto
             const currentCard = grid.querySelector('.erato-final-card');
-            if (currentCard) currentCard.style.visibility = '';
+            if (currentCard){ currentCard.style.visibility = ''; currentCard.style.zIndex = ''; }
             overlay.remove();
           }, 1000);
         }, introFadeDuration);
