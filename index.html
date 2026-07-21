@@ -1833,6 +1833,22 @@
   // non solo al centro della sua colonna. Misurato dal vero, non un valore fisso.
   // gestisce l'apertura automatica al caricamento: la card vera (statica, sempre corretta)
   // resta nascosta finché la copia animata indipendente non ha finito il suo lavoro
+  // centra verticalmente le colonne di navigazione (frecce + pallini) rispetto
+  // all'altezza VERA della card, che ora vive fuori dal flusso normale (è una copia
+  // indipendente posizionata via JS), quindi il centraggio CSS di .carousel-row non
+  // la vede più e non basta da solo
+  function centerNavColumns(cardTop, cardHeight){
+    const cardCenterY = cardTop + cardHeight / 2;
+    document.querySelectorAll('.nav-column').forEach(nav => {
+      nav.style.transform = 'none';
+      void nav.offsetHeight;
+      const navRect = nav.getBoundingClientRect();
+      const navCenterY = navRect.top + window.scrollY + navRect.height / 2;
+      const shift = cardCenterY - navCenterY;
+      nav.style.transform = `translateY(${shift}px)`;
+    });
+  }
+
   function handleEratoIntro(grid, g, number){
     if (window.innerWidth <= 900) return;
     if (grid.dataset.eratoIntroPlayed === 'true') return;
@@ -1859,6 +1875,7 @@
       // in un momento sbagliato
       const targetHeight = measureEratoContentHeight(g, number, targetWidth);
 
+      centerNavColumns(targetTop, targetHeight);
       playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, g, number);
     }
 
