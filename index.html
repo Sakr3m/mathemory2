@@ -156,11 +156,11 @@
     margin: 0 auto;
   }
   @keyframes erato-border-cycle{
-    0%   { border-color: rgba(232,196,104,0.55); }
-    25%  { border-color: rgba(95,168,160,0.55); }
-    50%  { border-color: rgba(193,85,75,0.55); }
-    75%  { border-color: rgba(127,119,221,0.55); }
-    100% { border-color: rgba(232,196,104,0.55); }
+    0%   { border-color: rgba(232,196,104,0.4); }
+    25%  { border-color: rgba(95,168,160,0.4); }
+    50%  { border-color: rgba(193,85,75,0.4); }
+    75%  { border-color: rgba(127,119,221,0.4); }
+    100% { border-color: rgba(232,196,104,0.4); }
   }
   @media (prefers-reduced-motion: reduce){
     .game-card:not(.locked):not(.leaderboard-card){ animation: none; }
@@ -1217,6 +1217,11 @@
       <text x="956" y="57" text-anchor="middle">Σ</text>
       <text x="747" y="38" text-anchor="middle">∞</text>
       <text x="934" y="168" text-anchor="middle">∫</text>
+      <text x="443" y="419" text-anchor="middle">π</text>
+      <text x="234" y="643" text-anchor="middle">√</text>
+      <text x="213" y="265" text-anchor="middle">Σ</text>
+      <text x="284" y="166" text-anchor="middle">∞</text>
+      <text x="808" y="118" text-anchor="middle">∫</text>
     </svg>
   <header>
     <div class="title-row">
@@ -1440,6 +1445,10 @@
   const NAV_LIMIT_INDEX = 11;
 
   let cachedEratoHeight = null;
+  // vero se i font sono già pronti (o non serve aspettarli): l'apertura automatica
+  // parte solo quando è certo che non arriverà un altro render() a metà animazione,
+  // altrimenti la card verrebbe ricreata da capo e l'animazione in corso andrebbe persa
+  let fontsReady = !document.fonts || document.fonts.status === 'loaded';
 
   // --- podio globale: letto dal Cloudflare Worker, null finché non arriva la prima risposta ---
   let cachedPodium = null;
@@ -1550,7 +1559,7 @@
     // della pagina (comparsa 25% più lenta di quella normale), poi scorre verso la sua
     // posizione abituale mentre si allarga alla stessa velocità che aveva l'hover,
     // rivelando la classifica. Resta aperta da lì in poi, nessun hover manuale.
-    if (grid.dataset.eratoIntroPlayed !== 'true'){
+    if (grid.dataset.eratoIntroPlayed !== 'true' && fontsReady){
       grid.dataset.eratoIntroPlayed = 'true';
       const normalWidth = card.getBoundingClientRect().width;
       const viewportCenter = window.innerWidth / 2;
@@ -2109,6 +2118,7 @@
   // i font potrebbero non essere ancora caricati al primo render: quando lo sono davvero, rimisuro
   if (document.fonts && document.fonts.ready){
     document.fonts.ready.then(() => {
+      fontsReady = true;
       cachedEratoHeight = null;
       render();
     });
