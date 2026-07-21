@@ -1779,17 +1779,24 @@
   function measureEratoHeight(){
     const realGrid = document.getElementById('gamesGrid');
     if (!realGrid) return;
+    const g = games[0];
     const probe = document.createElement('div');
-    probe.className = 'games';
     probe.style.position = 'absolute';
     probe.style.visibility = 'hidden';
     probe.style.pointerEvents = 'none';
     probe.style.left = '-9999px';
     probe.style.width = realGrid.offsetWidth + 'px';
-    probe.innerHTML = gameCardHtml(games[0], 1) + leaderboardCardHtml(games[0]);
+    probe.style.display = 'flex';
+    probe.style.flexDirection = 'row';
+    probe.innerHTML = `
+      <div class="erato-content-half" style="width:50%; flex-shrink:0; box-sizing:border-box; padding:0.855rem; display:flex; flex-direction:column; gap:0.475rem;">
+        ${eratoContentHtml(g)}
+      </div>
+      <div class="erato-leaderboard-half leaderboard-card" style="flex:1 1 auto; min-width:0; box-sizing:border-box; padding:0.855rem;">
+        ${eratoLbPreviewHtml(g)}
+      </div>`;
     document.body.appendChild(probe);
-    const card = probe.querySelector('.game-card:not(.locked):not(.leaderboard-card)');
-    if (card) cachedEratoHeight = card.offsetHeight;
+    cachedEratoHeight = probe.offsetHeight;
     document.body.removeChild(probe);
   }
 
