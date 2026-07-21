@@ -129,7 +129,7 @@
   /* bordo con colore animato, solo sulla card di Eratostene; prosegue anche durante l'espansione hover */
   .game-card:not(.locked):not(.leaderboard-card){
     border-width: 2px;
-    animation: erato-border-cycle 6s linear infinite;
+    animation: erato-border-cycle 14s ease-in-out infinite;
     flex-direction: row;
     align-items: stretch;
   }
@@ -636,6 +636,7 @@
     font-family:'Kalam', cursive;
     font-size: 1.5rem;
     fill: rgba(159, 176, 162, 0.20);
+    will-change: transform, opacity;
   }
   @media (prefers-reduced-motion: reduce){
     .math-constellation text{ transition: none !important; transform: none !important; }
@@ -1541,6 +1542,17 @@
       if (lbPreview && leaderboardCard){
         clearTimeout(card._lbClearTimer);
         lbPreview.innerHTML = leaderboardCard.innerHTML;
+
+        // il bordo destro delle tabelle deve distare dal bordo destro della card tanto quanto
+        // l'anteprima della griglia dista dal bordo sinistro: misurato dal vero, non un valore fisso
+        const miniSieve = card.querySelector('.mini-sieve');
+        if (miniSieve){
+          const leftGap = miniSieve.getBoundingClientRect().left - card.getBoundingClientRect().left;
+          lbPreview.querySelectorAll('.lb-row').forEach(row => {
+            row.style.marginRight = leftGap + 'px';
+            row.style.marginLeft = 'auto';
+          });
+        }
       }
 
       // l'animazione della mini-griglia va in pausa per tutta la durata del movimento
@@ -2010,7 +2022,12 @@
 
     function respawn(el){
       const fadeOutMs = jitter(1500, 300); // sparizione: ~1.5s
-      el.style.transition = `opacity ${(fadeOutMs / 1000).toFixed(2)}s ease`;
+      // a questo punto il simbolo è quasi certamente ancora a metà del suo percorso di 7s:
+      // aggiungo la dissolvenza alla transizione del movimento già in corso, invece di
+      // sovrascriverla — altrimenti il movimento si interrompe di colpo proprio qui
+      const existingTransition = el.style.transition;
+      const fadeOutRule = `opacity ${(fadeOutMs / 1000).toFixed(2)}s ease`;
+      el.style.transition = existingTransition ? existingTransition + ', ' + fadeOutRule : fadeOutRule;
       el.style.opacity = '0';
       setTimeout(() => {
         const newX = 30 + Math.random() * 940;
