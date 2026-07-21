@@ -430,6 +430,14 @@
     background: var(--bg-panel);
     z-index: 2;
     opacity: 0;
+    font-family:'Work Sans', sans-serif;
+    font-size: 1.43rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    border: 2px solid var(--ink-dim);
+    border-radius: 6px;
+    padding: 0.25rem 0.9rem;
   }
   .erato-title-row{
     position: relative;
@@ -2132,7 +2140,7 @@
 
     const overlay = document.createElement('div');
     overlay.innerHTML = `
-      <button type="button" class="game-number-btn erato-gamex-tag" id="eratoRulesBtn" onclick="openRulesModal()">RULES</button>
+      <div class="erato-gamex-tag" id="eratoRulesBtn">RULES</div>
       <div class="erato-content-half" style="width:${narrowWidth}px; flex-shrink:0; box-sizing:border-box; padding:0.855rem; display:flex; flex-direction:column; gap:0.475rem;">
         ${eratoContentHtml(g)}
       </div>
