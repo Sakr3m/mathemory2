@@ -48,16 +48,16 @@
 
   /* --- masthead --- */
   header{
-    margin-bottom: 2.0vh;
+    margin-bottom: calc(2.2vh + 3px);
   }
   header::after{
     content: '';
     display: block;
     width: 22.3rem;
     max-width: 100%;
-    height: 1px;
+    height: 3px;
     background: var(--rule);
-    margin: 2.0vh auto 0;
+    margin: 2.2vh auto 0;
   }
 
   .mark{
@@ -128,7 +128,7 @@
 
   /* bordo con colore animato, solo sulla card di Eratostene; prosegue anche durante l'espansione hover */
   .game-card:not(.locked):not(.leaderboard-card){
-    border-width: 2px;
+    border-width: 3px;
     animation: erato-border-cycle 14s ease-in-out infinite;
     flex-direction: row;
     align-items: stretch;
