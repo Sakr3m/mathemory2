@@ -126,7 +126,7 @@
 
   /* bordo con colore animato, solo sulla card di Eratostene; prosegue anche durante l'espansione hover */
   .game-card:not(.locked):not(.leaderboard-card){
-    border-width: 3px;
+    border-width: 1px;
     animation: erato-border-cycle 14s ease-in-out infinite;
     flex-direction: row;
     align-items: stretch;
@@ -156,11 +156,11 @@
     margin: 0 auto;
   }
   @keyframes erato-border-cycle{
-    0%   { border-color: rgba(232,196,104,0.4); }
-    25%  { border-color: rgba(95,168,160,0.4); }
-    50%  { border-color: rgba(193,85,75,0.4); }
-    75%  { border-color: rgba(127,119,221,0.4); }
-    100% { border-color: rgba(232,196,104,0.4); }
+    0%   { border-color: rgba(232,196,104,0.85); box-shadow: 0 0 0 1px rgba(232,196,104,0.55), 0 0 0 2px rgba(232,196,104,0.25); }
+    25%  { border-color: rgba(95,168,160,0.85); box-shadow: 0 0 0 1px rgba(95,168,160,0.55), 0 0 0 2px rgba(95,168,160,0.25); }
+    50%  { border-color: rgba(193,85,75,0.85); box-shadow: 0 0 0 1px rgba(193,85,75,0.55), 0 0 0 2px rgba(193,85,75,0.25); }
+    75%  { border-color: rgba(127,119,221,0.85); box-shadow: 0 0 0 1px rgba(127,119,221,0.55), 0 0 0 2px rgba(127,119,221,0.25); }
+    100% { border-color: rgba(232,196,104,0.85); box-shadow: 0 0 0 1px rgba(232,196,104,0.55), 0 0 0 2px rgba(232,196,104,0.25); }
   }
   @media (prefers-reduced-motion: reduce){
     .game-card:not(.locked):not(.leaderboard-card){ animation: none; }
@@ -1534,10 +1534,10 @@
     requestAnimationFrame(() => {
       const eratoShift = parseFloat(grid.dataset.eratoShift || '0');
       const leftPart = options.animateLeft ? `, left ${widthDuration} ease` : '';
-      card.style.transition = `width ${widthDuration} ease, box-shadow 0.3s ease${leftPart}`;
+      card.style.transition = `width ${widthDuration} ease, filter 0.3s ease${leftPart}`;
       card.style.left = '0px';
       card.style.width = (startWidth * 2 + 17.6 - eratoShift * 2) + 'px';
-      card.style.boxShadow = '0 10px 34px rgba(0,0,0,0.45)';
+      card.style.filter = 'drop-shadow(0 10px 20px rgba(0,0,0,0.45))';
       if (lbPreview){
         lbPreview.style.transition = `width ${widthDuration} ease, opacity ${widthDuration} ease`;
         lbPreview.style.width = startWidth + 'px';
@@ -1614,7 +1614,7 @@
       card.style.left = '0px';
       card.style.width = (startWidth * 2 + 17.6 - eratoShift * 2) + 'px';
       card.style.zIndex = '5';
-      card.style.boxShadow = '0 10px 34px rgba(0,0,0,0.45)';
+      card.style.filter = 'drop-shadow(0 10px 20px rgba(0,0,0,0.45))';
     }
   }
 
@@ -2054,7 +2054,19 @@
       el.style.transform = `translate(${dx}px, ${dy}px)`;
     }
 
+    // tiene conto di quanti simboli sono attualmente "invisibili" (in dissolvenza o in attesa),
+    // per garantire che restino sempre almeno 20 visibili sullo schermo
+    let invisibleCount = 0;
+    const minVisible = 20;
+
     function respawn(el){
+      // se far morire questo simbolo facesse scendere i visibili sotto la soglia minima,
+      // rimando la sua morte di un po' e riprovo più tardi
+      if (texts.length - invisibleCount - 1 < minVisible){
+        setTimeout(() => { respawn(el); }, 400 + Math.random() * 400);
+        return;
+      }
+      invisibleCount++;
       const fadeOutMs = jitter(1500, 700); // sparizione: ~1.5s, variazione ampia per rompere la sincronia
       // a questo punto il simbolo è quasi certamente ancora a metà del suo percorso di 7s:
       // aggiungo la dissolvenza alla transizione del movimento già in corso, invece di
@@ -2077,6 +2089,7 @@
           const fadeInMs = jitter(1500, 700); // comparsa: ~1.5s, variazione ampia per rompere la sincronia
           el.style.transition = `opacity ${(fadeInMs / 1000).toFixed(2)}s ease`;
           el.style.opacity = '';
+          invisibleCount--;
           driftAway(el);
           lifeLoop(el);
         }, gapMs);
@@ -2156,7 +2169,7 @@
   });
 
   // i font potrebbero non essere ancora caricati al primo render: quando lo sono davvero, rimisuro
-  if (document.fonts && document.fonts.ready){
+  if (document.fonts && document.fonts.ready && !fontsReady){
     document.fonts.ready.then(() => {
       fontsReady = true;
       cachedEratoHeight = null;
