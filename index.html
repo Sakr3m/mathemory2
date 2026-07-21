@@ -410,8 +410,8 @@
   .mc.prime{
     font-weight:700;
     border-radius: 6px;
-    animation: mc-light-up 1.5s ease forwards;
-    animation-delay: calc(var(--i) * 90ms + 3.5s);
+    animation: mc-light-up 1s ease forwards;
+    animation-delay: calc(var(--i) * 1000ms + 3.5s);
   }
   @keyframes mc-light-up{
     from{ color: var(--ink); background: transparent; box-shadow: none; }
@@ -1905,21 +1905,23 @@
       });
     }
 
-    if (document.readyState === 'complete'){
+    // aspetto solo i font (la vera dipendenza della pagina HTML in sé, quella che ci ha
+    // già causato problemi in passato) — non il caricamento totale della finestra, che
+    // includerebbe anche il contenuto degli iframe pubblicitari (gestito da Adsterra,
+    // fuori dal nostro controllo e spesso il più lento di tutti). Gli slot che ospitano
+    // i banner fanno comunque parte della pagina normale, solo il LORO contenuto esterno
+    // viene escluso dall'attesa
+    const fontsPromise = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    let started = false;
+    function startOnce(){
+      if (started) return;
+      started = true;
       startSequence();
-    } else {
-      // limite di sicurezza: se il caricamento completo non arriva entro 15 secondi
-      // (connessione lenta, risorsa bloccata, ecc.), si parte comunque — evita di
-      // restare in attesa all'infinito
-      let started = false;
-      function startOnce(){
-        if (started) return;
-        started = true;
-        startSequence();
-      }
-      window.addEventListener('load', startOnce, { once: true });
-      setTimeout(startOnce, 15000);
     }
+    fontsPromise.then(startOnce);
+    // limite di sicurezza: se per qualche motivo i font non risultassero mai pronti,
+    // si parte comunque dopo 15 secondi, evitando un'attesa infinita
+    setTimeout(startOnce, 15000);
   }
 
   // ============================================================
