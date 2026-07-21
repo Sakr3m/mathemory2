@@ -2066,21 +2066,9 @@
     overlay.dataset.eratoFinalized = 'true'; // da qui in poi, è sicuro calcolare margini basati sulla larghezza finale
     const lbHalf = overlay.querySelector('.erato-leaderboard-half');
 
-    // il bordo destro delle tabelle della classifica deve distare dal bordo destro della
-    // card tanto quanto l'anteprima della griglia dista dal bordo sinistro: misurato dal
-    // vero, non un valore fisso (queste sono tutte uguali, la parte più lunga della classifica)
-    const miniSieve = overlay.querySelector('.mini-sieve');
-    if (miniSieve){
-      const leftGap = miniSieve.getBoundingClientRect().left - overlay.getBoundingClientRect().left;
-      const lbHalfPaddingRight = lbHalf ? (parseFloat(getComputedStyle(lbHalf).paddingRight) || 0) : 0;
-      const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
-      overlay.dataset.eratoLbMarginRight = marginRight;
-      overlay.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
-        el.style.width = '85%';
-        el.style.marginRight = marginRight + 'px';
-        el.style.marginLeft = 'auto';
-      });
-    }
+    // il margine destro della classifica è già stato applicato all'inizio (in
+    // playEratoIntroOverlay, appena creata la card, mentre era ancora invisibile) —
+    // non va rifatto qui, altrimenti si rischia di nuovo il salto visibile
 
     // riga divisoria: a metà esatta tra il bordo destro del pulsante "Play now" di
     // destra e il bordo sinistro delle tabelle della classifica — misurata dal vero
@@ -2248,6 +2236,25 @@
     document.body.appendChild(overlay);
     eratoOverlayEl = overlay;
     loopMiniSievePreview(overlay);
+
+    // applico subito il margine destro della classifica, mentre la card è ancora
+    // invisibile (opacity:0): questa misura dipende solo dal padding interno, non
+    // dalla larghezza della card (che cambierà durante l'animazione), quindi è già
+    // corretta ora — applicarla qui invece che a fine animazione evita il salto
+    // visibile che si vedeva prima
+    const miniSieveEarly = overlay.querySelector('.mini-sieve');
+    if (miniSieveEarly){
+      const lbHalfEarly = overlay.querySelector('.erato-leaderboard-half');
+      const leftGapEarly = miniSieveEarly.getBoundingClientRect().left - overlay.getBoundingClientRect().left;
+      const lbHalfPaddingRightEarly = lbHalfEarly ? (parseFloat(getComputedStyle(lbHalfEarly).paddingRight) || 0) : 0;
+      const marginRightEarly = Math.max(0, leftGapEarly - lbHalfPaddingRightEarly);
+      overlay.dataset.eratoLbMarginRight = marginRightEarly;
+      overlay.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
+        el.style.width = '85%';
+        el.style.marginRight = marginRightEarly + 'px';
+        el.style.marginLeft = 'auto';
+      });
+    }
 
     // la card resta ferma qui, pronta e invisibile, finché la pagina non è DAVVERO
     // finita di caricare (non solo il DOM: immagini, font, tutto) — solo allora parte
