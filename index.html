@@ -1568,11 +1568,45 @@
   // overlay "Coming Soon" già costruiti, indicizzati per pagina (currentIndex): costruiti al
   // primo passaggio, poi solo mostrati/nascosti
   const comingSoonOverlays = {};
+  // id dei setTimeout della sequenza di apertura di Eratosthenes ancora in attesa: se si
+  // naviga via prima che scadano, vanno cancellati (vedi playEratoIntroOverlay/render)
+  let eratoIntroTimeoutIds = [];
+  // true solo quando i font (Kalam/Work Sans) sono DAVVERO pronti: finché non lo sono,
+  // computeCardGeometry calcola comunque un valore (necessario per costruire una card
+  // "Coming Soon" richiesta troppo presto) ma non lo mette in cache, per non bloccare per
+  // sempre una misura fatta con font di fallback
+  let fontsReadyForGeometry = !(document.fonts && document.fonts.ready);
+  if (document.fonts && document.fonts.ready){
+    document.fonts.ready.then(() => { fontsReadyForGeometry = true; });
+  }
 
   // --- podio globale: letto dal Cloudflare Worker, null finché non arriva la prima risposta ---
   let cachedPodium = null;
   let cachedPrimeRushPodium = null;
   let eratoOverlayEl = null; // riferimento alla card animata (se già creata), per aggiornare la classifica quando arrivano dati freschi dal Worker
+
+  // margine destro della classifica: misurato dal vero (dipende solo dal padding interno,
+  // non dalla larghezza della card), condiviso tra refreshEratoLeaderboard (quando i dati
+  // arrivano dopo che la card è già finalizzata) e playEratoIntroOverlay (applicato subito
+  // dopo la creazione, mentre la card è ancora invisibile, per evitare il salto visibile)
+  function applyEratoLbMargin(overlay, lbHalf){
+    const miniSieve = overlay.querySelector('.mini-sieve');
+    if (!miniSieve) return;
+    // il bordo della card va tolto dal gap misurato: altrimenti finisce contato due volte
+    // (una volta implicito nel leftGap, una volta nel bordo destro reale quando il margine
+    // viene applicato), spostando la classifica di 1px in più rispetto alla griglia invece
+    // di restare alla stessa identica distanza
+    const overlayBorderWidth = parseFloat(getComputedStyle(overlay).borderLeftWidth) || 0;
+    const leftGap = miniSieve.getBoundingClientRect().left - overlay.getBoundingClientRect().left - overlayBorderWidth;
+    const lbHalfPaddingRight = lbHalf ? (parseFloat(getComputedStyle(lbHalf).paddingRight) || 0) : 0;
+    const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
+    overlay.dataset.eratoLbMarginRight = marginRight;
+    overlay.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
+      el.style.width = '85%';
+      el.style.marginRight = marginRight + 'px';
+      el.style.marginLeft = 'auto';
+    });
+  }
 
   // aggiorna la classifica dentro la card già visibile, se esiste — altrimenti i dati
   // arrivati dopo la comparsa non si vedrebbero mai (l'overlay non viene ricostruito
@@ -1601,23 +1635,7 @@
       return;
     }
 
-    const miniSieve = eratoOverlayEl.querySelector('.mini-sieve');
-    if (miniSieve){
-      // il bordo della card va tolto dal gap misurato: altrimenti finisce contato
-      // due volte (una volta implicito nel leftGap, una volta nel bordo destro reale
-      // quando il margine viene applicato), spostando la classifica di 1px in più
-      // rispetto alla griglia invece di restare alla stessa identica distanza
-      const overlayBorderWidth = parseFloat(getComputedStyle(eratoOverlayEl).borderLeftWidth) || 0;
-      const leftGap = miniSieve.getBoundingClientRect().left - eratoOverlayEl.getBoundingClientRect().left - overlayBorderWidth;
-      const lbHalfPaddingRight = parseFloat(getComputedStyle(lbHalf).paddingRight) || 0;
-      const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
-      eratoOverlayEl.dataset.eratoLbMarginRight = marginRight;
-      eratoOverlayEl.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
-        el.style.width = '85%';
-        el.style.marginRight = marginRight + 'px';
-        el.style.marginLeft = 'auto';
-      });
-    }
+    applyEratoLbMargin(eratoOverlayEl, lbHalf);
     // catturato QUI, dopo i margini: mai più uno snapshot "sporco" senza allineamento
     lbHalf._realLbHtml = lbHalf.innerHTML;
   }
@@ -1920,7 +1938,15 @@
     } else {
       // pagina diversa da Eratosthenes: la sua card (l'overlay) va nascosta, altrimenti
       // resterebbe visibile sopra a tutto anche qui
-      if (eratoOverlayEl) eratoOverlayEl.style.display = 'none';
+      if (eratoOverlayEl){
+        eratoOverlayEl.style.display = 'none';
+        // se la sequenza di apertura era ancora in corso (utente ha cliccato "next"
+        // molto rapidamente), i timeout residui vanno cancellati: altrimenti
+        // scatterebbero più tardi su un overlay nascosto, misurando rettangoli a
+        // zero e scrivendo dividerX=0 in modo permanente (vedi FIX 2)
+        eratoIntroTimeoutIds.forEach(id => clearTimeout(id));
+        eratoIntroTimeoutIds.length = 0;
+      }
       showComingSoonPage(currentIndex, isNavigation);
     }
 
@@ -2031,8 +2057,31 @@
     // in un momento sbagliato
     const targetHeight = measureEratoContentHeight(g, number, targetWidth);
 
-    cardGeometry = { top: targetTop, left: targetLeft, width: targetWidth, height: targetHeight };
-    return cardGeometry;
+    const geometry = { top: targetTop, left: targetLeft, width: targetWidth, height: targetHeight };
+    // memoizzo solo se i font sono già davvero pronti: se qualcuno chiama questa funzione
+    // prima (es. buildComingSoonCard invocata troppo presto), il valore misurato con font
+    // di fallback NON va in cache, altrimenti resterebbe sbagliato per sempre anche dopo
+    // che handleEratoIntro la richiama a font ormai pronti
+    if (fontsReadyForGeometry) cardGeometry = geometry;
+    return geometry;
+  }
+
+  // riallinea le eventuali card "Coming Soon" già costruite alla geometria corrente
+  // (fresca): usata sia quando i font finiscono di caricarsi (possono essere state
+  // costruite prima, con misure sbagliate) sia al resize della finestra, visto che la
+  // card vera di Eratosthenes si ricentra dinamicamente a ogni render() mentre queste
+  // erano rimaste fisse ai pixel calcolati una tantum
+  function repositionComingSoonOverlays(){
+    cardGeometry = null;
+    const overlays = Object.values(comingSoonOverlays);
+    if (!overlays.length) return;
+    const geometry = computeCardGeometry(games[0], 1);
+    overlays.forEach(el => {
+      el.style.top = geometry.top + 'px';
+      el.style.left = geometry.left + 'px';
+      el.style.width = geometry.width + 'px';
+      el.style.height = geometry.height + 'px';
+    });
   }
 
   // card "Coming Soon": stessa identica dimensione/posizione di Eratosthenes (vedi
@@ -2359,22 +2408,7 @@
     // dalla larghezza della card (che cambierà durante l'animazione), quindi è già
     // corretta ora — applicarla qui invece che a fine animazione evita il salto
     // visibile che si vedeva prima
-    const miniSieveEarly = overlay.querySelector('.mini-sieve');
-    if (miniSieveEarly){
-      const lbHalfEarly = overlay.querySelector('.erato-leaderboard-half');
-      // stesso bordo tolto dal gap qui: senza sottrarlo la classifica finiva 1px più
-      // lontana dal bordo destro di quanta la griglia non lo sia da quello sinistro
-      const overlayBorderWidthEarly = parseFloat(getComputedStyle(overlay).borderLeftWidth) || 0;
-      const leftGapEarly = miniSieveEarly.getBoundingClientRect().left - overlay.getBoundingClientRect().left - overlayBorderWidthEarly;
-      const lbHalfPaddingRightEarly = lbHalfEarly ? (parseFloat(getComputedStyle(lbHalfEarly).paddingRight) || 0) : 0;
-      const marginRightEarly = Math.max(0, leftGapEarly - lbHalfPaddingRightEarly);
-      overlay.dataset.eratoLbMarginRight = marginRightEarly;
-      overlay.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
-        el.style.width = '85%';
-        el.style.marginRight = marginRightEarly + 'px';
-        el.style.marginLeft = 'auto';
-      });
-    }
+    applyEratoLbMargin(overlay, overlay.querySelector('.erato-leaderboard-half'));
 
     // la card resta ferma qui, pronta e invisibile, finché la pagina non è DAVVERO
     // finita di caricare (non solo il DOM: immagini, font, tutto) — solo allora parte
@@ -2387,21 +2421,28 @@
           overlay.style.opacity = '1';
           overlay.style.transform = 'translateY(0)';
 
-          setTimeout(() => {
+          // id dei timeout salvati man mano: se l'utente naviga via (overlay nascosto)
+          // prima che scadano, render() li cancella — altrimenti finalizeEratoLayout
+          // finirebbe per misurare un overlay display:none, scrivendo margini a zero
+          // in modo permanente (vedi FIX 2)
+          const t1 = setTimeout(() => {
             // pausa ferma al centro, poi l'allargamento
-            setTimeout(() => {
+            const t2 = setTimeout(() => {
               overlay.style.transition = `left ${expandDuration}ms ease, width ${expandDuration}ms ease`;
               overlay.style.left = targetLeft + 'px';
               overlay.style.width = targetWidth + 'px';
-              setTimeout(() => {
+              const t3 = setTimeout(() => {
                 // solo ORA la card è davvero alla larghezza finale: qui, e non prima,
                 // ha senso misurare dove sono davvero le tabelle della classifica
                 finalizeEratoLayout(overlay);
                 // l'animazione intera è finita: ora sì che si può interagire
                 overlay.style.pointerEvents = 'auto';
               }, expandDuration);
+              eratoIntroTimeoutIds.push(t3);
             }, pauseDuration);
+            eratoIntroTimeoutIds.push(t2);
           }, fadeInDuration);
+          eratoIntroTimeoutIds.push(t1);
         });
       });
     }
@@ -2543,6 +2584,7 @@
   window.addEventListener('resize', () => {
     applyMobileRotation();
     measureEratoHeight();
+    repositionComingSoonOverlays();
     render();
   });
 
@@ -2703,6 +2745,10 @@
     document.fonts.ready.then(() => {
       cachedEratoHeight = null;
       measureEratoHeight();
+      // eventuali card "Coming Soon" già costruite prima che i font fossero pronti
+      // (es. navigazione molto rapida al caricamento) vanno riallineate ora che la
+      // misura è finalmente corretta (vedi computeCardGeometry/FIX 1)
+      repositionComingSoonOverlays();
       render();
     });
   }
