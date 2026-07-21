@@ -126,7 +126,8 @@
 
   /* bordo con colore animato, sulla card (ormai statica) di Eratosthenes */
   .erato-slot-wide{ grid-column: 1 / -1; }
-  .erato-placeholder{ opacity: 0; pointer-events: none; }
+  .erato-placeholder{ opacity: 0; visibility: hidden; pointer-events: none; }
+  .erato-placeholder .erato-final-card{ animation: none !important; border: none !important; box-shadow: none !important; }
   .erato-final-card{
     border-width: 1px;
     animation: erato-border-cycle 14s ease-in-out infinite;
