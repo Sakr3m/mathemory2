@@ -124,32 +124,30 @@
 
   .cta-inline:focus-visible{ outline: 2px solid var(--ink); outline-offset: 3px; }
 
-  /* bordo con colore animato, solo sulla card di Eratostene; prosegue anche durante l'espansione hover */
-  .game-card:not(.locked):not(.leaderboard-card){
+  /* bordo con colore animato, sulla card (ormai statica) di Eratosthenes */
+  .erato-slot-wide{ grid-column: 1 / -1; }
+  .erato-final-card{
     border-width: 1px;
     animation: erato-border-cycle 14s ease-in-out infinite;
+    display: flex;
     flex-direction: row;
     align-items: stretch;
   }
-  .erato-fixed-content{
+  .erato-content-half{
     display: flex;
     flex-direction: column;
     gap: 0.475rem;
-    width: 100%;
+    width: 50%;
     flex-shrink: 0;
   }
-  .erato-lb-preview{
-    width: 0;
-    height: 100%;
-    min-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    flex-shrink: 0;
+  .erato-leaderboard-half{
+    flex: 1 1 auto;
+    min-width: 0;
   }
-  /* solo dentro il riquadro allargato: le 6 tabelle (Sieve + Prime Rush) hanno tutte
-     la stessa altezza, indipendentemente da quanto altro testo ha ogni metà sopra di loro,
-     e sono ristrette al 90% di larghezza, centrate. La classifica originale sotto resta invariata. */
-  .erato-lb-preview .lb-row{
+  /* le 6 tabelle (Sieve + Prime Rush) hanno tutte la stessa altezza, indipendentemente
+     da quanto altro testo ha ogni metà sopra di loro, e sono ristrette al 85% di
+     larghezza, centrate */
+  .erato-leaderboard-half .lb-row{
     flex: 0 0 auto;
     height: 2.6rem;
     width: 85%;
@@ -163,7 +161,7 @@
     100% { border-color: rgba(232,196,104,0.85); box-shadow: 0 0 0 1px rgba(232,196,104,0.55), 0 0 0 2px rgba(232,196,104,0.25); }
   }
   @media (prefers-reduced-motion: reduce){
-    .game-card:not(.locked):not(.leaderboard-card){ animation: none; }
+    .erato-final-card{ animation: none; }
   }
 
   .play-preview-block{
@@ -1475,135 +1473,6 @@
       });
   }
 
-  function initEratoHoverExpand(grid, g){
-    if (window.innerWidth <= 900) return;
-    const slot = grid.querySelector('.game-slot:first-child');
-    if (!slot) return;
-    const card = slot.querySelector('.game-card:not(.locked):not(.leaderboard-card)');
-    if (!card) return;
-    const fixedContent = card.querySelector('.erato-fixed-content');
-    const lbPreview = card.querySelector('.erato-lb-preview');
-
-    // la card vera va sempre istantaneamente allo stato finale espanso, ad ogni render()
-    // (che sia il primo o uno successivo non importa): l'animazione di apertura vera e
-    // propria vive interamente in una copia indipendente (vedi playEratoIntroOverlay),
-    // così non dipende più dai tempi imprevedibili di font/fetch/render
-    const startWidth = card.getBoundingClientRect().width;
-    const startHeight = card.getBoundingClientRect().height;
-    const style = getComputedStyle(card);
-    const contentWidth = card.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-    const eratoShift = parseFloat(grid.dataset.eratoShift || '0');
-
-    card.style.height = startHeight + 'px';
-    if (fixedContent){
-      fixedContent.style.width = contentWidth + 'px';
-      fixedContent.style.flexShrink = '0';
-    }
-    if (lbPreview){
-      lbPreview.innerHTML = eratoLbPreviewHtml(g);
-      const miniSieve = card.querySelector('.mini-sieve');
-      if (miniSieve){
-        const leftGap = miniSieve.getBoundingClientRect().left - card.getBoundingClientRect().left;
-        lbPreview.querySelectorAll('.lb-row').forEach(row => {
-          row.style.marginRight = leftGap + 'px';
-          row.style.marginLeft = 'auto';
-        });
-      }
-      lbPreview.style.width = startWidth + 'px';
-      lbPreview.style.opacity = '1';
-    }
-    card.style.transition = 'none';
-    card.style.position = 'absolute';
-    card.style.top = '0px';
-    card.style.left = '0px';
-    card.style.width = (startWidth * 2 + 17.6 - eratoShift * 2) + 'px';
-    card.style.zIndex = '5';
-    card.style.filter = 'drop-shadow(0 10px 20px rgba(0,0,0,0.45))';
-
-    // la prima volta, nascondo la card vera finché la copia animata non ha finito
-    // il suo lavoro (comparsa al centro + scorrimento + allargamento). Se nel frattempo
-    // scattasse un altro render() (font, fetch, ecc.), anche la card appena ricreata
-    // resta nascosta finché l'overlay non ha davvero finito
-    if (grid.dataset.eratoIntroPlayed !== 'true'){
-      grid.dataset.eratoIntroPlayed = 'true';
-      grid.dataset.eratoOverlayActive = 'true';
-      card.style.visibility = 'hidden';
-      playEratoIntroOverlay(grid);
-    } else if (grid.dataset.eratoOverlayActive === 'true'){
-      card.style.visibility = 'hidden';
-    }
-  }
-
-  // copia indipendente della card, fuori dal ciclo di render(): compare al centro della
-  // pagina (comparsa 25% più lenta di quella normale), poi scorre verso la posizione reale
-  // mentre si allarga, alla stessa velocità che aveva l'hover. Alla fine si toglie di mezzo
-  // e rivela la vera card (già pronta, ferma, nello stato finale) — questa copia non
-  // dipende in alcun modo dal ciclo di render(), quindi non può più essere interrotta da
-  // font/fetch/altri eventi imprevisti
-  function playEratoIntroOverlay(grid){
-    // aspetto un frame in più per essere sicuro che il layout della card vera sia stabile
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const realCard = grid.querySelector('.game-slot:first-child .game-card:not(.locked):not(.leaderboard-card)');
-        if (!realCard){ grid.dataset.eratoOverlayActive = 'false'; return; }
-
-        const finalRect = realCard.getBoundingClientRect();
-        const finalTop = finalRect.top + window.scrollY;
-        const finalLeft = finalRect.left + window.scrollX;
-        const finalWidth = finalRect.width;
-        const finalHeight = finalRect.height;
-        const narrowWidth = (finalWidth - 17.6) / 2; // la card vera è già larga il doppio + il gap
-        const viewportCenter = window.innerWidth / 2;
-        const centerLeft = viewportCenter - narrowWidth / 2;
-
-        const fixedContent = realCard.querySelector('.erato-fixed-content');
-        const overlay = document.createElement('div');
-        overlay.className = 'erato-intro-overlay';
-        overlay.innerHTML = fixedContent ? fixedContent.innerHTML : '';
-        overlay.style.cssText = `
-          position: absolute;
-          top: ${finalTop}px;
-          left: ${centerLeft}px;
-          width: ${narrowWidth}px;
-          height: ${finalHeight}px;
-          box-sizing: border-box;
-          overflow: hidden;
-          padding: 0.855rem;
-          display: flex;
-          flex-direction: column;
-          gap: 0.475rem;
-          background: var(--bg-panel);
-          border: 1px solid rgba(232,196,104,0.85);
-          border-radius: 6px;
-          box-shadow: 0 0 0 1px rgba(232,196,104,0.55), 0 0 0 2px rgba(232,196,104,0.25);
-          z-index: 999;
-          opacity: 0;
-        `;
-        document.body.appendChild(overlay);
-
-        const introFadeDuration = 750; // 0.6s di base, 25% più lento
-        requestAnimationFrame(() => {
-          overlay.style.transition = `opacity ${introFadeDuration}ms ease`;
-          overlay.style.opacity = '1';
-        });
-
-        setTimeout(() => {
-          overlay.style.transition = 'left 1s ease, width 1s ease';
-          overlay.style.left = finalLeft + 'px';
-          overlay.style.width = finalWidth + 'px';
-          setTimeout(() => {
-            grid.dataset.eratoOverlayActive = 'false';
-            // cerco la card ATTUALE (potrebbe essere stata ricreata da un render nel
-            // frattempo): mai un riferimento ormai obsoleto
-            const currentCard = grid.querySelector('.game-slot:first-child .game-card:not(.locked):not(.leaderboard-card)');
-            if (currentCard) currentCard.style.visibility = '';
-            overlay.remove();
-          }, 1000);
-        }, introFadeDuration);
-      });
-    });
-  }
-
   // 3 righe, ognuna ospita 2 classifiche affiancate con la stessa medaglia al centro:
   // tempo - nickname (sinistra) - medaglia - nickname - tempo (destra)
   function dualPodiumRowsHtml(leftPodium, rightPodium){
@@ -1643,11 +1512,10 @@
   function gameCardHtml(g, number){
     const state = gameState(g);
     if (state === 'open'){
-      const href = resumeHref(g.hrefKey, g.hrefBase);
       return `
-        <div class="game-slot entrance-anim">
-          <div class="game-card">
-            <div class="erato-fixed-content">
+        <div class="game-slot entrance-anim erato-slot-wide">
+          <div class="game-card erato-final-card">
+            <div class="erato-content-half">
               <h2 class="game-title-centered">${g.title}</h2>
               <div class="play-preview-block">
                 <div class="play-now-split">
@@ -1663,7 +1531,9 @@
                 <p class="device-note-old device-note-full">Progress is saved per device — switching devices restarts from level 1.</p>
               </div>
             </div>
-            <div class="erato-lb-preview leaderboard-card"></div>
+            <div class="erato-leaderboard-half leaderboard-card">
+              ${eratoLbPreviewHtml(g)}
+            </div>
           </div>
         </div>`;
     } else {
@@ -1849,11 +1719,6 @@
       cards.forEach(c => { c.style.height = cachedEratoHeight + 'px'; });
     }
 
-    // solo ORA, dopo che tutte le misure sul layout normale sono state fatte,
-    // rendo la card assoluta per l'apertura automatica — altrimenti le misure sopra
-    // (centerEratoRightEdge compresa) leggerebbero uno slot collassato e sbaglierebbero
-    initEratoHoverExpand(grid, g);
-
     document.getElementById('prevBtn').classList.toggle('disabled', currentIndex === 0);
     document.getElementById('nextBtn').classList.toggle('disabled', currentIndex === NAV_LIMIT_INDEX);
 
@@ -1908,18 +1773,18 @@
     if (window.innerWidth <= 900) return;
     const gamesGrid = document.getElementById('gamesGrid');
     if (!gamesGrid) return;
-    const firstSlot = gamesGrid.querySelector('.game-slot:first-child');
-    if (!firstSlot) return;
+    const wideCard = gamesGrid.querySelector('.erato-final-card');
+    if (!wideCard) return;
 
     gamesGrid.style.transform = 'none'; // azzero prima di misurare, altrimenti la misura include lo spostamento precedente
     void gamesGrid.offsetWidth;
 
-    const rightEdge = firstSlot.getBoundingClientRect().right;
+    const cardRect = wideCard.getBoundingClientRect();
+    const cardMidpoint = cardRect.left + cardRect.width / 2;
     const viewportCenter = window.innerWidth / 2;
-    const shift = viewportCenter - rightEdge;
+    const shift = viewportCenter - cardMidpoint;
 
     gamesGrid.style.transform = `translateX(${shift}px)`;
-    gamesGrid.dataset.eratoShift = shift;
   }
   window.addEventListener('resize', centerEratoRightEdge);
 
