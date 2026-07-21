@@ -411,7 +411,7 @@
     font-weight:700;
     border-radius: 6px;
     animation: mc-light-up 1.5s ease forwards;
-    animation-delay: calc(var(--i) * 90ms + 2.75s);
+    animation-delay: calc(var(--i) * 90ms + 3.0s);
   }
   @keyframes mc-light-up{
     from{ color: var(--ink); background: transparent; box-shadow: none; }
@@ -1842,6 +1842,7 @@
   // griglia (mini-sieve) parte 0.5s dopo che tutto ha finito
   function playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, g){
     const fadeInDuration = 750;   // comparsa: tre quarti di secondo
+    const pauseDuration = 250;    // pausa ferma al centro: un quarto di secondo
     const expandDuration = 1500;  // allargamento: un secondo e mezzo
 
     const narrowWidth = targetWidth / 2;
@@ -1872,31 +1873,43 @@
       box-shadow: 0 0 0 1px rgba(232,196,104,0.55), 0 0 0 2px rgba(232,196,104,0.25);
       z-index: 999;
       opacity: 0;
-      transform: translateY(16px);
+      transform: translateY(20px);
       pointer-events: none;
     `;
     document.body.appendChild(overlay);
 
-    // doppio requestAnimationFrame: garantisce che il browser abbia davvero dipinto lo
-    // stato iniziale (invisibile, leggermente più in basso) prima di avviare la
-    // transizione — altrimenti salta dritto al risultato finale, senza animare nulla
-    requestAnimationFrame(() => {
+    // la card resta ferma qui, pronta e invisibile, finché la pagina non è DAVVERO
+    // finita di caricare (non solo il DOM: immagini, font, tutto) — solo allora parte
+    // la sequenza vera e propria, evitando qualunque interferenza dovuta al carico
+    // iniziale della pagina
+    function startSequence(){
       requestAnimationFrame(() => {
-        overlay.style.transition = `opacity ${fadeInDuration}ms ease, transform ${fadeInDuration}ms ease`;
-        overlay.style.opacity = '1';
-        overlay.style.transform = 'translateY(0)';
-      });
-    });
+        requestAnimationFrame(() => {
+          overlay.style.transition = `opacity ${fadeInDuration}ms ease, transform ${fadeInDuration}ms ease`;
+          overlay.style.opacity = '1';
+          overlay.style.transform = 'translateY(0)';
 
-    setTimeout(() => {
-      overlay.style.transition = `left ${expandDuration}ms ease, width ${expandDuration}ms ease`;
-      overlay.style.left = targetLeft + 'px';
-      overlay.style.width = targetWidth + 'px';
-      setTimeout(() => {
-        // l'animazione intera è finita: ora sì che si può interagire
-        overlay.style.pointerEvents = 'auto';
-      }, expandDuration);
-    }, fadeInDuration);
+          setTimeout(() => {
+            // pausa ferma al centro, poi l'allargamento
+            setTimeout(() => {
+              overlay.style.transition = `left ${expandDuration}ms ease, width ${expandDuration}ms ease`;
+              overlay.style.left = targetLeft + 'px';
+              overlay.style.width = targetWidth + 'px';
+              setTimeout(() => {
+                // l'animazione intera è finita: ora sì che si può interagire
+                overlay.style.pointerEvents = 'auto';
+              }, expandDuration);
+            }, pauseDuration);
+          }, fadeInDuration);
+        });
+      });
+    }
+
+    if (document.readyState === 'complete'){
+      startSequence();
+    } else {
+      window.addEventListener('load', startSequence, { once: true });
+    }
   }
 
   // ============================================================
