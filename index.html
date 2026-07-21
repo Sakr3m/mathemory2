@@ -1579,6 +1579,42 @@
       setTimeout(() => {
         performEratoExpand(card, fixedContent, lbPreview, g, grid, { startLeft: centerLeft, animateLeft: true, widthDuration: '1s' });
       }, introStagger + introFadeDuration);
+    } else if (grid.dataset.eratoIntroPlayed === 'true'){
+      // l'apertura era già avvenuta in precedenza: questo è un nuovo render() (dati delle
+      // classifiche arrivati, cambio pagina del carosello, ecc.) che ha ricreato la card da
+      // zero in stato normale. Riapplico subito lo stato aperto finale, senza rifare
+      // l'animazione — altrimenti la card sembrerebbe "richiudersi" di scatto a ogni render
+      const startWidth = card.getBoundingClientRect().width;
+      const startHeight = card.getBoundingClientRect().height;
+      const style = getComputedStyle(card);
+      const contentWidth = card.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const eratoShift = parseFloat(grid.dataset.eratoShift || '0');
+
+      card.style.height = startHeight + 'px';
+      if (fixedContent){
+        fixedContent.style.width = contentWidth + 'px';
+        fixedContent.style.flexShrink = '0';
+      }
+      if (lbPreview){
+        lbPreview.innerHTML = eratoLbPreviewHtml(g);
+        const miniSieve = card.querySelector('.mini-sieve');
+        if (miniSieve){
+          const leftGap = miniSieve.getBoundingClientRect().left - card.getBoundingClientRect().left;
+          lbPreview.querySelectorAll('.lb-row').forEach(row => {
+            row.style.marginRight = leftGap + 'px';
+            row.style.marginLeft = 'auto';
+          });
+        }
+        lbPreview.style.width = startWidth + 'px';
+        lbPreview.style.opacity = '1';
+      }
+      card.style.transition = 'none';
+      card.style.position = 'absolute';
+      card.style.top = '0px';
+      card.style.left = '0px';
+      card.style.width = (startWidth * 2 + 17.6 - eratoShift * 2) + 'px';
+      card.style.zIndex = '5';
+      card.style.boxShadow = '0 10px 34px rgba(0,0,0,0.45)';
     }
   }
 
@@ -2062,8 +2098,12 @@
   }
   initConstellationLifecycle();
 
-  fetchLeaderboard();
-  fetchPrimeRushLeaderboard();
+  // ritardate di proposito: l'apertura automatica dura circa 1.85s in tutto, e se questi dati
+  // arrivassero prima, il render() che ne segue distruggerebbe la card a metà animazione
+  setTimeout(() => {
+    fetchLeaderboard();
+    fetchPrimeRushLeaderboard();
+  }, 2000);
   setInterval(fetchLeaderboard, 24 * 60 * 60 * 1000); // refresh una volta al giorno
   setInterval(fetchPrimeRushLeaderboard, 24 * 60 * 60 * 1000);
 
