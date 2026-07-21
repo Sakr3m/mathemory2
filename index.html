@@ -1916,6 +1916,68 @@
     }, 30000);
   }
 
+  // misura e posiziona tutto ciò che dipende dalla larghezza FINALE della card
+  // (margine delle tabelle, riga divisoria, Game X): va chiamata solo DOPO che
+  // l'allargamento è completamente finito, altrimenti si misura la card ancora
+  // stretta e tutto risulta fuori posto
+  function finalizeEratoLayout(overlay){
+    // il bordo destro delle tabelle della classifica deve distare dal bordo destro della
+    // card tanto quanto l'anteprima della griglia dista dal bordo sinistro: misurato dal
+    // vero, non un valore fisso (queste sono tutte uguali, la parte più lunga della classifica)
+    const miniSieve = overlay.querySelector('.mini-sieve');
+    if (miniSieve){
+      const leftGap = miniSieve.getBoundingClientRect().left - overlay.getBoundingClientRect().left;
+      const lbHalfEl = overlay.querySelector('.erato-leaderboard-half');
+      const lbHalfPaddingRight = lbHalfEl ? (parseFloat(getComputedStyle(lbHalfEl).paddingRight) || 0) : 0;
+      const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
+      overlay.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
+        el.style.width = '85%';
+        el.style.marginRight = marginRight + 'px';
+        el.style.marginLeft = 'auto';
+      });
+    }
+
+    // riga divisoria: a metà esatta tra il bordo destro del pulsante "Play now" di
+    // destra e il bordo sinistro delle tabelle della classifica — misurata dal vero
+    const playButtons = overlay.querySelectorAll('.play-now-split .cta-split');
+    const rightPlayBtn = playButtons[1];
+    const firstLbRow = overlay.querySelector('.lb-row');
+    if (rightPlayBtn && firstLbRow){
+      const overlayRect = overlay.getBoundingClientRect();
+      const btnRight = rightPlayBtn.getBoundingClientRect().right;
+      const rowLeft = firstLbRow.getBoundingClientRect().left;
+      const dividerX = (btnRight + rowLeft) / 2 - overlayRect.left;
+
+      let dividerLine = overlay.querySelector('.erato-mid-divider');
+      if (!dividerLine){
+        dividerLine = document.createElement('div');
+        dividerLine.className = 'erato-mid-divider';
+        dividerLine.innerHTML = `
+          <svg viewBox="0 0 10 356" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="eratoMidDividerFade" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(243,239,228,0)" />
+                <stop offset="18%" stop-color="rgba(243,239,228,0.12)" />
+                <stop offset="82%" stop-color="rgba(243,239,228,0.12)" />
+                <stop offset="100%" stop-color="rgba(243,239,228,0)" />
+              </linearGradient>
+            </defs>
+            <path d="M5,0 Q2,89 3.5,178 Q2,267 5,356 Q8,267 6.5,178 Q8,89 5,0 Z" fill="url(#eratoMidDividerFade)" />
+          </svg>`;
+        overlay.appendChild(dividerLine);
+      }
+      dividerLine.style.left = dividerX + 'px';
+
+      // Game X va alla stessa posizione orizzontale della riga, ma più in basso
+      // (non più a cavallo del bordo), abbastanza da leggersi tutto senza tagli
+      const gamexTag = overlay.querySelector('.erato-gamex-tag');
+      if (gamexTag){
+        gamexTag.style.left = dividerX + 'px';
+        gamexTag.style.top = '1.2rem';
+      }
+    }
+  }
+
   function playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, g, number){
     const fadeInDuration = 1500;   // comparsa: un secondo e mezzo
     const pauseDuration = 250;    // pausa ferma al centro: un quarto di secondo
@@ -1958,59 +2020,6 @@
     eratoOverlayEl = overlay;
     loopMiniSievePreview(overlay);
 
-    // il bordo destro delle tabelle della classifica deve distare dal bordo destro della
-    // card tanto quanto l'anteprima della griglia dista dal bordo sinistro: misurato dal
-    // vero, non un valore fisso (queste sono tutte uguali, la parte più lunga della classifica)
-    const miniSieve = overlay.querySelector('.mini-sieve');
-    if (miniSieve){
-      const leftGap = miniSieve.getBoundingClientRect().left - overlay.getBoundingClientRect().left;
-      const lbHalfEl = overlay.querySelector('.erato-leaderboard-half');
-      const lbHalfPaddingRight = lbHalfEl ? (parseFloat(getComputedStyle(lbHalfEl).paddingRight) || 0) : 0;
-      const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
-      overlay.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
-        el.style.width = '85%';
-        el.style.marginRight = marginRight + 'px';
-        el.style.marginLeft = 'auto';
-      });
-    }
-
-    // riga divisoria: a metà esatta tra il bordo destro del pulsante "Play now" di
-    // destra e il bordo sinistro delle tabelle della classifica — misurata dal vero
-    const playButtons = overlay.querySelectorAll('.play-now-split .cta-split');
-    const rightPlayBtn = playButtons[1];
-    const firstLbRow = overlay.querySelector('.lb-row');
-    if (rightPlayBtn && firstLbRow){
-      const overlayRect = overlay.getBoundingClientRect();
-      const btnRight = rightPlayBtn.getBoundingClientRect().right;
-      const rowLeft = firstLbRow.getBoundingClientRect().left;
-      const dividerX = (btnRight + rowLeft) / 2 - overlayRect.left;
-
-      const dividerLine = document.createElement('div');
-      dividerLine.className = 'erato-mid-divider';
-      dividerLine.innerHTML = `
-        <svg viewBox="0 0 10 356" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <linearGradient id="eratoMidDividerFade" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="rgba(243,239,228,0)" />
-              <stop offset="18%" stop-color="rgba(243,239,228,0.12)" />
-              <stop offset="82%" stop-color="rgba(243,239,228,0.12)" />
-              <stop offset="100%" stop-color="rgba(243,239,228,0)" />
-            </linearGradient>
-          </defs>
-          <path d="M5,0 Q2,89 3.5,178 Q2,267 5,356 Q8,267 6.5,178 Q8,89 5,0 Z" fill="url(#eratoMidDividerFade)" />
-        </svg>`;
-      dividerLine.style.left = dividerX + 'px';
-      overlay.appendChild(dividerLine);
-
-      // Game X va alla stessa posizione orizzontale della riga, ma più in basso
-      // (non più a cavallo del bordo), abbastanza da leggersi tutto senza tagli
-      const gamexTag = overlay.querySelector('.erato-gamex-tag');
-      if (gamexTag){
-        gamexTag.style.left = dividerX + 'px';
-        gamexTag.style.top = '1.2rem';
-      }
-    }
-
     // la card resta ferma qui, pronta e invisibile, finché la pagina non è DAVVERO
     // finita di caricare (non solo il DOM: immagini, font, tutto) — solo allora parte
     // la sequenza vera e propria, evitando qualunque interferenza dovuta al carico
@@ -2029,6 +2038,9 @@
               overlay.style.left = targetLeft + 'px';
               overlay.style.width = targetWidth + 'px';
               setTimeout(() => {
+                // solo ORA la card è davvero alla larghezza finale: qui, e non prima,
+                // ha senso misurare dove sono davvero le tabelle della classifica
+                finalizeEratoLayout(overlay);
                 // l'animazione intera è finita: ora sì che si può interagire
                 overlay.style.pointerEvents = 'auto';
               }, expandDuration);
