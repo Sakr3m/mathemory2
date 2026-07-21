@@ -431,12 +431,40 @@
   .game-number-btn:hover{ color: var(--yellow); border-color: var(--yellow); }
   .erato-gamex-tag{
     position: absolute;
-    top: -1.1rem;
+    top: 0;
     left: 50%;
     transform: translateX(-50%);
     background: var(--bg-panel);
     z-index: 2;
     opacity: 0;
+  }
+  .erato-gamex-label{
+    text-align: left;
+    font-family:'Space Mono', monospace;
+    font-size: 1rem;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+  }
+  .erato-rules-preview{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.6rem;
+    height: 100%;
+  }
+  .erato-rules-preview h3{
+    font-family:'Kalam', cursive;
+    font-size: 1.5rem;
+    color: var(--ink);
+    text-align: center;
+    margin: 0 0 0.3rem;
+  }
+  .erato-rules-preview p{
+    font-family:'Work Sans', sans-serif;
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+    margin: 0;
   }
   .erato-mid-divider{
     position: absolute;
@@ -1589,6 +1617,7 @@
   function eratoContentHtml(g){
     return `
       <h2 class="game-title-centered">${g.title}</h2>
+      <div class="erato-gamex-label">GAME 1</div>
       <div class="play-preview-block">
         <div class="play-now-split">
           <button type="button" class="cta-inline cta-split" onclick="openModeModal(0, false)">Play now<span class="cta-split-sub">Normal (locked)</span></button>
@@ -1949,6 +1978,31 @@
   // l'allargamento è completamente finito, altrimenti si misura la card ancora
   // stretta e tutto risulta fuori posto
   function finalizeEratoLayout(overlay){
+    // al passaggio del mouse su RULES, la classifica sparisce per un attimo lasciando
+    // spazio al testo delle regole (lo stesso che si legge aprendo il popup); toglendo
+    // il mouse, torna la classifica
+    const rulesBtn = overlay.querySelector('#eratoRulesBtn');
+    const lbHalf = overlay.querySelector('.erato-leaderboard-half');
+    if (rulesBtn && lbHalf && !rulesBtn.dataset.hoverBound){
+      rulesBtn.dataset.hoverBound = 'true';
+      const rulesPreviewHtml = `
+        <div class="erato-rules-preview">
+          <h3>Rules — Eratosthenes</h3>
+          <p><strong>How to play:</strong> find the 5 hidden primes in the 5×5 grid, add up their values, enter the total. Correct answer = next level.</p>
+          <p><strong>Modes:</strong> each mode has its own rules on time limits and leaderboards — check them when choosing your mode.</p>
+          <p><strong>Fair play:</strong> out of respect for all participants, please don't cheat.</p>
+          <p><em>Happy prime hunting.</em></p>
+        </div>`;
+      let savedLbContent = '';
+      rulesBtn.addEventListener('mouseenter', () => {
+        savedLbContent = lbHalf.innerHTML; // fresco ad ogni hover, mai una copia vecchia
+        lbHalf.innerHTML = rulesPreviewHtml;
+      });
+      rulesBtn.addEventListener('mouseleave', () => {
+        lbHalf.innerHTML = savedLbContent;
+      });
+    }
+
     // il bordo destro delle tabelle della classifica deve distare dal bordo destro della
     // card tanto quanto l'anteprima della griglia dista dal bordo sinistro: misurato dal
     // vero, non un valore fisso (queste sono tutte uguali, la parte più lunga della classifica)
@@ -2001,7 +2055,7 @@
       const gamexTag = overlay.querySelector('.erato-gamex-tag');
       if (gamexTag){
         gamexTag.style.left = dividerX + 'px';
-        gamexTag.style.top = '1.2rem';
+        gamexTag.style.top = '0px';
         // ora che è nel posto giusto, lo faccio comparire gradualmente — mai visibile
         // nella posizione sbagliata, nessun salto
         requestAnimationFrame(() => {
@@ -2040,7 +2094,7 @@
 
     const overlay = document.createElement('div');
     overlay.innerHTML = `
-      <button type="button" class="game-number-btn erato-gamex-tag" onclick="openRulesModal()">Game ${number}</button>
+      <button type="button" class="game-number-btn erato-gamex-tag" id="eratoRulesBtn" onclick="openRulesModal()">RULES</button>
       <div class="erato-content-half" style="width:${narrowWidth}px; flex-shrink:0; box-sizing:border-box; padding:0.855rem; display:flex; flex-direction:column; gap:0.475rem;">
         ${eratoContentHtml(g)}
       </div>
