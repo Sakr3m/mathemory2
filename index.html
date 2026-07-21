@@ -1840,6 +1840,24 @@
   // Compare al centro (comparsa 0.75s), poi scorre verso la posizione bersaglio mentre
   // si allarga (1.5s) — durante tutta questa fase non è interagibile. L'anteprima della
   // griglia (mini-sieve) parte 0.5s dopo che tutto ha finito
+  // fa ripartire l'accensione della mini-griglia ogni 60 secondi, indipendentemente dal
+  // primo innesco (che ha il suo ritardo iniziale di 3.5s incorporato nel CSS): qui uso
+  // uno stile diretto sull'elemento, senza quel ritardo, solo lo scaglionamento di 1s
+  // tra un numero e l'altro
+  function loopMiniSievePreview(overlay){
+    const cells = Array.from(overlay.querySelectorAll('.mc.prime'));
+    if (!cells.length) return;
+    function replay(){
+      cells.forEach((c, i) => {
+        c.style.animation = 'none';
+        void c.offsetWidth; // forzo il reflow prima di far ripartire l'animazione
+        c.style.animation = 'mc-light-up 1s ease forwards';
+        c.style.animationDelay = `${i * 1000}ms`;
+      });
+    }
+    setInterval(replay, 60000);
+  }
+
   function playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, g){
     const fadeInDuration = 1500;   // comparsa: un secondo e mezzo
     const pauseDuration = 250;    // pausa ferma al centro: un quarto di secondo
@@ -1877,6 +1895,7 @@
       pointer-events: none;
     `;
     document.body.appendChild(overlay);
+    loopMiniSievePreview(overlay);
 
     // la card resta ferma qui, pronta e invisibile, finché la pagina non è DAVVERO
     // finita di caricare (non solo il DOM: immagini, font, tutto) — solo allora parte
