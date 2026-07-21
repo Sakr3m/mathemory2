@@ -1436,6 +1436,23 @@
     return `<div class="mini-sieve">${html}</div>`;
   }
 
+  // le 11 date mostrate su ciascuna card "Coming Soon": la seconda card (il primo
+  // "Coming Soon" dopo Eratosthenes) è il 1 agosto 2026. Da lì in poi, ogni data è la
+  // precedente +12 giorni contando anche il giorno di partenza (cioè +11 giorni di
+  // calendario per il primo salto: dall'1 al 12 agosto, contando le 24h dell'1, sono
+  // 12 giorni), poi +12 giorni di calendario per tutti i salti successivi.
+  // Calcolata in UTC puro (solo anno/mese/giorno, senza orario né fuso) per non
+  // dipendere dal fuso orario di chi esegue il codice
+  const comingSoonUnlockLabels = [];
+  {
+    let d = new Date(Date.UTC(2026, 7, 1)); // 1 agosto 2026
+    for (let i = 0; i < 11; i++){
+      comingSoonUnlockLabels.push(d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }));
+      d = new Date(d);
+      d.setUTCDate(d.getUTCDate() + (i === 0 ? 11 : 12));
+    }
+  }
+
   // --- le 11 date di sblocco per i "coming soon" ---
   const comingSoonDates = [
     '2026-08-01T00:00:00+02:00',
@@ -1450,15 +1467,6 @@
     '2026-11-17T00:00:00+01:00',
     '2026-11-29T00:00:00+01:00',
   ];
-
-  // data mostrata solo sulla seconda card (il primo "Coming Soon" dopo Eratosthenes):
-  // 12 giorni dopo il 1 agosto, cioè il 13 agosto 2026. Calcolata in UTC puro (solo
-  // anno/mese/giorno, senza orario né fuso) per non dipendere dal fuso orario di chi
-  // esegue il codice: con un fuso indietro rispetto a +02:00, leggere l'ora locale
-  // del 1 agosto 00:00+02:00 darebbe ancora "31 luglio", sballando il conteggio di un giorno
-  const secondComingSoonUnlockDate = new Date(Date.UTC(2026, 7, 1));
-  secondComingSoonUnlockDate.setUTCDate(secondComingSoonUnlockDate.getUTCDate() + 12);
-  const secondComingSoonDateLabel = secondComingSoonUnlockDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
   // --- progressi salvati per dispositivo ---
   function resumeHref(key, baseUrl){
@@ -1928,9 +1936,12 @@
       if (grid.dataset.eratoIntroPlayed !== 'true'){
         handleEratoIntro(grid, g, number);
       } else if (isNavigation){
-        // ritorno alla prima pagina dal carosello: solo dissolvenza, niente
-        // movimento verticale, il contenuto interno (mini-griglia, ecc.) non si tocca
-        fadeInCardContainer(eratoOverlayEl);
+        // ritorno alla prima pagina dal carosello: stessa sequenza delle altre pagine
+        // (stretta, fade in, pausa, allargamento), solo che qui la card riparte dalla
+        // sua identica dimensione finale già nota; il contenuto interno (mini-griglia,
+        // classifica, ecc.) resta quello che era, non viene ricostruito
+        const geometry = computeCardGeometry(g, number);
+        playCardNavAnimation(eratoOverlayEl, geometry.top, geometry.left, geometry.width, geometry.height);
       } else if (eratoOverlayEl){
         eratoOverlayEl.style.display = 'flex';
         eratoOverlayEl.style.opacity = '1';
@@ -2081,45 +2092,28 @@
       el.style.left = geometry.left + 'px';
       el.style.width = geometry.width + 'px';
       el.style.height = geometry.height + 'px';
+      el._targetGeometry = geometry;
     });
   }
 
   // card "Coming Soon": stessa identica dimensione/posizione di Eratosthenes (vedi
-  // computeCardGeometry), titolo con lo stesso font del titolo di Eratosthenes, ed
-  // eventualmente una data più piccola sotto (solo sulla primissima, vedi chiamante)
+  // computeCardGeometry), titolo con lo stesso font del titolo di Eratosthenes, e sotto
+  // una data più piccola per ciascuna (vedi comingSoonUnlockLabels)
   function buildComingSoonCard(index){
     const geometry = computeCardGeometry(games[0], 1);
     const overlay = document.createElement('div');
     overlay.className = 'coming-soon-card';
-    const dateHtml = index === 1 ? `<p class="unlock-date">${secondComingSoonDateLabel}</p>` : '';
+    const dateHtml = comingSoonUnlockLabels[index - 1] ? `<p class="unlock-date">${comingSoonUnlockLabels[index - 1]}</p>` : '';
     overlay.innerHTML = `<h2 class="game-title-centered">COMING SOON</h2>${dateHtml}`;
-    overlay.style.top = geometry.top + 'px';
-    overlay.style.left = geometry.left + 'px';
-    overlay.style.width = geometry.width + 'px';
-    overlay.style.height = geometry.height + 'px';
     document.body.appendChild(overlay);
+    overlay._targetGeometry = geometry; // riletta da showComingSoonPage per l'animazione di comparsa
     return overlay;
-  }
-
-  // dissolvenza pura del contenitore della card, nessun movimento: usata per il cambio
-  // pagina dal carosello (avanti, indietro, ritorno a Eratosthenes), sia per la card
-  // "Coming Soon" sia per il ritorno alla card di Eratosthenes già esistente — il suo
-  // contenuto interno (mini-griglia, ecc.) non viene toccato, solo il contenitore
-  function fadeInCardContainer(el){
-    if (!el) return;
-    el.style.display = 'flex';
-    el.style.transition = 'none';
-    el.style.opacity = '0';
-    void el.offsetWidth; // forzo il reflow prima di avviare la dissolvenza
-    requestAnimationFrame(() => {
-      el.style.transition = `opacity ${CARD_PAGE_CHANGE_FADE_MS}ms ease`;
-      el.style.opacity = '1';
-    });
   }
 
   // mostra la card "Coming Soon" della pagina data, nascondendo le altre; la costruisce
   // al primo passaggio, poi la riusa. isNavigation distingue un vero cambio pagina dal
-  // carosello (fade-in) da un semplice re-render (resize, ecc: nessuna animazione)
+  // carosello (sequenza stretta-fade-pausa-allargamento, come Eratosthenes ma dimezzata
+  // e senza movimento) da un semplice re-render (resize, ecc: nessuna animazione)
   function showComingSoonPage(index, isNavigation){
     if (window.innerWidth <= 900) return; // su mobile la schermata "Coming Soon" è un'altra (vedi mobileGameSectionHtml)
     Object.keys(comingSoonOverlays).forEach(key => {
@@ -2130,7 +2124,8 @@
     }
     const overlay = comingSoonOverlays[index];
     if (isNavigation || overlay.style.display !== 'flex'){
-      fadeInCardContainer(overlay);
+      const g = overlay._targetGeometry;
+      playCardNavAnimation(overlay, g.top, g.left, g.width, g.height);
     }
   }
 
@@ -2360,11 +2355,56 @@
   const CARD_INITIAL_FADE_MS = 1500;
   // durata della dissolvenza al semplice cambio pagina dal carosello (nessun movimento)
   const CARD_PAGE_CHANGE_FADE_MS = 750;
+  // pausa ferma al centro e allargamento: condivisi tra la comparsa iniziale di
+  // Eratosthenes e la sequenza di cambio pagina dal carosello, stessa identica durata
+  const CARD_PAUSE_MS = 250;
+  const CARD_EXPAND_MS = 1250;
+
+  // sequenza di comparsa usata a ogni cambio pagina dal carosello (avanti, indietro,
+  // ritorno a Eratosthenes): identica nella struttura a playEratoIntroOverlay (stretta
+  // e centrata, poi fade in, pausa, poi allargamento fino alla dimensione finale) ma
+  // con la dissolvenza dimezzata (CARD_PAGE_CHANGE_FADE_MS invece di CARD_INITIAL_FADE_MS)
+  // e SENZA il movimento verticale di 30px, che appartiene solo alla comparsa iniziale
+  // dal caricamento pagina. Usata sia per le card "Coming Soon" sia per il ritorno alla
+  // card di Eratosthenes via freccette
+  function playCardNavAnimation(overlay, targetTop, targetLeft, targetWidth, targetHeight){
+    const narrowWidth = targetWidth / 2;
+    const viewportCenter = window.innerWidth / 2;
+    const centerLeft = viewportCenter - narrowWidth / 2;
+
+    overlay.style.transition = 'none';
+    overlay.style.display = 'flex';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.top = targetTop + 'px';
+    overlay.style.left = centerLeft + 'px';
+    overlay.style.width = narrowWidth + 'px';
+    overlay.style.height = targetHeight + 'px';
+    overlay.style.opacity = '0';
+    void overlay.offsetWidth; // forzo il reflow prima di avviare la sequenza vera
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        overlay.style.transition = `opacity ${CARD_PAGE_CHANGE_FADE_MS}ms ease`;
+        overlay.style.opacity = '1';
+
+        setTimeout(() => {
+          setTimeout(() => {
+            overlay.style.transition = `left ${CARD_EXPAND_MS}ms ease, width ${CARD_EXPAND_MS}ms ease`;
+            overlay.style.left = targetLeft + 'px';
+            overlay.style.width = targetWidth + 'px';
+            setTimeout(() => {
+              overlay.style.pointerEvents = 'auto';
+            }, CARD_EXPAND_MS);
+          }, CARD_PAUSE_MS);
+        }, CARD_PAGE_CHANGE_FADE_MS);
+      });
+    });
+  }
 
   function playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, g, number){
     const fadeInDuration = CARD_INITIAL_FADE_MS; // comparsa: un secondo e mezzo
-    const pauseDuration = 250;    // pausa ferma al centro: un quarto di secondo
-    const expandDuration = 1250;  // allargamento: un secondo e un quarto
+    const pauseDuration = CARD_PAUSE_MS;    // pausa ferma al centro: un quarto di secondo
+    const expandDuration = CARD_EXPAND_MS;  // allargamento: un secondo e un quarto
 
     const narrowWidth = targetWidth / 2;
     const viewportCenter = window.innerWidth / 2;
