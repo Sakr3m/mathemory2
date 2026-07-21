@@ -411,7 +411,7 @@
     font-weight:700;
     border-radius: 6px;
     animation: mc-light-up 1.5s ease forwards;
-    animation-delay: calc(var(--i) * 90ms + 1.4s);
+    animation-delay: calc(var(--i) * 90ms + 2.75s);
   }
   @keyframes mc-light-up{
     from{ color: var(--ink); background: transparent; box-shadow: none; }
@@ -1315,6 +1315,9 @@
 
 <script>
   // --- griglia decorativa 5x5, max 5 primi cerchiati ---
+  // ============================================================
+  // SEZIONE: DATI E COSTRUZIONE DEL GIOCO (Eratosthenes)
+  // ============================================================
   function buildMiniSieve(){
     const values =    [9, 7, 22, 34, 13,
                        15, 18, 29, 6, 21,
@@ -1414,6 +1417,9 @@
   }
 
   // --- suono tap.mp3: generico, riusato su tutti i pulsanti della pagina ---
+  // ============================================================
+  // SEZIONE: AUDIO — effetti sonori (tap, right, wrong, winner...)
+  // ============================================================
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const soundBuffers = {};
   function loadSound(name, url){
@@ -1438,6 +1444,9 @@
     source.start(0);
   }
 
+  // ============================================================
+  // SEZIONE: STATO GLOBALE — carosello, cache altezza/classifiche
+  // ============================================================
   let currentIndex = 0;
   const maxIndex = games.length - 1;
   // per ora si può navigare solo fino a Game 2: niente promesse sugli altri 10 finché non vediamo come va
@@ -1450,6 +1459,9 @@
   let cachedPrimeRushPodium = null;
   const LEADERBOARD_API = 'https://eratostene.sl-eternal-lux.workers.dev';
 
+  // ============================================================
+  // SEZIONE: CLASSIFICHE — fetch dei dati dal Worker Cloudflare
+  // ============================================================
   function fetchLeaderboard(){
     fetch(`${LEADERBOARD_API}/leaderboard`)
       .then(r => r.json())
@@ -1476,6 +1488,9 @@
 
   // 3 righe, ognuna ospita 2 classifiche affiancate con la stessa medaglia al centro:
   // tempo - nickname (sinistra) - medaglia - nickname - tempo (destra)
+  // ============================================================
+  // SEZIONE: CLASSIFICHE — generazione HTML del podio
+  // ============================================================
   function dualPodiumRowsHtml(leftPodium, rightPodium){
     const medals = ['🥇', '🥈', '🥉'];
     const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
@@ -1510,32 +1525,19 @@
     return html;
   }
 
+  // ============================================================
+  // SEZIONE: CARD DEI GIOCHI — generazione HTML (desktop)
+  // Il ramo "open" (Eratosthenes) genera solo un segnaposto invisibile:
+  // il contenuto vero vive in eratoContentHtml()/eratoLbPreviewHtml()
+  // qui sotto, usato dalla card animata indipendente più in basso.
+  // ============================================================
   function gameCardHtml(g, number){
     const state = gameState(g);
     if (state === 'open'){
+      const heightStyle = cachedEratoHeight ? `style="height:${cachedEratoHeight}px"` : '';
       return `
         <div class="game-slot entrance-anim erato-slot-wide erato-placeholder">
-          <div class="game-card erato-final-card">
-            <div class="erato-content-half">
-              <h2 class="game-title-centered">${g.title}</h2>
-              <div class="play-preview-block">
-                <div class="play-now-split">
-                  <button type="button" class="cta-inline cta-split" onclick="openModeModal(0, false)">Play now<span class="cta-split-sub">Normal (locked)</span></button>
-                  <button type="button" class="cta-inline cta-split" onclick="openModeModal(0, true)">Play now<span class="cta-split-sub">All unlocked</span></button>
-                </div>
-                <div class="preview-row">
-                  ${g.preview || ''}
-                  <div class="preview-text-col">
-                    <p class="desc"><span class="desc-title">${g.descTitle}</span>${g.desc}</p>
-                  </div>
-                </div>
-                <p class="device-note-old device-note-full">Progress is saved per device — switching devices restarts from level 1.</p>
-              </div>
-            </div>
-            <div class="erato-leaderboard-half leaderboard-card">
-              ${eratoLbPreviewHtml(g)}
-            </div>
-          </div>
+          <div class="game-card erato-final-card" ${heightStyle}></div>
         </div>`;
     } else {
       const heightStyle = cachedEratoHeight ? `style="height:${cachedEratoHeight}px"` : '';
@@ -1552,6 +1554,27 @@
   // genera il contenuto della classifica direttamente dai dati già in cache — usata dal
   // pannello dentro la card allargata, indipendente dalla vecchia card della leaderboard
   // (che potrebbe anche non esistere più in futuro)
+  // contenuto vero della card di Eratosthenes (titolo, pulsanti, anteprima, descrizione):
+  // non vive più come markup statico nella griglia, viene costruito solo quando serve
+  // per popolare la card animata
+  function eratoContentHtml(g){
+    return `
+      <h2 class="game-title-centered">${g.title}</h2>
+      <div class="play-preview-block">
+        <div class="play-now-split">
+          <button type="button" class="cta-inline cta-split" onclick="openModeModal(0, false)">Play now<span class="cta-split-sub">Normal (locked)</span></button>
+          <button type="button" class="cta-inline cta-split" onclick="openModeModal(0, true)">Play now<span class="cta-split-sub">All unlocked</span></button>
+        </div>
+        <div class="preview-row">
+          ${g.preview || ''}
+          <div class="preview-text-col">
+            <p class="desc"><span class="desc-title">${g.descTitle}</span>${g.desc}</p>
+          </div>
+        </div>
+        <p class="device-note-old device-note-full">Progress is saved per device — switching devices restarts from level 1.</p>
+      </div>`;
+  }
+
   function eratoLbPreviewHtml(g){
     return `
       <div class="lb-half">
@@ -1618,6 +1641,9 @@
       </div>`;
   }
 
+  // ============================================================
+  // SEZIONE: CARD DEI GIOCHI — generazione HTML (mobile)
+  // ============================================================
   function mobileNavRowHtml(){
     let dots = '';
     for (let i = 1; i <= 12; i++){
@@ -1700,6 +1726,10 @@
       </div>`;
   }
 
+  // ============================================================
+  // SEZIONE: RENDER PRINCIPALE — chiamato a ogni cambio pagina del
+  // carosello, ridimensionamento, arrivo dati classifiche, ecc.
+  // ============================================================
   function render(){
     const grid = document.getElementById('gamesGrid');
     const g = games[currentIndex];
@@ -1708,7 +1738,7 @@
     grid.innerHTML = gameCardHtml(g, number) + gameXSlotHtml(number);
     positionIndexSoundBtn();
     centerEratoRightEdge();
-    handleEratoIntro(grid);
+    handleEratoIntro(grid, g);
 
     // l'altezza di riferimento è sempre quella naturale di Eratosthenes (il gioco vero), non della leaderboard
     const cards = grid.querySelectorAll('.game-card');
@@ -1767,41 +1797,58 @@
   // centrato in verticale col titolo, diametro = 1.5x l'altezza del titolo. Spostato nel
   // body e posizionato con coordinate reali di pagina, per scorrere insieme al contenuto
   // (i due riferimenti — titolo e card — non condividono lo stesso genitore diretto)
+  // ============================================================
+  // SEZIONE: ERATOSTHENES — apertura automatica animata
+  // La card vera è solo un segnaposto invisibile (vedi gameCardHtml);
+  // questa sezione costruisce e anima l'UNICA card visibile, in modo
+  // indipendente dal ciclo di render() (vedi POST-IT esterno per il
+  // backup del vecchio markup statico, se mai servisse ripristinarlo).
+  // ============================================================
   let indexSoundBtnMovedToBody = false;
   // sposta l'intera griglia dei 2 giochi in modo che il lato destro della card di
   // Eratostene (il confine tra le 2 card) cada esattamente al centro reale della finestra,
   // non solo al centro della sua colonna. Misurato dal vero, non un valore fisso.
   // gestisce l'apertura automatica al caricamento: la card vera (statica, sempre corretta)
   // resta nascosta finché la copia animata indipendente non ha finito il suo lavoro
-  function handleEratoIntro(grid){
+  function handleEratoIntro(grid, g){
     if (window.innerWidth <= 900) return;
     if (grid.dataset.eratoIntroPlayed === 'true') return;
     const card = grid.querySelector('.erato-final-card');
     if (!card) return;
     grid.dataset.eratoIntroPlayed = 'true';
 
-    // il segnaposto è già invisibile via CSS (opacity:0), riservava solo lo spazio nella
-    // griglia: mi basta misurarlo e leggere il contenuto, senza spostare nulla
+    // il segnaposto è vuoto e invisibile (opacity:0 via CSS), riserva solo lo spazio
+    // nella griglia per sapere dove e quanto grande deve arrivare la card animata
     const targetRect = card.getBoundingClientRect();
     const targetTop = targetRect.top + window.scrollY;
     const targetLeft = targetRect.left + window.scrollX;
     const targetWidth = targetRect.width;
     const targetHeight = targetRect.height;
-    const contentHalfHtml = (card.querySelector('.erato-content-half') || {}).innerHTML || '';
 
-    playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, contentHalfHtml);
+    playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, g);
   }
 
-  // "card nuova": indipendente, prende tutto lo spazio che le serve. Compare al centro
-  // della pagina (comparsa 25% più lenta di quella normale), poi scorre verso la
-  // posizione bersaglio mentre si allarga, alla stessa velocità di prima, e ci resta
-  function playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, contentHalfHtml){
+  // card animata: unica card esistente per Eratosthenes, costruita direttamente in JS
+  // (il contenuto non vive più come markup statico da nessuna parte nella pagina).
+  // Compare al centro (comparsa 0.75s), poi scorre verso la posizione bersaglio mentre
+  // si allarga (1.5s) — durante tutta questa fase non è interagibile. L'anteprima della
+  // griglia (mini-sieve) parte 0.5s dopo che tutto ha finito
+  function playEratoIntroOverlay(targetTop, targetLeft, targetWidth, targetHeight, g){
+    const fadeInDuration = 750;   // comparsa: tre quarti di secondo
+    const expandDuration = 1500;  // allargamento: un secondo e mezzo
+
     const narrowWidth = targetWidth / 2;
     const viewportCenter = window.innerWidth / 2;
     const centerLeft = viewportCenter - narrowWidth / 2;
 
     const overlay = document.createElement('div');
-    overlay.innerHTML = contentHalfHtml;
+    overlay.innerHTML = `
+      <div class="erato-content-half" style="width:${narrowWidth}px; flex-shrink:0; box-sizing:border-box; padding:0.855rem; display:flex; flex-direction:column; gap:0.475rem;">
+        ${eratoContentHtml(g)}
+      </div>
+      <div class="erato-leaderboard-half leaderboard-card" style="flex:1 1 auto; min-width:0; box-sizing:border-box; padding:0.855rem;">
+        ${eratoLbPreviewHtml(g)}
+      </div>`;
     overlay.style.cssText = `
       position: absolute;
       top: ${targetTop}px;
@@ -1810,34 +1857,37 @@
       height: ${targetHeight}px;
       box-sizing: border-box;
       overflow: hidden;
-      padding: 0.855rem;
       display: flex;
-      flex-direction: column;
-      gap: 0.475rem;
+      flex-direction: row;
       background: var(--bg-panel);
       border: 1px solid rgba(232,196,104,0.85);
       border-radius: 6px;
       box-shadow: 0 0 0 1px rgba(232,196,104,0.55), 0 0 0 2px rgba(232,196,104,0.25);
       z-index: 999;
       opacity: 0;
+      pointer-events: none;
     `;
     document.body.appendChild(overlay);
 
-    const introFadeDuration = 750; // 0.6s di base, 25% più lento
     requestAnimationFrame(() => {
-      overlay.style.transition = `opacity ${introFadeDuration}ms ease`;
+      overlay.style.transition = `opacity ${fadeInDuration}ms ease`;
       overlay.style.opacity = '1';
     });
 
     setTimeout(() => {
-      overlay.style.transition = 'left 1s ease, width 1s ease';
+      overlay.style.transition = `left ${expandDuration}ms ease, width ${expandDuration}ms ease`;
       overlay.style.left = targetLeft + 'px';
       overlay.style.width = targetWidth + 'px';
-      // qui la card nuova resta così com'è: nessuna rimozione, nessuna rivelazione di
-      // altro — è lei stessa il risultato finale, per questo confronto
-    }, introFadeDuration);
+      setTimeout(() => {
+        // l'animazione intera è finita: ora sì che si può interagire
+        overlay.style.pointerEvents = 'auto';
+      }, expandDuration);
+    }, fadeInDuration);
   }
 
+  // ============================================================
+  // SEZIONE: POSIZIONAMENTO — centraggio card e pulsante audio
+  // ============================================================
   function centerEratoRightEdge(){
     if (window.innerWidth <= 900) return;
     const gamesGrid = document.getElementById('gamesGrid');
@@ -1883,6 +1933,9 @@
   }
   window.addEventListener('resize', positionIndexSoundBtn);
 
+  // ============================================================
+  // SEZIONE: CAROSELLO — navigazione tra i giochi (frecce, pallini)
+  // ============================================================
   function renderDots(topId, bottomId){
     const top = document.getElementById(topId);
     const bottom = document.getElementById(bottomId);
@@ -1933,6 +1986,9 @@
   bindHold(document.getElementById('nextBtn'), 1);
 
   // su mobile le freccette diventano visivamente su/giù (stesso comportamento)
+  // ============================================================
+  // SEZIONE: MOBILE — blocco orizzontale (ruota il telefono)
+  // ============================================================
   function applyMobileRotation(){
     const isMobile = window.innerWidth <= 900;
     document.getElementById('prevBtn').classList.toggle('rotate', isMobile);
@@ -1951,6 +2007,9 @@
   // ogni simbolo si muove per conto suo, in linea retta, in una direzione casuale ampia;
   // dopo 3 secondi di vita sfuma (in ordine sfalsato tra un simbolo e l'altro, non tutti insieme),
   // e dopo mezzo secondo di pausa riappare altrove con un simbolo diverso
+  // ============================================================
+  // SEZIONE: COSTELLAZIONE — simboli matematici fluttuanti sullo sfondo
+  // ============================================================
   function initConstellationLifecycle(){
     const svg = document.querySelector('.math-constellation');
     if (!svg) return;
@@ -2041,6 +2100,9 @@
   setInterval(fetchPrimeRushLeaderboard, 24 * 60 * 60 * 1000);
 
   // --- popup del regolamento ---
+  // ============================================================
+  // SEZIONE: POPUP — regolamento e scelta modalità di gioco
+  // ============================================================
   const rulesModal = document.getElementById('rulesModal');
   function openRulesModal(){ playSound('tap'); rulesModal.classList.add('visible'); }
   function closeRulesModal(){ playSound('tap'); rulesModal.classList.remove('visible'); }
@@ -2097,6 +2159,9 @@
   }
 
   // --- scorrimento mobile a scatti veri: nessun movimento durante il trascinamento, scatta solo a gesto concluso ---
+  // ============================================================
+  // SEZIONE: MOBILE — scorrimento a schermate separate (snap scroll)
+  // ============================================================
   let mobileSnapIndex = 0;
   const snapTrack = document.getElementById('snapTrack');
   const snapScrollEl = document.getElementById('snapScroll');
