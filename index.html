@@ -436,6 +436,14 @@
     background: var(--bg-panel);
     z-index: 2;
   }
+  .erato-mid-divider{
+    position: absolute;
+    top: 25%;
+    height: 50%;
+    width: 1px;
+    background: var(--rule);
+    transform: translateX(-50%);
+  }
   /* --- overlay condiviso da tutti i popup (regole, scelta modalità, ecc.) --- */
   .modal-overlay{
     display:none;
@@ -1940,6 +1948,31 @@
         el.style.marginRight = marginRight + 'px';
         el.style.marginLeft = 'auto';
       });
+    }
+
+    // riga divisoria: a metà esatta tra il bordo destro del pulsante "Play now" di
+    // destra e il bordo sinistro delle tabelle della classifica — misurata dal vero
+    const playButtons = overlay.querySelectorAll('.play-now-split .cta-split');
+    const rightPlayBtn = playButtons[1];
+    const firstLbRow = overlay.querySelector('.lb-row');
+    if (rightPlayBtn && firstLbRow){
+      const overlayRect = overlay.getBoundingClientRect();
+      const btnRight = rightPlayBtn.getBoundingClientRect().right;
+      const rowLeft = firstLbRow.getBoundingClientRect().left;
+      const dividerX = (btnRight + rowLeft) / 2 - overlayRect.left;
+
+      const dividerLine = document.createElement('div');
+      dividerLine.className = 'erato-mid-divider';
+      dividerLine.style.left = dividerX + 'px';
+      overlay.appendChild(dividerLine);
+
+      // Game X va alla stessa posizione orizzontale della riga, ma più in basso
+      // (non più a cavallo del bordo), abbastanza da leggersi tutto senza tagli
+      const gamexTag = overlay.querySelector('.erato-gamex-tag');
+      if (gamexTag){
+        gamexTag.style.left = dividerX + 'px';
+        gamexTag.style.top = '1.2rem';
+      }
     }
 
     // la card resta ferma qui, pronta e invisibile, finché la pagina non è DAVVERO
