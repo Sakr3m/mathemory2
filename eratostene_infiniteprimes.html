@@ -909,11 +909,55 @@
     render();
     window.addEventListener('resize', render);
 
-    // dimensiona i pulsanti tondi (volume, home) in proporzione all'altezza del titolo,
-    // stessa identica logica usata per il pulsante suono dell'index (metà dell'altezza
-    // del titolo, font-size proporzionale). Qui il titolo è statico (non cambia per
-    // livello come nelle altre due pagine), quindi basta chiamarla una volta al caricamento.
-    // Stessa funzione delle altre due pagine (verifica anche che stia su una riga sola)
+    // stessa dimensione del pulsante suono dell'index: quel pulsante si dimensiona su
+    // metà dell'altezza del titolo "MATHEMORY" (font Kalam, stesso clamp). Qui quel
+    // titolo non esiste in pagina, quindi ne misuro un clone invisibile con lo stesso
+    // font/font-size, per ottenere lo stesso identico valore in pixel a parità di
+    // larghezza schermo — indipendente dal titolo di QUESTA pagina
+    function getIndexButtonDiameter(){
+      const probe = document.createElement('div');
+      probe.style.position = 'absolute';
+      probe.style.visibility = 'hidden';
+      probe.style.whiteSpace = 'nowrap';
+      probe.style.fontFamily = "'Kalam', cursive";
+      probe.style.fontWeight = '700';
+      probe.style.fontSize = 'clamp(3.2rem, 6.4vw, 5rem)';
+      probe.style.textTransform = 'uppercase';
+
+      // replico esattamente la struttura del titolo "MATHEMORY" dell'index (con croce,
+      // sigma ed empty set al posto di T/E/O): quei simboli rendono il titolo vero più
+      // alto di un semplice testo, quindi li riproduco per avere lo stesso identico
+      // valore in pixel, non una stima al ribasso
+      function sym(char, fontSize, verticalAlign, margin){
+        const s = document.createElement('span');
+        s.style.fontFamily = "Arial, 'Helvetica Neue', sans-serif";
+        s.style.display = 'inline-block';
+        s.style.lineHeight = '1';
+        s.style.fontSize = fontSize;
+        s.style.verticalAlign = verticalAlign;
+        if (margin) s.style.margin = margin;
+        s.textContent = char;
+        return s;
+      }
+      probe.append(
+        'Ma',
+        sym('✝', '1.2em', '0.14em', '0 -0.02em'),
+        'h',
+        sym('Σ', '0.82em', '0.02em'),
+        'm',
+        sym('∅', '0.8em', '0.01em'),
+        'ry'
+      );
+
+      document.body.appendChild(probe);
+      const height = probe.getBoundingClientRect().height;
+      document.body.removeChild(probe);
+      return height * 0.5;
+    }
+
+    // dimensiona i pulsanti tondi (volume, home) come il pulsante suono dell'index. Qui
+    // il titolo è statico (non cambia per livello come nelle altre due pagine), quindi
+    // basta chiamarla una volta al caricamento
     function sizeTitleIconButtons(){
       const h1 = document.getElementById('levelTitle');
       const btns = document.querySelectorAll('.title-icon-row .mobile-icon-btn');
@@ -924,35 +968,34 @@
       }
       if (!h1 || !btns.length) return;
 
-      h1.style.fontSize = '';
-      const availableWidth = h1.getBoundingClientRect().width;
-      const baseFontSize = parseFloat(getComputedStyle(h1).fontSize);
-
-      const probe = document.createElement('span');
-      const h1Style = getComputedStyle(h1);
-      probe.style.fontFamily = h1Style.fontFamily;
-      probe.style.fontWeight = h1Style.fontWeight;
-      probe.style.fontSize = h1Style.fontSize;
-      probe.style.whiteSpace = 'nowrap';
-      probe.style.position = 'absolute';
-      probe.style.visibility = 'hidden';
-      probe.textContent = h1.textContent;
-      document.body.appendChild(probe);
-      const neededWidth = probe.getBoundingClientRect().width;
-      document.body.removeChild(probe);
-
-      if (neededWidth > availableWidth && availableWidth > 0){
-        const scale = (availableWidth / neededWidth) * 0.97;
-        h1.style.fontSize = (baseFontSize * scale) + 'px';
-      }
-
-      const diameter = h1.getBoundingClientRect().height * 0.5;
-      if (!diameter) return;
+      const diameter = getIndexButtonDiameter();
       btns.forEach(btn => {
         btn.style.width = diameter + 'px';
         btn.style.height = diameter + 'px';
         btn.style.fontSize = (diameter * 0.4267) + 'px';
       });
+
+      h1.style.fontSize = '';
+      const availableWidth = h1.getBoundingClientRect().width;
+      const baseFontSize = parseFloat(getComputedStyle(h1).fontSize);
+
+      const titleProbe = document.createElement('span');
+      const h1Style = getComputedStyle(h1);
+      titleProbe.style.fontFamily = h1Style.fontFamily;
+      titleProbe.style.fontWeight = h1Style.fontWeight;
+      titleProbe.style.fontSize = h1Style.fontSize;
+      titleProbe.style.whiteSpace = 'nowrap';
+      titleProbe.style.position = 'absolute';
+      titleProbe.style.visibility = 'hidden';
+      titleProbe.textContent = h1.textContent;
+      document.body.appendChild(titleProbe);
+      const neededWidth = titleProbe.getBoundingClientRect().width;
+      document.body.removeChild(titleProbe);
+
+      if (neededWidth > availableWidth && availableWidth > 0){
+        const scale = (availableWidth / neededWidth) * 0.97;
+        h1.style.fontSize = (baseFontSize * scale) + 'px';
+      }
     }
     sizeTitleIconButtons();
     window.addEventListener('resize', sizeTitleIconButtons);
