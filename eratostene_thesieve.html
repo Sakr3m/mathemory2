@@ -679,6 +679,12 @@
     color: var(--ink-faint);
     margin-top: 0.8rem;
   }
+  .nickname-hint{
+    font-family:'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    margin: 0.4rem 0 0;
+  }
 </style>
 </head>
 <body>
@@ -693,6 +699,7 @@
     <p>Your total race time: <strong id="finishTotalTime"></strong></p>
     <p>Enter a nickname to be remembered for this race. It will be sent for the leaderboard.</p>
     <input type="text" id="finishNickname" maxlength="24" placeholder="Your nickname">
+    <p class="nickname-hint">Letters, numbers, spaces, - _ . only (any language/alphabet is fine).</p>
     <div class="modal-buttons">
       <button type="button" class="modal-btn yes" id="finishConfirmBtn">Confirm</button>
       <button type="button" class="modal-btn no" id="finishSkipBtn">Skip</button>
