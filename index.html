@@ -112,38 +112,6 @@
   }
   .game-slot:first-child{ position: relative; z-index: 2; }
 
-  /* === EFFETTO A COMPARSA DELLE CARD (facoltativo, isolato apposta) =========
-     Per toglierlo: cancella questo blocco e rimuovi la classe "entrance-anim"
-     dalle 2 righe in gameCardHtml()/leaderboardCardHtml() più sotto. Nient'altro
-     dipende da questo blocco, è sicuro da rimuovere in qualunque momento. */
-  @keyframes card-entrance{
-    from{ opacity: 0; transform: translateY(16px); }
-    to{ opacity: 1; transform: translateY(0); }
-  }
-  .game-slot.entrance-anim{
-    opacity: 0;
-    animation: card-entrance 0.6s ease forwards;
-  }
-  .game-slot.entrance-anim:nth-child(1){ animation-delay: 0.1s; animation-duration: 0.75s; } /* 25% più lenta, per la card di Eratosthenes */
-  .game-slot.entrance-anim:nth-child(2){ animation-delay: 0.3s; }
-  @media (prefers-reduced-motion: reduce){
-    .game-slot.entrance-anim{ animation: none; opacity: 1; }
-  }
-  /* === FINE EFFETTO A COMPARSA =============================================== */
-
-  .game-card{
-    background: var(--bg-panel);
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    padding: 0.855rem;
-    text-decoration:none;
-    color: var(--ink);
-    display:flex;
-    flex-direction:column;
-    gap: 0.475rem;
-    transition: transform 0.15s ease, border-color 0.15s ease;
-  }
-
   .cta-inline:focus-visible{ outline: 2px solid var(--ink); outline-offset: 3px; }
 
   .erato-content-half{
@@ -215,15 +183,7 @@
     opacity:0.75;
   }
 
-  .game-card h2{
-    font-family:'Kalam', cursive;
-    font-size: 3.192rem;
-    margin: 0;
-  }
-
-  .game-card.locked h2{ color: var(--ink-faint); font-size: 3.06rem; }
-
-  .game-card p.desc{
+  .desc{
     font-family:'Work Sans', sans-serif;
     color: var(--ink-dim);
     font-size: 1.097rem;
@@ -239,16 +199,6 @@
     margin: 0 0 0.5rem;
     display:block;
   }
-
-  .game-card.locked{
-    background: var(--bg-panel-locked);
-    border-style: dashed;
-    pointer-events: none;
-    align-items: center;
-    text-align: center;
-    justify-content: center;
-  }
-  .game-card.locked p.desc{ color: var(--ink-faint); }
 
   .unlock-date{
     font-family:'Space Mono', monospace;
@@ -1682,10 +1632,8 @@
   }
 
   // 3 righe, ognuna ospita 2 classifiche affiancate con la stessa medaglia al centro:
-  // tempo - nickname (sinistra) - medaglia - nickname - tempo (destra)
-  // ============================================================
-  // SEZIONE: CLASSIFICHE — generazione HTML del podio
-  // ============================================================
+  // tempo - nickname (sinistra, già implementata) - medaglia - nickname - tempo (destra,
+  // riservata per una seconda classifica non ancora implementata: passare null lì)
   function dualPodiumRowsHtml(leftPodium, rightPodium){
     const medals = ['🥇', '🥈', '🥉'];
     const rankClasses = ['rank-1', 'rank-2', 'rank-3'];
@@ -1705,6 +1653,9 @@
     return html;
   }
 
+  // ============================================================
+  // SEZIONE: CLASSIFICHE — generazione HTML del podio
+  // ============================================================
   function podiumRowsHtml(podium, count){
     count = count || 3;
     const medals = ['🥇', '🥈', '🥉'];
@@ -1790,42 +1741,6 @@
         <h3>Prime Rush</h3>
         <div class="lb-section">
           ${dualPodiumRowsHtml(cachedPrimeRushPodium, null)}
-        </div>
-      </div>`;
-  }
-
-  function leaderboardCardHtml(g){
-    const state = gameState(g);
-    const heightStyle = cachedEratoHeight ? `style="height:${cachedEratoHeight}px"` : '';
-
-    if (state === 'open'){
-      return `
-        <div class="game-slot entrance-anim">
-          <div class="game-card leaderboard-card" ${heightStyle}>
-            <div class="lb-half">
-              <h2>The Sieve</h2>
-              <p class="race-end-inline">The race ends on ${g.raceEnd}</p>
-              <div class="lb-section">
-                ${podiumRowsHtml(cachedPodium)}
-              </div>
-            </div>
-            <div class="lb-divider"></div>
-            <div class="lb-half">
-              <h3>Prime Rush</h3>
-              <div class="lb-section">
-                ${dualPodiumRowsHtml(cachedPrimeRushPodium, null)}
-              </div>
-            </div>
-          </div>
-        </div>`;
-    }
-
-    return `
-      <div class="game-slot">
-        <div class="game-card locked" ${heightStyle}>
-          <h2>LEADERBOARD</h2>
-          <p class="race-end-inline">The race ends on ${g.raceEnd}</p>
-          <p class="unlock-date">Unlocks with the game.</p>
         </div>
       </div>`;
   }
