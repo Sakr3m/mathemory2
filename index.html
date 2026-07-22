@@ -134,7 +134,21 @@
     flex: 0 0 auto;
     height: 2.6rem;
     width: 85%;
-    margin: 0 auto;
+    margin-left: auto;
+    margin-right: var(--erato-lb-margin, 0px);
+  }
+  /* stesso allineamento a destra delle righe classifica, condiviso tramite la
+     variabile CSS --erato-lb-margin impostata una volta sola sulla card (vedi
+     applyEratoLbMargin): qualunque contenuto venga iniettato qui dentro in futuro
+     (dati aggiornati, popup RULES) la eredita automaticamente, senza bisogno di
+     riscriverla via JS a ogni singolo punto che tocca questo contenuto */
+  .leaderboard-card h2,
+  .leaderboard-card h3,
+  .race-end-inline,
+  .erato-rules-preview{
+    width: 85%;
+    margin-left: auto;
+    margin-right: var(--erato-lb-margin, 0px);
   }
   @keyframes erato-border-cycle{
     0%   { border-color: rgba(232,196,104,0.85); box-shadow: 0 0 0 1px rgba(232,196,104,0.55), 0 0 0 2px rgba(232,196,104,0.25); }
@@ -489,7 +503,7 @@
   .erato-mid-divider svg{ display: block; width: 100%; height: 100%; }
   .erato-face-img{
     position: absolute;
-    bottom: 0.5625rem;
+    bottom: 0.0625rem;
     left: 0;
     transform: translateX(-50%);
     max-height: 20.87%;
@@ -1579,12 +1593,10 @@
     const leftGap = miniSieve.getBoundingClientRect().left - overlay.getBoundingClientRect().left - overlayBorderWidth;
     const lbHalfPaddingRight = lbHalf ? (parseFloat(getComputedStyle(lbHalf).paddingRight) || 0) : 0;
     const marginRight = Math.max(0, leftGap - lbHalfPaddingRight);
-    overlay.dataset.eratoLbMarginRight = marginRight;
-    overlay.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
-      el.style.width = '85%';
-      el.style.marginRight = marginRight + 'px';
-      el.style.marginLeft = 'auto';
-    });
+    // impostata UNA VOLTA come variabile CSS sulla card: qualunque contenuto venga
+    // iniettato dentro (ora o in futuro, da qualunque punto del codice) la eredita
+    // automaticamente tramite la regola CSS, senza bisogno di riscriverla via JS
+    overlay.style.setProperty('--erato-lb-margin', marginRight + 'px');
   }
 
   // aggiorna la classifica dentro la card già visibile, se esiste — altrimenti i dati
@@ -1596,27 +1608,16 @@
     if (!lbHalf) return;
     const freshHtml = eratoLbPreviewHtml(games[0]);
     if (lbHalf._isShowingRules){
-      // RULES è in vista ora, non tocco il DOM: i margini verranno comunque
-      // riapplicati al mouseleave leggendo overlay.dataset.eratoLbMarginRight,
-      // quindi qui va bene salvare la versione ancora senza margini
+      // RULES è in vista ora: aggiorno solo il contenuto "vero" salvato per dopo,
+      // non tocco il DOM finché non si esce con il mouse
       lbHalf._realLbHtml = freshHtml;
       return;
     }
-
     lbHalf.innerHTML = freshHtml;
-
-    // se l'animazione di apertura non è ancora finita (la card potrebbe essere ancora
-    // a metà dell'allargamento), non calcolo qui i margini: misurare una larghezza
-    // "a metà strada" darebbe un valore sbagliato. finalizeEratoLayout() li applicherà
-    // correttamente lui stesso, appena l'allargamento sarà davvero completo
-    if (eratoOverlayEl.dataset.eratoFinalized !== 'true'){
-      lbHalf._realLbHtml = lbHalf.innerHTML;
-      return;
-    }
-
-    applyEratoLbMargin(eratoOverlayEl, lbHalf);
-    // catturato QUI, dopo i margini: mai più uno snapshot "sporco" senza allineamento
     lbHalf._realLbHtml = lbHalf.innerHTML;
+    // l'allineamento a destra arriva da solo dalla variabile CSS --erato-lb-margin
+    // già impostata sulla card (vedi applyEratoLbMargin): qualunque contenuto nuovo
+    // la eredita automaticamente, non serve più ricalcolarla o riapplicarla qui
   }
   const LEADERBOARD_API = 'https://eratostene.sl-eternal-lux.workers.dev';
 
@@ -2315,13 +2316,8 @@
         lbHalf.style.opacity = '0';
         swapTimer = setTimeout(() => {
           lbHalf.innerHTML = rulesPreviewHtml;
-          const rulesPreviewEl = lbHalf.querySelector('.erato-rules-preview');
-          if (rulesPreviewEl){
-            const savedMarginRight = overlay.dataset.eratoLbMarginRight || '0';
-            rulesPreviewEl.style.width = '85%';
-            rulesPreviewEl.style.marginRight = savedMarginRight + 'px';
-            rulesPreviewEl.style.marginLeft = 'auto';
-          }
+          // l'allineamento a destra (.erato-rules-preview è tra i selettori della
+          // regola CSS condivisa) arriva da solo dalla variabile --erato-lb-margin
           void lbHalf.offsetWidth; // forzo il reflow prima di far ripartire la dissolvenza
           lbHalf.style.opacity = '1';
         }, fadeMs);
@@ -2334,14 +2330,8 @@
         lbHalf.style.opacity = '0';
         swapTimer = setTimeout(() => {
           lbHalf.innerHTML = lbHalf._realLbHtml; // sempre il contenuto vero, mai una copia sporcata
-          // riapplico comunque il margine salvato: anche se lo snapshot non lo avesse
-          // già, la classifica torna sempre allineata a destra
-          const savedMarginRight = overlay.dataset.eratoLbMarginRight || '0';
-          lbHalf.querySelectorAll('.lb-row, .leaderboard-card h2, .leaderboard-card h3, .race-end-inline').forEach(el => {
-            el.style.width = '85%';
-            el.style.marginRight = savedMarginRight + 'px';
-            el.style.marginLeft = 'auto';
-          });
+          // l'allineamento a destra arriva da solo dalla variabile --erato-lb-margin,
+          // non serve più riapplicarlo a mano riga per riga
           void lbHalf.offsetWidth;
           lbHalf.style.opacity = '1';
         }, fadeMs);
