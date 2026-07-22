@@ -747,8 +747,10 @@
 <script>
   // simboli di sfondo: statici (nessun movimento), ma con posizione casuale a ogni
   // apertura pagina — un "seed" diverso genera una nuova disposizione ogni volta,
-  // incluso ogni cambio livello (che qui ricarica sempre la pagina intera)
-  (function randomizeConstellation(){
+  // incluso ogni cambio livello (che qui ricarica sempre la pagina intera). Chiamata
+  // solo DOPO che la griglia vera è stata riempita (vedi renderLevel): misurarla
+  // prima darebbe l'altezza del solo segnaposto "Loading level…", non quella reale
+  function randomizeConstellation(){
     const svg = document.querySelector('.math-constellation');
     if (!svg) return;
     function mulberry32(seed){
@@ -761,13 +763,35 @@
     }
     const seed = (Date.now() ^ (Math.random() * 0xFFFFFFFF)) | 0;
     const rand = mulberry32(seed);
+
+    // viewBox calcolato dalla dimensione vera del contenitore (non più un 1000×900
+    // fisso): con quel valore fisso, su un contenitore più alto che largo come
+    // questa pagina, "xMidYMid slice" ritagliava una fetta orizzontale strettissima
+    // del viewBox, lasciando i simboli confinati in una banda verticale sottile
+    const wrapEl = document.getElementById('wrap') || svg.parentElement;
+    const vbWidth = wrapEl.clientWidth || window.innerWidth;
+    const vbHeight = wrapEl.clientHeight || window.innerHeight;
+    svg.setAttribute('viewBox', `0 0 ${vbWidth} ${vbHeight}`);
+    const marginX = Math.min(30, vbWidth * 0.03);
+    const marginY = Math.min(30, vbHeight * 0.03);
+
+    // qui i simboli sono FERMI (a differenza dell'index, dove si muovono): due nati
+    // vicini resterebbero ammucchiati per sempre, quindi ognuno viene ripescato
+    // finché non trova un punto abbastanza lontano da tutti quelli già piazzati
+    const minDist = 70;
+    const placed = [];
     svg.querySelectorAll('text').forEach(el => {
-      const x = 30 + rand() * 940;
-      const y = 30 + rand() * 840;
+      let x, y, tries = 0;
+      do {
+        x = marginX + rand() * (vbWidth - marginX * 2);
+        y = marginY + rand() * (vbHeight - marginY * 2);
+        tries++;
+      } while (tries < 40 && placed.some(p => Math.hypot(p.x - x, p.y - y) < minDist));
+      placed.push({ x, y });
       el.setAttribute('x', x.toFixed(0));
       el.setAttribute('y', y.toFixed(0));
     });
-  })();
+  }
 
   const params = new URLSearchParams(window.location.search);
   const levelNum = parseInt(params.get('n')) || 1;
@@ -1093,6 +1117,7 @@
     });
 
     positionRankBadge(); // solo ORA la griglia ha la sua altezza vera (celle già dentro)
+    randomizeConstellation(); // stesso motivo: serve l'altezza vera del contenitore
 
     function toggleCell(i){
       if (selected.has(i)){

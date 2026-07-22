@@ -2634,6 +2634,17 @@
     const symbolPool = ['π', '√', 'Σ', '∞', '∫', 'Δ', 'θ', '×', '÷'];
     const texts = Array.from(svg.querySelectorAll('text'));
 
+    // viewBox calcolato dalla dimensione vera del contenitore (non più un 1000×900
+    // fisso): con quel valore fisso, su schermi molto più larghi che alti come
+    // l'index, "xMidYMid slice" ritagliava una fetta verticale strettissima del
+    // viewBox, lasciando i simboli confinati in una banda orizzontale sottile
+    const wrapEl = svg.closest('.wrap') || svg.parentElement;
+    const vbWidth = wrapEl.clientWidth || window.innerWidth;
+    const vbHeight = wrapEl.clientHeight || window.innerHeight;
+    svg.setAttribute('viewBox', `0 0 ${vbWidth} ${vbHeight}`);
+    const marginX = Math.min(30, vbWidth * 0.03);
+    const marginY = Math.min(30, vbHeight * 0.03);
+
     // aggiunge un po' di imprecisione naturale a ogni durata, invece di tempi identici e meccanici
     function jitter(baseMs, spreadMs){
       return baseMs + (Math.random() * 2 - 1) * spreadMs;
@@ -2673,8 +2684,8 @@
       el.style.transition = existingTransition ? existingTransition + ', ' + fadeOutRule : fadeOutRule;
       el.style.opacity = '0';
       setTimeout(() => {
-        const newX = 30 + Math.random() * 940;
-        const newY = 30 + Math.random() * 840;
+        const newX = marginX + Math.random() * (vbWidth - marginX * 2);
+        const newY = marginY + Math.random() * (vbHeight - marginY * 2);
         el.setAttribute('x', newX.toFixed(0));
         el.setAttribute('y', newY.toFixed(0));
         el.textContent = symbolPool[Math.floor(Math.random() * symbolPool.length)];
