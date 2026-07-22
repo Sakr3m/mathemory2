@@ -48,7 +48,7 @@
 
   /* --- masthead --- */
   header{
-    margin-bottom: calc(2.2vh + 3px);
+    margin-bottom: 2.2vh; /* stesso valore del margine sopra il divisorio, per averli identici */
   }
   .header-divider{
     display: block;
@@ -1189,7 +1189,8 @@
       margin: 0 auto;
     }
     .title-row .mark, .subtitle{
-      opacity: 0; /* compaiono di scatto, sincronizzate con la card: vedi handleEratoIntro */
+      opacity: 0; /* fade in di 0.5s appena i font sono pronti: vedi handleEratoIntro */
+      transition: opacity 0.5s ease;
     }
     .index-sound-btn{
       position: absolute;
@@ -1203,9 +1204,9 @@
       color: var(--ink-dim);
       font-family:'Space Mono', monospace;
       cursor: pointer;
-      transition: border-color 0.15s ease, color 0.15s ease;
+      transition: border-color 0.15s ease, color 0.15s ease, opacity 0.5s ease;
       z-index: 50;
-      opacity: 0; /* stessa comparsa sincronizzata di titolo/sottotitolo */
+      opacity: 0; /* stesso fade in sincronizzato di titolo/sottotitolo */
     }
     .mobile-index-sound-btn{ display: none; }
   }
@@ -2161,21 +2162,26 @@
     grid.dataset.eratoIntroPlayed = 'true';
 
     let revealed = false;
-    function revealAndPlay(){
-      if (revealed) return; // il fallback dei 15s e la promise dei font potrebbero
-      revealed = true;      // scattare entrambi: la sequenza deve partire una sola volta
+    let cardStarted = false;
 
-      // titolo, sottotitolo e pulsante suono compaiono tutti insieme, di scatto (MAI
-      // una dissolvenza): fino a questo istante restano invisibili via CSS, non si
-      // devono vedere nemmeno per un fotogramma col font di riserva prima che Kalam
-      // sia pronto. Da qui parte anche la card, sincronizzata con questo stesso istante
+    // titolo, sottotitolo e pulsante suono: fade in di 0.5s appena i font sono
+    // pronti (mai visibili prima, nemmeno un fotogramma col font di riserva prima
+    // che Kalam sia pronto). La card è esclusa da questa dissolvenza: parte a parte,
+    // 0.5s dopo, così comincia esattamente quando questo fade in è appena finito
+    function revealPageChrome(){
+      if (revealed) return;
+      revealed = true;
       positionIndexSoundBtn(); // ricalcolo qui: ora i font sono DAVVERO pronti
       document.querySelectorAll('.title-row .mark, .subtitle').forEach(el => {
         el.style.opacity = '1';
       });
       const soundBtn = document.getElementById('indexSoundBtn');
       if (soundBtn) soundBtn.style.opacity = '1';
+    }
 
+    function playCardSequence(){
+      if (cardStarted) return; // il fallback dei 15s e la promise dei font potrebbero
+      cardStarted = true;      // scattare entrambi: la sequenza deve partire una sola volta
       const geometry = computeCardGeometry(g, number);
       centerNavColumns(geometry.top, geometry.height);
       playEratoIntroOverlay(geometry.top, geometry.left, geometry.width, geometry.height, g, number);
@@ -2185,15 +2191,18 @@
     // titolo (e tutto il resto) usa il font "Kalam", esterno — se non è ancora
     // scaricato, il browser misura con un font di riserva più piccolo, dando
     // un'altezza sbagliata. Siccome il tempo di scaricamento del font varia a ogni
-    // refresh, senza questa attesa il bug sembra comparire "a caso". Poi altri 0.5s
-    // in più prima di mostrare/far partire qualunque cosa, per dare respiro al resto
-    // del caricamento (banner esclusi, quelli restano fuori da ogni attesa)
+    // refresh, senza questa attesa il bug sembra comparire "a caso"
     const fontsPromise = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
-    fontsPromise.then(() => setTimeout(revealAndPlay, 500));
+    fontsPromise.then(() => {
+      revealPageChrome();
+      setTimeout(playCardSequence, 500);
+    });
     // rete di sicurezza: se i font non risultassero mai pronti, si parte comunque
-    // dopo 15 secondi (stessa soglia già usata altrove nel file per lo stesso motivo),
-    // altrimenti titolo e pulsante resterebbero invisibili per sempre
-    setTimeout(revealAndPlay, 15000);
+    // dopo 15 secondi (stessa soglia già usata altrove nel file per lo stesso motivo)
+    setTimeout(() => {
+      revealPageChrome();
+      playCardSequence();
+    }, 15000);
   }
 
   // misura da zero l'altezza naturale del contenuto vero (titolo, Game X, pulsanti,
