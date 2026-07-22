@@ -1142,6 +1142,9 @@
       opacity: 0; /* fade in di 0.5s appena i font sono pronti: vedi handleEratoIntro */
       transition: opacity 0.5s ease;
     }
+    .title-row .mark{
+      transform: translateY(0.28125px); /* per portare il centro del titolo esattamente a 127px dal bordo alto */
+    }
     .index-sound-btn{
       position: absolute;
       flex-shrink: 0;
@@ -1193,7 +1196,7 @@
     text-align: right;
   }
   .audio-toggle-btn{ cursor: pointer; }
-  .index-sound-btn svg, .mobile-index-sound-btn svg{ width: 27.83px; height: 27.83px; }
+  .index-sound-btn svg, .mobile-index-sound-btn svg{ width: 26.5px; height: 26.5px; }
   /* stato "acceso" del volume (audio non muto): stessa illuminazione dei numeri
      selezionati nella griglia, l'icona resta sempre la stessa, cambia solo questo */
   .audio-toggle-btn.audio-on{
