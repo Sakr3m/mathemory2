@@ -1352,6 +1352,11 @@
       note.style.color = 'var(--red)';
       return;
     }
+    if (nickname.length < 3){
+      note.textContent = 'Nickname must be at least 3 characters.';
+      note.style.color = 'var(--red)';
+      return;
+    }
 
     localStorage.setItem('erato_primerush_finisher_nickname', nickname);
     const totalRaceTime = localStorage.getItem(TOTAL_TIME_KEY) || '0';
