@@ -89,6 +89,13 @@
     font-size: 0.75rem;
     color: rgba(243,239,228,0.5);
   }
+  /* quando non c'è ancora un rango sbloccato, badge e descrizione restano nel DOM
+     (con un testo placeholder) solo per riservare lo spazio: così gli elementi sotto
+     non "salgono" quando il rango non c'è, invece di restare al loro posto giusto */
+  .rank-callout.no-rank .rank-badge,
+  .rank-callout.no-rank .rank-phrase{
+    visibility: hidden;
+  }
   .instructions{
     color: var(--ink-dim);
     font-size: 1.14rem;
@@ -1076,9 +1083,11 @@
       `Eratosthenes <span class="accent">·</span> Prime Rush <span class="accent">·</span> Level ${levelNum}`;
     sizeTitleIconButtons();
 
-    document.getElementById('rankCallout').innerHTML = rankInfo
+    const rankCalloutEl = document.getElementById('rankCallout');
+    rankCalloutEl.classList.toggle('no-rank', !rankInfo);
+    rankCalloutEl.innerHTML = rankInfo
       ? `<span class="rank-badge">${rankInfo.title}</span><span class="rank-phrase">${rankInfo.phrase}</span>`
-      : '';
+      : `<span class="rank-badge">Placeholder rank</span><span class="rank-phrase">Placeholder phrase text goes here.</span>`;
 
     document.getElementById('levelLayout').innerHTML = `
       <div class="grid" id="gridEl"></div>
