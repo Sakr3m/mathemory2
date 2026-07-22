@@ -2200,9 +2200,13 @@
     overlay.dataset.eratoFinalized = 'true'; // da qui in poi, è sicuro calcolare margini basati sulla larghezza finale
     const lbHalf = overlay.querySelector('.erato-leaderboard-half');
 
-    // il margine destro della classifica è già stato applicato all'inizio (in
-    // playEratoIntroOverlay, appena creata la card, mentre era ancora invisibile) —
-    // non va rifatto qui, altrimenti si rischia di nuovo il salto visibile
+    // il margine destro della classifica potrebbe essere già quello giusto (applicato
+    // in playEratoIntroOverlay mentre la card era ancora invisibile), MA se nel
+    // frattempo sono arrivati i dati veri dal Worker (refreshEratoLeaderboard) prima
+    // che l'allargamento finisse, quella funzione riscrive l'HTML della classifica e
+    // perde lo stile inline del margine, confidando che venisse rifatto qui — quindi
+    // va sempre riapplicato qui, non è mai sicuro assumere che sia già a posto
+    if (lbHalf) applyEratoLbMargin(overlay, lbHalf);
 
     // riga divisoria: a metà esatta tra il bordo destro del pulsante "Play now" di
     // destra e il bordo sinistro delle tabelle della classifica — misurata dal vero
