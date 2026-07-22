@@ -960,8 +960,12 @@
     `;
   }
 
-  fetch('eratostene_primerush.json')
+  const levelFetchController = new AbortController();
+  const levelFetchTimeout = setTimeout(() => levelFetchController.abort(), 7000);
+
+  fetch('eratostene_primerush.json', { signal: levelFetchController.signal })
     .then(res => {
+      clearTimeout(levelFetchTimeout);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
     })
@@ -982,6 +986,10 @@
       renderLevel(levelData);
     })
     .catch(err => {
+      if (err.name === 'AbortError'){
+        showError('This is taking too long. Please check your connection and reload the page.');
+        return;
+      }
       showError(`
         Could not load <code>eratostene_primerush.json</code>.<br><br>
         If you're testing this by double-clicking the file (a <code>file://</code> address), most browsers block this kind of request for security reasons.<br><br>
@@ -1122,30 +1130,35 @@
     // il giocatore interagisca prima ancora che i font risultino pronti
     levelStartTime = Date.now();
 
-    // segno la sessione come "aperta" e avvio il battito subito: se la pagina si chiude
-    // bruscamente, al prossimo caricamento troveremo qui l'ultimo tempo conosciuto invece
-    // di perderlo del tutto. Il battito stesso non aspetta i font: registra sempre il
-    // tempo trascorso da levelStartTime, qualunque esso sia in quel momento
-    localStorage.setItem(SESSION_OPEN_KEY, 'true');
-    if (heartbeatInterval) clearInterval(heartbeatInterval);
-    heartbeatInterval = setInterval(() => {
-      const elapsed = (Date.now() - levelStartTime) / 1000;
-      localStorage.setItem(HEARTBEAT_KEY, elapsed.toFixed(1));
-    }, 5000);
-
-    // il cronometro vero e proprio riparte solo quando il giocatore ha completa visione
-    // della pagina: non al caricamento del DOM, ma quando i font sono davvero pronti —
-    // stessa tecnica (e stesso fallback di sicurezza a 15s) usata per far partire
-    // l'animazione della card di Eratosthenes sull'index
+    // sia il battito che il cronometro vero riprendono solo quando il giocatore ha
+    // completa visione della pagina: non al caricamento del DOM, ma quando i font sono
+    // davvero pronti — stessa tecnica usata per far partire l'animazione della card di
+    // Eratosthenes sull'index. Qui è una gara: se i font non risultano pronti entro 7
+    // secondi (già un margine ampio per un caricamento normale), qualcosa non va — meglio
+    // dirlo chiaramente con un errore che far finta di niente e partire comunque
     let timerReallyStarted = false;
     function reallyStartTimer(){
       if (timerReallyStarted) return;
       timerReallyStarted = true;
       levelStartTime = Date.now(); // da qui in poi si conta per davvero
+
+      // segno la sessione come "aperta" e avvio il battito: se la pagina si chiude
+      // bruscamente, al prossimo caricamento troveremo qui l'ultimo tempo conosciuto
+      // invece di perderlo del tutto
+      localStorage.setItem(SESSION_OPEN_KEY, 'true');
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+      heartbeatInterval = setInterval(() => {
+        const elapsed = (Date.now() - levelStartTime) / 1000;
+        localStorage.setItem(HEARTBEAT_KEY, elapsed.toFixed(1));
+      }, 5000);
     }
     const fontsPromise = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
     fontsPromise.then(reallyStartTimer);
-    setTimeout(reallyStartTimer, 15000);
+    const fontsTimeoutId = setTimeout(() => {
+      if (timerReallyStarted) return;
+      showError('This is taking too long. Please reload the page.');
+    }, 7000);
+    fontsPromise.then(() => clearTimeout(fontsTimeoutId));
 
     // Home è un'uscita volontaria come un'altra: deposito il tempo prima di lasciare la pagina
     document.getElementById('homeBtn').addEventListener('click', () => {
