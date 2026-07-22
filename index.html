@@ -2605,7 +2605,9 @@
     const viewportCenter = window.innerWidth / 2;
     const cardLeft = viewportCenter - singleColWidth;
 
-    const diameter = titleRect.height * 0.5;
+    // dimensione fissa a 55px (non più calcolata sull'altezza del titolo, su
+    // richiesta esplicita): resta identica a qualunque larghezza di schermo
+    const diameter = 55;
     btn.style.width = diameter + 'px';
     btn.style.height = diameter + 'px';
     btn.style.fontSize = (diameter * 0.4267) + 'px';

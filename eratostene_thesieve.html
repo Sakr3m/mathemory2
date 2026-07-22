@@ -815,50 +815,10 @@
       `);
     });
 
-  // stessa dimensione del pulsante suono dell'index: quel pulsante si dimensiona su
-  // metà dell'altezza del titolo "MATHEMORY" (font Kalam, stesso clamp). Qui quel
-  // titolo non esiste in pagina, quindi ne misuro un clone invisibile con lo stesso
-  // font/font-size, per ottenere lo stesso identico valore in pixel a parità di
-  // larghezza schermo — indipendente dal titolo di QUESTA pagina
+  // stessa dimensione fissa del pulsante suono dell'index: 55px, indipendente
+  // dalla larghezza dello schermo e dal titolo di questa pagina
   function getIndexButtonDiameter(){
-    const probe = document.createElement('div');
-    probe.style.position = 'absolute';
-    probe.style.visibility = 'hidden';
-    probe.style.whiteSpace = 'nowrap';
-    probe.style.fontFamily = "'Kalam', cursive";
-    probe.style.fontWeight = '700';
-    probe.style.fontSize = 'clamp(3.2rem, 6.4vw, 5rem)';
-    probe.style.textTransform = 'uppercase';
-
-    // replico esattamente la struttura del titolo "MATHEMORY" dell'index (con croce,
-    // sigma ed empty set al posto di T/E/O): quei simboli rendono il titolo vero più
-    // alto di un semplice testo, quindi li riproduco per avere lo stesso identico
-    // valore in pixel, non una stima al ribasso
-    function sym(char, fontSize, verticalAlign, margin){
-      const s = document.createElement('span');
-      s.style.fontFamily = "Arial, 'Helvetica Neue', sans-serif";
-      s.style.display = 'inline-block';
-      s.style.lineHeight = '1';
-      s.style.fontSize = fontSize;
-      s.style.verticalAlign = verticalAlign;
-      if (margin) s.style.margin = margin;
-      s.textContent = char;
-      return s;
-    }
-    probe.append(
-      'Ma',
-      sym('✝', '1.2em', '0.14em', '0 -0.02em'),
-      'h',
-      sym('Σ', '0.82em', '0.02em'),
-      'm',
-      sym('∅', '0.8em', '0.01em'),
-      'ry'
-    );
-
-    document.body.appendChild(probe);
-    const height = probe.getBoundingClientRect().height;
-    document.body.removeChild(probe);
-    return height * 0.5;
+    return 55;
   }
 
   // dimensiona i pulsanti tondi (volume, home) come il pulsante suono dell'index, poi
