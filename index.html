@@ -1138,7 +1138,7 @@
       display: table;
       margin: 0 auto;
     }
-    .title-row .mark, .subtitle{
+    .title-row .mark, .subtitle, .nav-column{
       opacity: 0; /* fade in di 0.5s appena i font sono pronti: vedi handleEratoIntro */
       transition: opacity 0.5s ease;
     }
@@ -2085,11 +2085,18 @@
     // pronti (mai visibili prima, nemmeno un fotogramma col font di riserva prima
     // che Kalam sia pronto). La card è esclusa da questa dissolvenza: parte a parte,
     // 0.5s dopo, così comincia esattamente quando questo fade in è appena finito
+    // titolo, sottotitolo, pulsante suono e pulsanti/pallini del carosello: fade in di
+    // 0.5s appena i font sono pronti (mai visibili prima, nemmeno un fotogramma col
+    // font di riserva o in una posizione ancora da calcolare). La card è esclusa da
+    // questa dissolvenza: parte a parte, 0.5s dopo, così comincia esattamente quando
+    // questo fade in è appena finito
     function revealPageChrome(){
       if (revealed) return;
       revealed = true;
       positionIndexSoundBtn(); // ricalcolo qui: ora i font sono DAVVERO pronti
-      document.querySelectorAll('.title-row .mark, .subtitle').forEach(el => {
+      const geometry = computeCardGeometry(g, number);
+      centerNavColumns(geometry.top, geometry.height); // stessa logica: calcolo PRIMA di mostrare, mai dopo
+      document.querySelectorAll('.title-row .mark, .subtitle, .nav-column').forEach(el => {
         el.style.opacity = '1';
       });
       const soundBtn = document.getElementById('indexSoundBtn');
@@ -2100,7 +2107,6 @@
       if (cardStarted) return; // il fallback dei 15s e la promise dei font potrebbero
       cardStarted = true;      // scattare entrambi: la sequenza deve partire una sola volta
       const geometry = computeCardGeometry(g, number);
-      centerNavColumns(geometry.top, geometry.height);
       playEratoIntroOverlay(geometry.top, geometry.left, geometry.width, geometry.height, g, number);
     }
 
