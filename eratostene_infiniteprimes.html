@@ -210,8 +210,8 @@
   .title-icon-row h1{ margin: 0; flex: 1; min-width: 0; text-align: center; }
   .mobile-icon-btn{
     flex-shrink: 0;
-    width: 84px;
-    height: 84px;
+    width: 55px;
+    height: 55px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -221,7 +221,7 @@
     color: var(--ink-dim);
     text-decoration: none;
     font-family:'Space Mono', monospace;
-    font-size: 2.24rem;
+    font-size: 23.47px;
     cursor: pointer;
     transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease, box-shadow 0.2s ease;
   }
@@ -914,15 +914,9 @@
     render();
     window.addEventListener('resize', render);
 
-    // stessa dimensione fissa del pulsante suono dell'index: 55px, indipendente
-    // dalla larghezza dello schermo e dal titolo di questa pagina
-    function getIndexButtonDiameter(){
-      return 55;
-    }
-
-    // dimensiona i pulsanti tondi (volume, home) come il pulsante suono dell'index. Qui
-    // il titolo è statico (non cambia per livello come nelle altre due pagine), quindi
-    // basta chiamarla una volta al caricamento
+    // dimensiona i pulsanti tondi (volume, home) come il pulsante suono dell'index (55px
+    // fisso). Qui il titolo è statico (non cambia per livello come nelle altre due
+    // pagine), quindi basta chiamarla una volta al caricamento
     function sizeTitleIconButtons(){
       const h1 = document.getElementById('levelTitle');
       const btns = document.querySelectorAll('.title-icon-row .mobile-icon-btn');
@@ -933,7 +927,7 @@
       }
       if (!h1 || !btns.length) return;
 
-      const diameter = getIndexButtonDiameter();
+      const diameter = 55;
       btns.forEach(btn => {
         btn.style.width = diameter + 'px';
         btn.style.height = diameter + 'px';
