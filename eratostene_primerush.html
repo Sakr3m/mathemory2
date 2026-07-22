@@ -1119,16 +1119,34 @@
       </div>
     `;
 
+    // valore di sicurezza: mai lasciare levelStartTime nullo, nel caso rarissimo in cui
+    // il giocatore interagisca prima ancora che i font risultino pronti
     levelStartTime = Date.now();
 
-    // segno la sessione come "aperta" e avvio il battito: se la pagina si chiude bruscamente,
-    // al prossimo caricamento troveremo qui l'ultimo tempo conosciuto invece di perderlo del tutto
+    // segno la sessione come "aperta" e avvio il battito subito: se la pagina si chiude
+    // bruscamente, al prossimo caricamento troveremo qui l'ultimo tempo conosciuto invece
+    // di perderlo del tutto. Il battito stesso non aspetta i font: registra sempre il
+    // tempo trascorso da levelStartTime, qualunque esso sia in quel momento
     localStorage.setItem(SESSION_OPEN_KEY, 'true');
     if (heartbeatInterval) clearInterval(heartbeatInterval);
     heartbeatInterval = setInterval(() => {
       const elapsed = (Date.now() - levelStartTime) / 1000;
       localStorage.setItem(HEARTBEAT_KEY, elapsed.toFixed(1));
     }, 5000);
+
+    // il cronometro vero e proprio riparte solo quando il giocatore ha completa visione
+    // della pagina: non al caricamento del DOM, ma quando i font sono davvero pronti —
+    // stessa tecnica (e stesso fallback di sicurezza a 15s) usata per far partire
+    // l'animazione della card di Eratosthenes sull'index
+    let timerReallyStarted = false;
+    function reallyStartTimer(){
+      if (timerReallyStarted) return;
+      timerReallyStarted = true;
+      levelStartTime = Date.now(); // da qui in poi si conta per davvero
+    }
+    const fontsPromise = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    fontsPromise.then(reallyStartTimer);
+    setTimeout(reallyStartTimer, 15000);
 
     // Home è un'uscita volontaria come un'altra: deposito il tempo prima di lasciare la pagina
     document.getElementById('homeBtn').addEventListener('click', () => {
