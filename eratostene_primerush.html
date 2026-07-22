@@ -41,7 +41,6 @@
     margin: 0 0 0.6rem;
   }
   h1 .accent{ color: var(--yellow); }
-  h1 .max-prime-note{ display: block; font-size: 0.54em; margin-top: 0.08rem; }
   .rank-callout{ margin: 0 0 0.9rem; display:flex; align-items:baseline; gap: 0.7rem; flex-wrap: nowrap; }
   .rank-badge{
     display:inline-block;
@@ -365,7 +364,6 @@
       font-size: 0.85rem;
       text-align: center;
     }
-    .title-icon-row h1 .max-prime-note{ display: block; font-size: 0.85em; margin-top: 0.2rem; }
     .mobile-icon-btn{
       width: 44px;
       height: 44px;
@@ -772,9 +770,58 @@
       `);
     });
 
+  // dimensiona i pulsanti tondi (volume, home) in proporzione all'altezza del titolo,
+  // stessa identica logica usata per il pulsante suono dell'index (metà dell'altezza
+  // del titolo, font-size proporzionale). Prima però verifica che il titolo (più lungo
+  // ora, con "The Sieve"/"Prime Rush" nel mezzo) entri su una riga sola: se andasse a
+  // capo, l'altezza raddoppierebbe e i pulsanti diventerebbero enormi, quindi in quel
+  // caso riduce il font-size del titolo appena quanto basta per farlo stare su una riga
+  function sizeTitleIconButtons(){
+    const h1 = document.getElementById('levelTitle');
+    const btns = document.querySelectorAll('.title-icon-row .mobile-icon-btn');
+    if (window.innerWidth <= 900){
+      // su mobile la CSS ha già le sue misure: pulisco eventuali stili inline
+      // rimasti da un resize precedente da desktop a mobile, altrimenti
+      // vincerebbero loro sulla regola della media query
+      if (h1) h1.style.fontSize = '';
+      btns.forEach(btn => { btn.style.width = ''; btn.style.height = ''; btn.style.fontSize = ''; });
+      return;
+    }
+    if (!h1 || !btns.length) return;
+
+    h1.style.fontSize = ''; // riparto sempre dal font-size CSS di base, mai da un valore già ridotto prima
+    const availableWidth = h1.getBoundingClientRect().width;
+    const baseFontSize = parseFloat(getComputedStyle(h1).fontSize);
+
+    const probe = document.createElement('span');
+    const h1Style = getComputedStyle(h1);
+    probe.style.fontFamily = h1Style.fontFamily;
+    probe.style.fontWeight = h1Style.fontWeight;
+    probe.style.fontSize = h1Style.fontSize;
+    probe.style.whiteSpace = 'nowrap';
+    probe.style.position = 'absolute';
+    probe.style.visibility = 'hidden';
+    probe.textContent = h1.textContent;
+    document.body.appendChild(probe);
+    const neededWidth = probe.getBoundingClientRect().width;
+    document.body.removeChild(probe);
+
+    if (neededWidth > availableWidth && availableWidth > 0){
+      const scale = (availableWidth / neededWidth) * 0.97; // piccolo margine di sicurezza
+      h1.style.fontSize = (baseFontSize * scale) + 'px';
+    }
+
+    const diameter = h1.getBoundingClientRect().height * 0.5;
+    if (!diameter) return; // titolo non ancora misurabile (es. display:none)
+    btns.forEach(btn => {
+      btn.style.width = diameter + 'px';
+      btn.style.height = diameter + 'px';
+      btn.style.fontSize = (diameter * 0.4267) + 'px';
+    });
+  }
+
   function renderLevel(levelData){
     const grid = levelData.griglia;
-    const checkpoint = levelData.checkpoint;
     const circleColor = circleColorForLevel(levelNum);
     const rankInfo = rankForLevel(levelNum);
     // se il rango di QUESTO livello è diverso da quello del livello precedente, il badge si è appena sbloccato
@@ -789,7 +836,8 @@
     wrap.style.setProperty('--circle-color', circleColor);
 
     document.getElementById('levelTitle').innerHTML =
-      `Eratosthenes <span class="accent">·</span> Level ${levelNum} <span class="accent max-prime-note">(max prime number = ${checkpoint})</span>`;
+      `Eratosthenes <span class="accent">·</span> Prime Rush <span class="accent">·</span> Level ${levelNum}`;
+    sizeTitleIconButtons();
 
     document.getElementById('rankCallout').innerHTML = rankInfo
       ? `<span class="rank-badge">${rankInfo.title}</span><span class="rank-phrase">${rankInfo.phrase}</span>`
@@ -897,6 +945,7 @@
     }
     render();
     window.addEventListener('resize', render);
+    window.addEventListener('resize', sizeTitleIconButtons);
 
     // solo ORA il pannello destro ha davvero tutti e 5 i riquadri dentro: l'altezza misurata è quella reale
     alignSidePanel();
