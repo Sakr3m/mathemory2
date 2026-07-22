@@ -41,24 +41,32 @@
     margin: 0 0 0.6rem;
   }
   h1 .accent{ color: var(--yellow); }
-  .rank-callout{ margin: 0 0 0.9rem; display:flex; align-items:baseline; gap: 0.7rem; flex-wrap: nowrap; }
+  .rank-callout{
+    position: relative;
+    height: 26.78px; /* stessa altezza di prima, per non spostare griglia/pannello sotto */
+    margin: 0 0 0.9rem;
+  }
   .rank-badge{
-    display:inline-block;
-    flex-shrink: 0;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 409px; height: 40px; /* raddoppiata in larghezza, ×1.5 in altezza rispetto a prima */
     font-family:'Space Mono', monospace;
     font-size: 0.935rem;
     font-weight:700;
     color: var(--bg);
     background: var(--circle-color, var(--yellow));
-    padding: 0.275rem 0.77rem;
     border-radius: 4px;
+    box-sizing: border-box;
   }
   .rank-phrase{
-    flex: 1 1 auto;
-    min-width: 0;
+    position: absolute;
+    width: 409px; /* poco sotto il badge, stessa larghezza */
+    text-align: center;
     font-family:'Space Mono', monospace;
-    font-size: 0.935rem;
-    color: var(--ink-dim);
+    font-size: 0.75rem;
+    color: rgba(243,239,228,0.5);
   }
   .instructions{
     color: var(--ink-dim);
@@ -77,6 +85,29 @@
   }
   @media (max-width: 1400px){
     .level-layout{ grid-template-columns: 1fr; }
+    /* qui griglia e pannello si impilano: niente spazio a destra della griglia per il
+       badge ingrandito, torna il vecchio badge piccolo in riga sopra la griglia */
+    .rank-callout{
+      position: static;
+      height: auto;
+      display:flex; align-items:baseline; gap: 0.7rem; flex-wrap: nowrap;
+    }
+    .rank-badge{
+      position: static;
+      display:inline-block;
+      width: auto; height: auto;
+      flex-shrink: 0;
+      padding: 0.275rem 0.77rem;
+    }
+    .rank-phrase{
+      position: static;
+      width: auto;
+      flex: 1 1 auto;
+      min-width: 0;
+      text-align: left;
+      font-size: 0.935rem;
+      color: var(--ink-dim);
+    }
   }
 
   .grid{
@@ -234,7 +265,7 @@
     align-items:center;
     justify-content:space-between;
     gap: 1rem;
-    margin-bottom: 1.4rem;
+    margin-bottom: 0.7rem;
   }
   .title-icon-row h1{ margin: 0; flex: 1; min-width: 0; text-align: center; }
   .mobile-icon-btn{
@@ -869,6 +900,31 @@
     }
   }
 
+  // posiziona badge+frase del rango a destra della griglia, allineati in alto col suo
+  // bordo superiore: calcolato dal vero (non hardcoded), così funziona a qualunque
+  // larghezza di finestra desktop, ma solo quando la griglia e il pannello laterale
+  // sono davvero affiancati (sopra i 1400px: sotto quella soglia si impilano, vedi CSS)
+  function positionRankBadge(){
+    const badge = document.querySelector('.rank-badge');
+    const phrase = document.querySelector('.rank-phrase');
+    const callout = document.getElementById('rankCallout');
+    const grid = document.getElementById('gridEl');
+    const sidePanel = document.querySelector('.side-panel-wrap');
+    if (!badge || !phrase || !callout || !grid || !sidePanel) return;
+    if (window.innerWidth <= 1400) return; // qui vale il CSS statico per il layout impilato
+
+    const calloutRect = callout.getBoundingClientRect();
+    const gridRect = grid.getBoundingClientRect();
+    const sidePanelRect = sidePanel.getBoundingClientRect();
+
+    const top = gridRect.top - calloutRect.top;
+    const left = sidePanelRect.left - calloutRect.left;
+    badge.style.top = top + 'px';
+    badge.style.left = left + 'px';
+    phrase.style.top = (top + badge.offsetHeight + 8) + 'px';
+    phrase.style.left = left + 'px';
+  }
+
   function renderLevel(levelData){
     const grid = levelData.griglia;
     const circleColor = circleColorForLevel(levelNum);
@@ -908,6 +964,8 @@
         <button type="button" id="devSkipBtn" class="dev-skip-btn" aria-label="Dev skip">»</button>
       </div>
     `;
+
+    positionRankBadge();
 
     levelStartTime = Date.now();
 
