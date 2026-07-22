@@ -263,9 +263,10 @@
     margin: 0 auto;
     align-items:start;
     padding: 0 1rem;
+    position: relative;
   }
-  .ad-a{ position: sticky; top: calc(50vh - 300px); width: 160px; height: 600px; border: 1px dashed var(--rule); border-radius: 6px; background: var(--bg-panel); display:flex; align-items:center; justify-content:center; font-family:'Space Mono', monospace; font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase; color: var(--ink-dim); grid-area: adA; }
-  .ad-b-wrapper{ grid-area: adB; position: relative; align-self: stretch; }
+  .ad-a{ position: sticky; top: calc(50vh - 300px); width: 160px; height: 600px; border: 1px dashed var(--rule); border-radius: 6px; background: var(--bg-panel); display:flex; align-items:center; justify-content:center; font-family:'Space Mono', monospace; font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase; color: var(--ink-dim); grid-area: adA; z-index: 1; }
+  .ad-b-wrapper{ grid-area: adB; position: relative; align-self: stretch; z-index: 1; }
   .ad-top-rect{
     position: absolute;
     top: 3.5vh;
@@ -301,7 +302,7 @@
     text-transform:uppercase;
     color: var(--ink-dim);
   }
-  .content-col{ grid-area: content; min-width:0; }
+  .content-col{ grid-area: content; min-width:0; position: relative; z-index: 1; }
 
   @media (max-width: 900px){
     .page-shell{
@@ -594,11 +595,7 @@
 
 
 <div class="page-shell">
-  <div class="ad-a" aria-hidden="true">Ad space</div>
-
-  <div class="content-col">
-  <div class="wrap" id="wrap">
-    <svg class="math-constellation" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <svg class="math-constellation" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <text x="848" y="288" text-anchor="middle">π</text>
       <text x="363" y="232" text-anchor="middle">√</text>
       <text x="276" y="227" text-anchor="middle">Σ</text>
@@ -655,6 +652,10 @@
       <text x="284" y="166" text-anchor="middle">∞</text>
       <text x="808" y="118" text-anchor="middle">∫</text>
     </svg>
+  <div class="ad-a" aria-hidden="true">Ad space</div>
+
+  <div class="content-col">
+  <div class="wrap" id="wrap">
     <div class="title-icon-row">
       <button type="button" class="mobile-icon-btn audio-toggle-btn" id="mobileSkipBtn" aria-label="Sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8 8 0 0 1 0 12"/></svg></button>
       <h1 id="levelTitle">Eratosthenes <span class="accent">·</span> ∞ Primes</h1>
@@ -697,7 +698,7 @@
     // fisso): con quel valore fisso, su un contenitore più alto che largo come
     // questa pagina, "xMidYMid slice" ritagliava una fetta orizzontale strettissima
     // del viewBox, lasciando i simboli confinati in una banda verticale sottile
-    const wrapEl = document.getElementById('wrap') || svg.parentElement;
+    const wrapEl = svg.closest('.page-shell') || svg.parentElement;
     const vbWidth = wrapEl.clientWidth || window.innerWidth;
     const vbHeight = wrapEl.clientHeight || window.innerHeight;
     svg.setAttribute('viewBox', `0 0 ${vbWidth} ${vbHeight}`);

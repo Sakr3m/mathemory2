@@ -775,6 +775,7 @@
     margin: 0 auto;
     align-items:start;
     padding: 0 1rem;
+    position: relative;
   }
   .ad-slot{
     position: sticky;
@@ -792,9 +793,10 @@
     letter-spacing:0.08em;
     text-transform:uppercase;
     color: var(--ink-faint);
+    z-index: 1;
   }
   .ad-a{ grid-area: adA; }
-  .ad-b-wrapper{ grid-area: adB; position: relative; align-self: stretch; }
+  .ad-b-wrapper{ grid-area: adB; position: relative; align-self: stretch; z-index: 1; }
   .ad-top-rect{
     position: absolute;
     top: 3.5vh;
@@ -819,7 +821,7 @@
     width: 160px;
     height: 300px;
   }
-  .content-col{ grid-area: content; min-width:0; max-width: 1600px; margin: 0 auto; width: 100%; }
+  .content-col{ grid-area: content; min-width:0; max-width: 1600px; margin: 0 auto; width: 100%; position: relative; z-index: 1; }
   .mobile-snap-wrap{ display: none; }
 
   @media (max-width: 900px){
@@ -1247,11 +1249,7 @@
 <div class="rotate-lock-overlay">Please rotate your device back to portrait to continue.</div>
 
 <div class="page-shell">
-  <div class="ad-slot ad-a" aria-hidden="true">Ad space</div>
-
-  <div class="content-col">
-  <div class="wrap">
-    <svg class="math-constellation" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <svg class="math-constellation" viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <text x="848" y="288" text-anchor="middle">π</text>
       <text x="363" y="232" text-anchor="middle">√</text>
       <text x="276" y="227" text-anchor="middle">Σ</text>
@@ -1308,6 +1306,10 @@
       <text x="284" y="166" text-anchor="middle">∞</text>
       <text x="808" y="118" text-anchor="middle">∫</text>
     </svg>
+  <div class="ad-slot ad-a" aria-hidden="true">Ad space</div>
+
+  <div class="content-col">
+  <div class="wrap">
   <header>
     <div class="title-row">
       <button type="button" class="index-sound-btn audio-toggle-btn" id="indexSoundBtn" aria-label="Sound"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8 8 0 0 1 0 12"/></svg></button>
@@ -2638,7 +2640,7 @@
     // fisso): con quel valore fisso, su schermi molto più larghi che alti come
     // l'index, "xMidYMid slice" ritagliava una fetta verticale strettissima del
     // viewBox, lasciando i simboli confinati in una banda orizzontale sottile
-    const wrapEl = svg.closest('.wrap') || svg.parentElement;
+    const wrapEl = svg.closest('.page-shell') || svg.parentElement;
     const vbWidth = wrapEl.clientWidth || window.innerWidth;
     const vbHeight = wrapEl.clientHeight || window.innerHeight;
     svg.setAttribute('viewBox', `0 0 ${vbWidth} ${vbHeight}`);
