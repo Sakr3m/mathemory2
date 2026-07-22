@@ -286,7 +286,33 @@
     border-radius: 6px;
     padding: 0 1rem;
   }
+  /* riga a doppia colonna (Prime Rush): griglia con colonna centrale a
+     larghezza fissa (quella della medaglia stessa) — così la medaglia non
+     si sposta MAI, qualunque sia la lunghezza dei nomi ai due lati. Ogni
+     nome ha a disposizione al massimo metà riga (la sua colonna da 1fr),
+     con troncamento invece di spingere oltre se dovesse comunque eccedere */
+  .lb-row-dual{
+    display:grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items:center;
+    gap: 0.5rem;
+  }
+  .lb-row-dual .lb-value:first-child{
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .lb-row-dual .lb-value:last-child{
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
   .lb-medal{ font-size: 1.452rem; line-height:1; }
+  .lb-row-dual .lb-value{ font-size: 0.54rem; }
   .lb-value{ color: var(--yellow); font-weight:700; font-size: 1rem; }
   .lb-row.rank-1{ border-color: #E8C468; animation: rank-glow-gold 2.4s ease-in-out infinite; }
   .lb-row.rank-2{ border-color: #C7CDD6; animation: rank-glow-silver 2.4s ease-in-out infinite; }
