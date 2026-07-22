@@ -858,7 +858,6 @@
   localStorage.removeItem(HEARTBEAT_KEY);
   const ACC_CORRECT_KEY = 'erato_primerush_acc_correct';
   const ACC_TOTAL_KEY = 'erato_primerush_acc_total';
-  const RACE_END_DATE = new Date('2026-07-31T23:59:00+02:00');
   const wrap = document.getElementById('wrap');
 
   // --- 3 effetti sonori: cerchio (selezione), giusto, sbagliato ---
@@ -1284,17 +1283,9 @@
 
         if (levelNum >= 200){
           playSound('winner');
-          const raceEnded = Date.now() > RACE_END_DATE.getTime();
-
-          if (raceEnded){
-            // la gara è finita per davvero: niente popup, dritti in home
-            window.location.href = 'index.html';
-            return;
-          } else {
-            // Prime Rush: il popup compare ad ogni run completata, non solo la prima volta
-            document.getElementById('finishTotalTime').textContent = (localStorage.getItem(TOTAL_TIME_KEY) || '0') + 's';
-            document.getElementById('finishModal').classList.add('visible');
-          }
+          // Prime Rush non ha una data di scadenza: il popup compare sempre a ogni run completata
+          document.getElementById('finishTotalTime').textContent = (localStorage.getItem(TOTAL_TIME_KEY) || '0') + 's';
+          document.getElementById('finishModal').classList.add('visible');
         } else {
           playSound('right');
           // risposta corretta: si passa subito al livello successivo, senza messaggio intermedio
