@@ -1425,6 +1425,15 @@
 </div>
 
 <script>
+  // il browser (soprattutto Safari mobile) a volte ripristina una vecchia posizione
+  // di scroll tornando su questa pagina dalla cache di navigazione (es. rientrando da
+  // The Sieve col tasto Home), disallineando le schermate mobile a scatti rispetto a
+  // dove dovrebbero davvero stare. Disattivo il ripristino automatico e forzo la
+  // posizione a zero il più presto possibile, prima che qualunque altro layout scatti
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
+  window.addEventListener('pageshow', () => { window.scrollTo(0, 0); });
+
   // --- griglia decorativa 5x5, max 5 primi cerchiati ---
   // ============================================================
   // SEZIONE: DATI E COSTRUZIONE DEL GIOCO (Eratosthenes)
@@ -2835,6 +2844,11 @@
     mobileSnapIndex = Math.max(0, Math.min(2, index));
     if (snapTrack) snapTrack.style.transform = `translateY(-${mobileSnapIndex * (100/3)}%)`;
   }
+  // stessa difesa di cui sopra, applicata qui allo scorrimento a scatti vero e proprio:
+  // forzo sempre la schermata Intro all'apertura, anche se il browser pensasse di
+  // dover ripristinare uno stato diverso da una visita precedente
+  goToSnap(0);
+  window.addEventListener('pageshow', () => { goToSnap(0); });
 
   if (snapScrollEl){
     let touchStartY = null;
