@@ -12,6 +12,15 @@
 
   function isMobile(){ return window.innerWidth <= 900; }
 
+  // ogni pagina imposta window.MATHEMORY_MUSIC_VOLUME_MULTIPLIER = { desktop: X, mobile: Y }
+  // prima di caricare questo file. Se manca, o manca un lato, quel lato vale 1 (nessuna modifica)
+  function getMusicVolumeMultiplier(){
+    const m = window.MATHEMORY_MUSIC_VOLUME_MULTIPLIER;
+    if (!m || typeof m !== 'object') return 1;
+    const value = isMobile() ? m.mobile : m.desktop;
+    return typeof value === 'number' ? value : 1;
+  }
+
   function getMusicVol(){
     const v = localStorage.getItem(MUSIC_VOL_KEY);
     return v === null ? DEFAULT_MUSIC_VOL : parseInt(v);
@@ -51,8 +60,7 @@
   // al 100% (1.0), il tetto massimo valido per il volume di un elemento audio
   function applyMusicPlayback(){
     if (!bgMusic) return;
-    const multiplier = window.MATHEMORY_MUSIC_VOLUME_MULTIPLIER || 1;
-    bgMusic.volume = Math.min(1, (getMusicVol() / 100) * multiplier);
+    bgMusic.volume = Math.min(1, (getMusicVol() / 100) * getMusicVolumeMultiplier());
     if (isMuted()) bgMusic.pause();
     else bgMusic.play().catch(() => {});
   }
@@ -76,7 +84,7 @@
       return;
     }
 
-    bgMusic.volume = Math.min(1, (getMusicVol() / 100) * (window.MATHEMORY_MUSIC_VOLUME_MULTIPLIER || 1));
+    bgMusic.volume = Math.min(1, (getMusicVol() / 100) * getMusicVolumeMultiplier());
     const p = bgMusic.play();
     if (p && p.catch){
       p.catch(() => {
