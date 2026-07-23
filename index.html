@@ -1571,6 +1571,22 @@
       .catch(() => {}); // se il file manca o non si carica, il sito funziona comunque senza audio
   }
   loadSound('tap', 'tap.mp3');
+  // volume specifico per singolo suono, sopra a quello scelto con la barra effetti
+  // (o il 100% di default su mobile, dove la barra non c'e): 1 = nessuna modifica.
+  // Ogni suono puo avere un valore diverso per PC e per mobile (o un solo numero,
+  // se deve valere uguale su entrambi). Vuota per ora: l'index non ha ancora suoni
+  // che necessitano di un volume diverso dagli altri (es. 'pad' esiste solo nelle
+  // pagine di gioco) - pronta per quando servira, qui o in pagine future
+  const SOUND_LEVELS = {};
+  function getSoundLevel(name){
+    const level = SOUND_LEVELS[name];
+    if (level === undefined) return 1;
+    if (typeof level === 'number') return level;
+    const isMobileNow = window.innerWidth <= 900;
+    const value = isMobileNow ? level.mobile : level.desktop;
+    return typeof value === 'number' ? value : 1;
+  }
+
   function playSound(name){
     const buffer = soundBuffers[name];
     if (!buffer) return;
@@ -1579,7 +1595,8 @@
     const source = audioCtx.createBufferSource();
     source.buffer = buffer;
     const gainNode = audioCtx.createGain();
-    gainNode.gain.value = window.MathemoryAudio ? window.MathemoryAudio.getSfxVolume() : 1;
+    const baseVolume = window.MathemoryAudio ? window.MathemoryAudio.getSfxVolume() : 1;
+    gainNode.gain.value = baseVolume * getSoundLevel(name);
     source.connect(gainNode);
     gainNode.connect(audioCtx.destination);
     source.start(0);
