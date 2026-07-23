@@ -898,6 +898,10 @@
   loadSound('tap', 'tap.mp3'); // suono generico, riusabile per la maggior parte dei pulsanti della pagina
 
   let currentPadSource = null;
+  // volume specifico per singolo suono, sopra a quello scelto con la barra effetti
+  // (o il 100% di default su mobile, dove la barra non c'e): 1 = nessuna modifica
+  const SOUND_LEVELS = { pad: 0.8 };
+
   function playSound(name){
     const buffer = soundBuffers[name];
     if (!buffer) return; // non ancora decodificato (o file assente): niente audio, nessun errore
@@ -912,7 +916,8 @@
     const source = audioCtx.createBufferSource();
     source.buffer = buffer;
     const gainNode = audioCtx.createGain();
-    gainNode.gain.value = window.MathemoryAudio ? window.MathemoryAudio.getSfxVolume() : 1;
+    const baseVolume = window.MathemoryAudio ? window.MathemoryAudio.getSfxVolume() : 1;
+    gainNode.gain.value = baseVolume * (SOUND_LEVELS[name] || 1);
     source.connect(gainNode);
     gainNode.connect(audioCtx.destination);
     source.start(0);
@@ -1378,7 +1383,7 @@
   });
 </script>
 
-<script>window.MATHEMORY_MUSIC_VOLUME_MULTIPLIER = { desktop: 1.25, mobile: 1.25 };</script>
+<script>window.MATHEMORY_MUSIC_VOLUME_MULTIPLIER = { desktop: 1.25, mobile: 1.875 };</script>
 <script src="mathemory-audio.js"></script>
 
 </body>
