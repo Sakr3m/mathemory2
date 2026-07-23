@@ -810,8 +810,18 @@
 
   let currentPadSource = null;
   // volume specifico per singolo suono, sopra a quello scelto con la barra effetti
-  // (o il 100% di default su mobile, dove la barra non c'e): 1 = nessuna modifica
-  const SOUND_LEVELS = { pad: 0.8 };
+  // (o il 100% di default su mobile, dove la barra non c'e): 1 = nessuna modifica.
+  // Ogni suono puo avere un valore diverso per PC e per mobile (o un solo numero,
+  // se deve valere uguale su entrambi)
+  const SOUND_LEVELS = { pad: { desktop: 1, mobile: 0.8 } };
+  function getSoundLevel(name){
+    const level = SOUND_LEVELS[name];
+    if (level === undefined) return 1;
+    if (typeof level === 'number') return level;
+    const isMobileNow = window.innerWidth <= 900;
+    const value = isMobileNow ? level.mobile : level.desktop;
+    return typeof value === 'number' ? value : 1;
+  }
 
   function playSound(name){
     const buffer = soundBuffers[name];
@@ -828,7 +838,7 @@
     source.buffer = buffer;
     const gainNode = audioCtx.createGain();
     const baseVolume = window.MathemoryAudio ? window.MathemoryAudio.getSfxVolume() : 1;
-    gainNode.gain.value = baseVolume * (SOUND_LEVELS[name] || 1);
+    gainNode.gain.value = baseVolume * getSoundLevel(name);
     source.connect(gainNode);
     gainNode.connect(audioCtx.destination);
     source.start(0);
