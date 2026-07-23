@@ -951,7 +951,7 @@
     source.start(0);
     if (name === 'pad') currentPadSource = source;
 
-    // durante badge e winner, la musica si abbassa temporaneamente per farli sentire meglio
+    // durante badge e winner, la musica scende a un volume fisso (15%, non -15% dal suo volume attuale) per farli sentire meglio
     if (window.MathemoryAudio && window.MathemoryAudio.duckMusic){
       if (name === 'badge') window.MathemoryAudio.duckMusic(0.15, 1000);
       if (name === 'winner') window.MathemoryAudio.duckMusic(0.15, 1500);

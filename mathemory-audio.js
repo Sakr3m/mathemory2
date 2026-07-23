@@ -88,10 +88,13 @@
   // giusto da sola. Un contatore gestisce eventuali sovrapposizioni (es. badge e winner insieme):
   // il volume torna normale solo quando TUTTI gli abbassamenti attivi sono finiti
   let duckActive = 0;
-  function duckMusic(amount, durationMs){
+  // porta la musica a un volume ASSOLUTO fisso (es. 0.15 = 15%, qualunque sia il volume
+  // normale di partenza), non la abbassa di un tot rispetto a dove si trova. Il volume
+  // normale torna da solo, invariato, una volta finiti tutti gli abbassamenti attivi
+  function duckMusic(targetVolume, durationMs){
     if (!bgMusic) return;
     duckActive++;
-    bgMusic.volume = Math.max(0, normalMusicVolume() - amount);
+    bgMusic.volume = Math.max(0, Math.min(1, targetVolume));
     setTimeout(() => {
       duckActive = Math.max(0, duckActive - 1);
       if (duckActive === 0) bgMusic.volume = normalMusicVolume();
