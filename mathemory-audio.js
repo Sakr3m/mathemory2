@@ -50,8 +50,53 @@
     updateAllButtons();
   }
 
+  const MUSIC_POSITION_KEY = 'mathemory_music_position'; // { src, time } — per continuare la musica tra un livello e l'altro invece di farla ripartire da zero
+
   const bgMusic = document.getElementById('bgMusic');
   const buttons = document.querySelectorAll('.audio-toggle-btn');
+
+  // ripristino la posizione SOLO alla primissima riproduzione di questa pagina (non ogni volta
+  // che si smuta/rimuta durante la stessa visita, altrimenti tornerebbe indietro ogni volta)
+  let musicPositionRestored = false;
+  function restoreMusicPositionOnce(){
+    if (musicPositionRestored || !bgMusic) return;
+    musicPositionRestored = true;
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(MUSIC_POSITION_KEY) || 'null');
+      if (saved && saved.src === bgMusic.src && typeof saved.time === 'number' && isFinite(saved.time)){
+        bgMusic.currentTime = saved.time;
+      }
+    } catch(e){}
+  }
+  function saveMusicPosition(){
+    if (!bgMusic || !bgMusic.src) return;
+    try {
+      sessionStorage.setItem(MUSIC_POSITION_KEY, JSON.stringify({ src: bgMusic.src, time: bgMusic.currentTime }));
+    } catch(e){}
+  }
+  // 'pagehide' e piu affidabile di 'beforeunload' su mobile (Safari in particolare)
+  window.addEventListener('beforeunload', saveMusicPosition);
+  window.addEventListener('pagehide', saveMusicPosition);
+
+  // volume "normale" che la musica dovrebbe avere in questo momento, secondo le impostazioni
+  // (usato sia per l'avvio normale sia per tornare al volume giusto dopo un abbassamento temporaneo)
+  function normalMusicVolume(){
+    return Math.min(1, (getMusicVol() / 100) * getMusicVolumeMultiplier());
+  }
+
+  // abbassamento temporaneo della musica (es. mentre suona badge/winner), poi torna al volume
+  // giusto da sola. Un contatore gestisce eventuali sovrapposizioni (es. badge e winner insieme):
+  // il volume torna normale solo quando TUTTI gli abbassamenti attivi sono finiti
+  let duckActive = 0;
+  function duckMusic(amount, durationMs){
+    if (!bgMusic) return;
+    duckActive++;
+    bgMusic.volume = Math.max(0, normalMusicVolume() - amount);
+    setTimeout(() => {
+      duckActive = Math.max(0, duckActive - 1);
+      if (duckActive === 0) bgMusic.volume = normalMusicVolume();
+    }, durationMs);
+  }
 
   // moltiplicatore di volume specifico per pagina: ogni pagina lo imposta a modo
   // suo (con una riga prima di caricare questo file) o lo lascia non impostato
@@ -60,7 +105,8 @@
   // al 100% (1.0), il tetto massimo valido per il volume di un elemento audio
   function applyMusicPlayback(){
     if (!bgMusic) return;
-    bgMusic.volume = Math.min(1, (getMusicVol() / 100) * getMusicVolumeMultiplier());
+    restoreMusicPositionOnce();
+    bgMusic.volume = normalMusicVolume();
     if (isMuted()) bgMusic.pause();
     else bgMusic.play().catch(() => {});
   }
@@ -78,13 +124,14 @@
   function tryResumeInherited(){
     runtimeMuted = localStorage.getItem(MUTED_KEY) === 'true';
     updateAllButtons();
+    restoreMusicPositionOnce(); // sempre, anche se muto: la posizione e' pronta per quando riprende
 
     if (runtimeMuted || !bgMusic){
       if (bgMusic) bgMusic.pause();
       return;
     }
 
-    bgMusic.volume = Math.min(1, (getMusicVol() / 100) * getMusicVolumeMultiplier());
+    bgMusic.volume = normalMusicVolume();
     const p = bgMusic.play();
     if (p && p.catch){
       p.catch(() => {
@@ -102,6 +149,7 @@
   function forceMutedStart(){
     runtimeMuted = true;
     localStorage.setItem(MUTED_KEY, 'true'); // scrivo esplicitamente: diventa la scelta "attuale" per le pagine successive
+    restoreMusicPositionOnce();
     if (bgMusic) bgMusic.pause();
     updateAllButtons();
   }
@@ -218,6 +266,7 @@
     getSfxVolume: () => getSfxVol() / 100,
     setMusicVol,
     setSfxVol,
+    duckMusic,
   };
 
   initAudioState();

@@ -918,7 +918,7 @@
   // (o il 100% di default su mobile, dove la barra non c'e): 1 = nessuna modifica.
   // Ogni suono puo avere un valore diverso per PC e per mobile (o un solo numero,
   // se deve valere uguale su entrambi)
-  const SOUND_LEVELS = { pad: { desktop: 1, mobile: 0.7 } };
+  const SOUND_LEVELS = { pad: { desktop: 1, mobile: 0.7 }, badge: { desktop: 1, mobile: 1.75 }, winner: { desktop: 1, mobile: 1.1 } };
   function getSoundLevel(name){
     const level = SOUND_LEVELS[name];
     if (level === undefined) return 1;
@@ -948,6 +948,12 @@
     gainNode.connect(audioCtx.destination);
     source.start(0);
     if (name === 'pad') currentPadSource = source;
+
+    // durante badge e winner, la musica si abbassa temporaneamente per farli sentire meglio
+    if (window.MathemoryAudio && window.MathemoryAudio.duckMusic){
+      if (name === 'badge') window.MathemoryAudio.duckMusic(0.15, 1000);
+      if (name === 'winner') window.MathemoryAudio.duckMusic(0.15, 1500);
+    }
   }
   let levelStartTime = null;
   let heartbeatInterval = null;
