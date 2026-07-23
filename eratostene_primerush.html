@@ -801,6 +801,14 @@
 </div>
 
 <script>
+  // il browser normalmente ripristina da solo la posizione di scroll di prima al refresh
+  // della pagina: su mobile, dove lo scroll e' del tutto bloccato (vedi touchmove qui sotto),
+  // se quella posizione non era zero la pagina resta "incastrata" li per sempre, senza modo
+  // di scorrere per sistemarla. Disattivo il ripristino automatico e forzo zero il prima possibile
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
+  window.addEventListener('pageshow', () => { window.scrollTo(0, 0); });
+
   // schermata bloccata su mobile: non deve scorrere in nessuna direzione (tutto
   // dovrebbe già stare nella schermata grazie al ridimensionamento). L'overflow:hidden
   // via CSS non basta sempre (es. il "rimbalzo" di iOS Safari), quindi blocco anche
