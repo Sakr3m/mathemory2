@@ -44,9 +44,15 @@
   const bgMusic = document.getElementById('bgMusic');
   const buttons = document.querySelectorAll('.audio-toggle-btn');
 
+  // moltiplicatore di volume specifico per pagina: ogni pagina lo imposta a modo
+  // suo (con una riga prima di caricare questo file) o lo lascia non impostato
+  // (= 1, nessuna modifica). Cosi si puo alzare/abbassare la musica di UNA sola
+  // pagina senza toccare le altre. Il risultato finale resta comunque bloccato
+  // al 100% (1.0), il tetto massimo valido per il volume di un elemento audio
   function applyMusicPlayback(){
     if (!bgMusic) return;
-    bgMusic.volume = getMusicVol() / 100;
+    const multiplier = window.MATHEMORY_MUSIC_VOLUME_MULTIPLIER || 1;
+    bgMusic.volume = Math.min(1, (getMusicVol() / 100) * multiplier);
     if (isMuted()) bgMusic.pause();
     else bgMusic.play().catch(() => {});
   }
@@ -70,7 +76,7 @@
       return;
     }
 
-    bgMusic.volume = getMusicVol() / 100;
+    bgMusic.volume = Math.min(1, (getMusicVol() / 100) * (window.MATHEMORY_MUSIC_VOLUME_MULTIPLIER || 1));
     const p = bgMusic.play();
     if (p && p.catch){
       p.catch(() => {
