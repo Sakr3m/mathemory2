@@ -933,7 +933,7 @@
   // (o il 100% di default su mobile, dove la barra non c'e): 1 = nessuna modifica.
   // Ogni suono puo avere un valore diverso per PC e per mobile (o un solo numero,
   // se deve valere uguale su entrambi)
-  const SOUND_LEVELS = { pad: { desktop: 1, mobile: 0.7 }, badge: { desktop: 1, mobile: 1.9 }, winner: { desktop: 1, mobile: 1.1 } };
+  const SOUND_LEVELS = { pad: { desktop: 1, mobile: 0.7 }, badge: { desktop: 1, mobile: 0.5 }, winner: { desktop: 1, mobile: 1.1 } };
   function getSoundLevel(name){
     const level = SOUND_LEVELS[name];
     if (level === undefined) return 1;
