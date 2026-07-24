@@ -922,7 +922,35 @@
     return Math.min(1, levelNum / 400);
   }
 
+  // randomizzazione POSIZIONALE: cresce fino al livello 200 (stesso traguardo di The Sieve/Prime Rush),
+  // poi resta al massimo caos per tutti i livelli successivi, invece di continuare a crescere fino al 400
+  function positionRandomnessForLevel(levelNum){
+    return Math.min(1, levelNum / 200);
+  }
+
   function lerp(a, b, t){ return a + (b - a) * t; }
+
+  // memoria delle combinazioni di primi degli ultimi 5 livelli generati, per evitare che la
+  // stessa combinazione (stessi 5 primi, quindi anche stessa somma) ricompaia troppo vicina -
+  // sessionStorage perche i livelli qui si generano al volo ad ogni caricamento di pagina
+  const RECENT_COMBOS_KEY = 'infiniteprimes_recent_combos';
+  const RECENT_COMBOS_WINDOW = 5;
+
+  function getRecentCombos(){
+    try {
+      const raw = sessionStorage.getItem(RECENT_COMBOS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e){ return []; }
+  }
+  function isComboRecent(combo, recent){
+    const key = [...combo].sort((a,b) => a-b).join(',');
+    return recent.some(r => r === key);
+  }
+  function pushRecentCombo(combo, recent){
+    const key = [...combo].sort((a,b) => a-b).join(',');
+    const updated = [...recent, key].slice(-RECENT_COMBOS_WINDOW);
+    try { sessionStorage.setItem(RECENT_COMBOS_KEY, JSON.stringify(updated)); } catch(e){}
+  }
 
   function pickRandom(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
   function shuffle(arr){
@@ -991,13 +1019,25 @@
       if (n % 2 === 0) evenComposites.push(n); else oddComposites.push(n);
     }
 
-    // 1) 5 primi scelti in base al punteggio di difficoltà target
+    // 1) 5 primi scelti in base al punteggio di difficoltà target - riprovo se la combinazione
+    //    coincide con una delle ultime 5 generate (stessi 5 primi = stessa somma)
     const targetScore = lerp(0.10, 0.95, t);
+    const recentCombos = getRecentCombos();
     let chosen = pickFivePrimes(primesPool, targetScore);
     if (chosen.length < 5){
       const rest = shuffle(primesPool.filter(p => !chosen.includes(p)));
       for (const p of rest){ if (chosen.length >= 5) break; chosen.push(p); }
     }
+    let attempts = 0;
+    while (isComboRecent(chosen, recentCombos) && attempts < 30 && primesPool.length > 5){
+      chosen = pickFivePrimes(primesPool, targetScore);
+      if (chosen.length < 5){
+        const rest = shuffle(primesPool.filter(p => !chosen.includes(p)));
+        for (const p of rest){ if (chosen.length >= 5) break; chosen.push(p); }
+      }
+      attempts++;
+    }
+    pushRecentCombo(chosen, recentCombos);
     shuffle(chosen);
 
     // 2) quota di pari tra i 20 riempitivi (alta se facile, bassa se difficile) +
@@ -1021,7 +1061,10 @@
     for (let i = 0; i < numOdd; i++) composti.push(pickOne(oddComposites));
 
     // 3) posizione in griglia: vicine se facile, sparse se difficile
-    const positions = buildGridPositions(1 - t);
+    // il caos posizionale raggiunge il massimo al livello 200 e poi resta li, a differenza
+    // della difficolta generale (numeri/somma) che continua a salire fino al livello 400
+    const posT = positionRandomnessForLevel(levelNum);
+    const positions = buildGridPositions(1 - posT);
     const griglia = new Array(25).fill(null);
     positions.forEach((pos, i) => { griglia[pos] = chosen[i]; });
     let compIdx = 0;
