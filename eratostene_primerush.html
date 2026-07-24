@@ -569,7 +569,7 @@
     }
     .page-shell{ display: none; }
   }
-  /* --- popup di fine gara (Livello 200) --- */
+  /* --- popup di fine gara (Livello 100) --- */
   .modal-overlay{
     display:none;
     position: fixed;
@@ -712,7 +712,7 @@
     <div class="modal-buttons" style="flex-direction:column;">
       <button type="button" class="modal-btn yes" id="devSkip1Btn">+1</button>
       <button type="button" class="modal-btn yes" id="devSkip25Btn">+25</button>
-      <button type="button" class="modal-btn yes" id="devSkip200Btn">200</button>
+      <button type="button" class="modal-btn yes" id="devSkip100Btn">100</button>
       <button type="button" class="modal-btn no" id="devSkipResetBtn">Reset</button>
     </div>
   </div>
@@ -1313,10 +1313,10 @@
       window.location.href = `eratostene_primerush.html?n=${levelNum + 1}`;
     });
     document.getElementById('devSkip25Btn').addEventListener('click', () => {
-      window.location.href = `eratostene_primerush.html?n=${Math.min(200, levelNum + 25)}`;
+      window.location.href = `eratostene_primerush.html?n=${Math.min(100, levelNum + 25)}`;
     });
-    document.getElementById('devSkip200Btn').addEventListener('click', () => {
-      window.location.href = 'eratostene_primerush.html?n=200';
+    document.getElementById('devSkip100Btn').addEventListener('click', () => {
+      window.location.href = 'eratostene_primerush.html?n=100';
     });
     document.getElementById('devSkipResetBtn').addEventListener('click', () => {
       Object.keys(localStorage).filter(k => k.startsWith('erato_primerush')).forEach(k => localStorage.removeItem(k));
@@ -1351,7 +1351,7 @@
         const elapsed = commitElapsedTime();
         localStorage.setItem(LAST_TIME_KEY, elapsed.toFixed(1));
 
-        if (levelNum >= 200){
+        if (levelNum >= 100){
           playSound('winner');
           // Prime Rush non ha una data di scadenza: il popup compare sempre a ogni run completata
           document.getElementById('finishTotalTime').textContent = (localStorage.getItem(TOTAL_TIME_KEY) || '0') + 's';
